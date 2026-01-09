@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Loader2, Sparkles } from "lucide-react";
-import generatedLogo from "@assets/generated_images/enlarged_heart_dancer_logo_for_danceme.png";
+import generatedLogo from "@assets/generated_images/circular_red_heart_dancer_logo_for_danceme.png";
 
 export default function AuthPage() {
   const handleLogin = () => {
@@ -16,21 +16,21 @@ export default function AuthPage() {
       <div className="relative z-10 w-full max-w-md px-8 text-center">
         
         {/* Logo/Icon Animation */}
-        <div className="mx-auto mb-10 w-48 h-48 relative">
-           <div className="absolute inset-0 bg-primary/20 rounded-full animate-pulse" />
+        <div className="mx-auto mb-10 w-56 h-56 relative">
+           <div className="absolute inset-0 bg-red-500/10 rounded-full animate-pulse" />
            <div className="absolute inset-0 flex items-center justify-center">
              <img 
                src={generatedLogo} 
                alt="Danceme Logo" 
-               className="w-44 h-44 object-contain drop-shadow-[0_20px_50px_rgba(255,100,200,0.5)] animate-in zoom-in duration-700 ease-out"
+               className="w-52 h-52 object-contain rounded-full drop-shadow-[0_20px_50px_rgba(255,0,0,0.4)] animate-in zoom-in duration-700 ease-out border-4 border-white/20"
              />
            </div>
            <div className="absolute top-2 right-2 bg-white rounded-full p-3 shadow-xl animate-bounce">
-             <Sparkles className="w-8 h-8 text-yellow-500 fill-yellow-200" />
+             <Sparkles className="w-8 h-8 text-red-500 fill-red-200" />
            </div>
         </div>
 
-        <h1 className="text-7xl font-display font-black tracking-tighter mb-6 bg-gradient-to-br from-[#ff0080] via-[#7928ca] to-[#ff0080] bg-clip-text text-transparent drop-shadow-sm animate-in slide-in-from-bottom duration-700">
+        <h1 className="text-7xl font-display font-black tracking-tighter mb-6 bg-gradient-to-br from-[#ff0000] via-[#c41e3a] to-[#ff0080] bg-clip-text text-transparent drop-shadow-sm animate-in slide-in-from-bottom duration-700">
           Danceme
         </h1>
         
