@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Loader2, Sparkles } from "lucide-react";
-import generatedLogo from "@assets/generated_images/danceme_dating_app_logo_design.png";
+import generatedLogo from "@assets/generated_images/enlarged_heart_dancer_logo_for_danceme.png";
 
 export default function AuthPage() {
   const handleLogin = () => {
