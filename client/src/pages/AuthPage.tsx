@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
-import { Loader2, Heart, Sparkles } from "lucide-react";
+import { Loader2, Sparkles } from "lucide-react";
+import generatedLogo from "@assets/generated_images/danceme_dating_app_logo_design.png";
 
 export default function AuthPage() {
   const handleLogin = () => {
@@ -17,20 +18,24 @@ export default function AuthPage() {
         {/* Logo/Icon Animation */}
         <div className="mx-auto mb-8 w-32 h-32 relative">
            <div className="absolute inset-0 bg-primary/20 rounded-full animate-ping" />
-           <div className="absolute inset-4 bg-gradient-to-tr from-primary to-secondary rounded-full flex items-center justify-center shadow-2xl">
-             <Heart className="w-12 h-12 text-white fill-current" />
+           <div className="absolute inset-0 flex items-center justify-center">
+             <img 
+               src={generatedLogo} 
+               alt="Danceme Logo" 
+               className="w-28 h-28 object-contain drop-shadow-2xl animate-in zoom-in duration-500"
+             />
            </div>
            <div className="absolute top-0 right-0 bg-white rounded-full p-2 shadow-lg animate-bounce delay-100">
              <Sparkles className="w-6 h-6 text-yellow-500" />
            </div>
         </div>
 
-        <h1 className="text-5xl font-display font-black tracking-tighter mb-4 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-          danceme
+        <h1 className="text-6xl font-display font-black tracking-tighter mb-4 bg-gradient-to-r from-primary via-purple-500 to-secondary bg-clip-text text-transparent">
+          Danceme
         </h1>
         
-        <p className="text-lg text-muted-foreground mb-12 font-medium leading-relaxed">
-          Find your rhythm. Match with people who move like you do.
+        <p className="text-lg text-muted-foreground mb-12 font-medium leading-relaxed italic">
+          "Find your rhythm. Match with people who move like you do."
         </p>
 
         <div className="space-y-4">
