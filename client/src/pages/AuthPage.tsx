@@ -16,21 +16,21 @@ export default function AuthPage() {
       <div className="relative z-10 w-full max-w-md px-8 text-center">
         
         {/* Logo/Icon Animation */}
-        <div className="mx-auto mb-8 w-32 h-32 relative">
-           <div className="absolute inset-0 bg-primary/20 rounded-full animate-ping" />
+        <div className="mx-auto mb-10 w-48 h-48 relative">
+           <div className="absolute inset-0 bg-primary/20 rounded-full animate-pulse" />
            <div className="absolute inset-0 flex items-center justify-center">
              <img 
                src={generatedLogo} 
                alt="Danceme Logo" 
-               className="w-28 h-28 object-contain drop-shadow-2xl animate-in zoom-in duration-500"
+               className="w-44 h-44 object-contain drop-shadow-[0_20px_50px_rgba(255,100,200,0.5)] animate-in zoom-in duration-700 ease-out"
              />
            </div>
-           <div className="absolute top-0 right-0 bg-white rounded-full p-2 shadow-lg animate-bounce delay-100">
-             <Sparkles className="w-6 h-6 text-yellow-500" />
+           <div className="absolute top-2 right-2 bg-white rounded-full p-3 shadow-xl animate-bounce">
+             <Sparkles className="w-8 h-8 text-yellow-500 fill-yellow-200" />
            </div>
         </div>
 
-        <h1 className="text-6xl font-display font-black tracking-tighter mb-4 bg-gradient-to-r from-primary via-purple-500 to-secondary bg-clip-text text-transparent">
+        <h1 className="text-7xl font-display font-black tracking-tighter mb-6 bg-gradient-to-br from-[#ff0080] via-[#7928ca] to-[#ff0080] bg-clip-text text-transparent drop-shadow-sm animate-in slide-in-from-bottom duration-700">
           Danceme
         </h1>
         
