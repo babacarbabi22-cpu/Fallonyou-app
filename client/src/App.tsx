@@ -8,6 +8,7 @@ import AuthPage from "@/pages/AuthPage";
 import SwipePage from "@/pages/SwipePage";
 import MatchesPage from "@/pages/MatchesPage";
 import ProfilePage from "@/pages/ProfilePage";
+import PremiumPage from "@/pages/PremiumPage";
 import { useCurrentUser } from "@/hooks/use-danceme";
 
 function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
@@ -31,6 +32,9 @@ function Router() {
       </Route>
       <Route path="/profile">
         {() => <ProtectedRoute component={ProfilePage} />}
+      </Route>
+      <Route path="/premium">
+        {() => <ProtectedRoute component={PremiumPage} />}
       </Route>
       <Route component={NotFound} />
     </Switch>

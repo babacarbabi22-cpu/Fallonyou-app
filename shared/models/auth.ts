@@ -23,6 +23,13 @@ export const users = pgTable("users", {
   profileImageUrl: varchar("profile_image_url"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
+  stripeCustomerId: varchar("stripe_customer_id"),
+  stripeSubscriptionId: varchar("stripe_subscription_id"),
+  isPremium: varchar("is_premium").default("false"),
+  premiumExpiresAt: timestamp("premium_expires_at"),
+  trialEndsAt: timestamp("trial_ends_at"),
+  dailyLikesUsed: varchar("daily_likes_used").default("0"),
+  lastLikeResetDate: timestamp("last_like_reset_date"),
 });
 
 export type UpsertUser = typeof users.$inferInsert;

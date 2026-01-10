@@ -9,6 +9,8 @@ import multer from "multer";
 import path from "path";
 import express from "express";
 import { registerObjectStorageRoutes } from "./replit_integrations/object_storage";
+import { stripeService } from "./stripeService";
+import { getStripePublishableKey } from "./stripeClient";
 
 const upload = multer({ dest: "uploads/" });
 
@@ -64,12 +66,26 @@ export async function registerRoutes(
   app.post(api.matches.create.path, async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     const { targetUserId } = api.matches.create.input.parse(req.body);
+    
+    const likeStatus = await storage.canUserLike(req.user!.id);
+    if (!likeStatus.canLike) {
+      return res.status(429).json({ 
+        error: 'Daily like limit reached',
+        remainingLikes: 0,
+        isPremium: false 
+      });
+    }
+    
+    if (!likeStatus.isPremium) {
+      await storage.incrementDailyLikes(req.user!.id);
+    }
+    
     const match = await storage.createMatch(req.user!.id, targetUserId);
     
     if (match && match.status === 'matched') {
-       res.json(match);
+       res.json({ match, isMatch: true });
     } else {
-       res.json(null);
+       res.json({ match, isMatch: false, remainingLikes: likeStatus.remainingLikes - 1 });
     }
   });
 
@@ -100,6 +116,187 @@ export async function registerRoutes(
       raterId: req.user!.id
     });
     res.status(201).json(rating);
+  });
+
+  // Premium Status
+  app.get('/api/premium/status', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const user = await storage.getUser(req.user!.id);
+    if (!user) return res.sendStatus(404);
+    
+    const isPremium = user.isPremium === 'true' || 
+      (user.trialEndsAt && new Date(user.trialEndsAt) > new Date());
+    
+    const likeStatus = await storage.canUserLike(req.user!.id);
+    
+    res.json({
+      isPremium,
+      stripeCustomerId: user.stripeCustomerId,
+      stripeSubscriptionId: user.stripeSubscriptionId,
+      premiumExpiresAt: user.premiumExpiresAt,
+      trialEndsAt: user.trialEndsAt,
+      ...likeStatus
+    });
+  });
+
+  // Get Stripe publishable key
+  app.get('/api/stripe/config', async (req, res) => {
+    try {
+      const publishableKey = await getStripePublishableKey();
+      res.json({ publishableKey });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to get Stripe config' });
+    }
+  });
+
+  // Get subscription products
+  app.get('/api/premium/products', async (req, res) => {
+    try {
+      const products = await storage.getProductsWithPrices();
+      res.json({ products });
+    } catch (error) {
+      res.json({ products: [] });
+    }
+  });
+
+  // Create checkout session
+  app.post('/api/premium/checkout', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    const { priceId, includeTrial } = req.body;
+    if (!priceId) return res.status(400).json({ error: 'Price ID required' });
+    
+    const user = await storage.getUser(req.user!.id);
+    if (!user) return res.sendStatus(404);
+    
+    let customerId = user.stripeCustomerId;
+    if (!customerId) {
+      const customer = await stripeService.createCustomer(
+        user.email || `${user.id}@fallonyou.app`,
+        user.id
+      );
+      await storage.updateUserStripeInfo(user.id, { stripeCustomerId: customer.id });
+      customerId = customer.id;
+    }
+    
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
+    const session = await stripeService.createCheckoutSession(
+      customerId,
+      priceId,
+      `${baseUrl}/premium?success=true&session_id={CHECKOUT_SESSION_ID}`,
+      `${baseUrl}/premium?canceled=true`,
+      includeTrial ? 7 : undefined
+    );
+    
+    res.json({ url: session.url });
+  });
+
+  // Verify checkout session and activate premium
+  app.post('/api/premium/verify-session', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    const { sessionId } = req.body;
+    if (!sessionId) return res.status(400).json({ error: 'Session ID required' });
+    
+    try {
+      const { getUncachableStripeClient } = await import('./stripeClient');
+      const stripe = await getUncachableStripeClient();
+      const session = await stripe.checkout.sessions.retrieve(sessionId);
+      
+      if (session.payment_status === 'paid' && session.subscription) {
+        const subscription = await stripe.subscriptions.retrieve(session.subscription as string);
+        
+        await storage.updateUserStripeInfo(req.user!.id, {
+          isPremium: 'true',
+          stripeSubscriptionId: session.subscription as string,
+          premiumExpiresAt: new Date(subscription.current_period_end * 1000),
+        });
+        
+        res.json({ success: true, isPremium: true });
+      } else {
+        res.json({ success: false, isPremium: false });
+      }
+    } catch (error) {
+      console.error('Session verification error:', error);
+      res.status(500).json({ error: 'Failed to verify session' });
+    }
+  });
+
+  // Customer portal for managing subscription
+  app.post('/api/premium/portal', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    const user = await storage.getUser(req.user!.id);
+    if (!user?.stripeCustomerId) {
+      return res.status(400).json({ error: 'No subscription found' });
+    }
+    
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
+    const session = await stripeService.createCustomerPortalSession(
+      user.stripeCustomerId,
+      `${baseUrl}/premium`
+    );
+    
+    res.json({ url: session.url });
+  });
+
+  // Start free trial
+  app.post('/api/premium/trial', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    const user = await storage.getUser(req.user!.id);
+    if (!user) return res.sendStatus(404);
+    
+    if (user.trialEndsAt || user.isPremium === 'true') {
+      return res.status(400).json({ error: 'Trial already used or already premium' });
+    }
+    
+    const trialEnd = new Date();
+    trialEnd.setDate(trialEnd.getDate() + 7);
+    
+    await storage.updateUserStripeInfo(user.id, { trialEndsAt: trialEnd });
+    
+    res.json({ success: true, trialEndsAt: trialEnd });
+  });
+
+  // Who liked me (premium feature)
+  app.get('/api/premium/liked-by', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    const user = await storage.getUser(req.user!.id);
+    if (!user) return res.sendStatus(404);
+    
+    const isPremium = user.isPremium === 'true' || 
+      (user.trialEndsAt && new Date(user.trialEndsAt) > new Date());
+    
+    if (!isPremium) {
+      const likers = await storage.getUsersWhoLikedMe(req.user!.id);
+      return res.json({ 
+        count: likers.length, 
+        users: [],
+        isPremium: false 
+      });
+    }
+    
+    const likers = await storage.getUsersWhoLikedMe(req.user!.id);
+    const enriched = await Promise.all(likers.map(async u => {
+      const profile = await storage.getProfile(u.id);
+      const photos = await storage.getPhotos(u.id);
+      return { ...u, profile, photos };
+    }));
+    
+    res.json({ 
+      count: likers.length, 
+      users: enriched,
+      isPremium: true 
+    });
+  });
+
+  // Check like limit
+  app.get('/api/likes/status', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const status = await storage.canUserLike(req.user!.id);
+    res.json(status);
   });
 
   return httpServer;

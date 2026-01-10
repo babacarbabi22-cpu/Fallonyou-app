@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Heart, MessageCircle, User as UserIcon } from "lucide-react";
+import { Heart, MessageCircle, User as UserIcon, Crown } from "lucide-react";
 import { clsx } from "clsx";
 
 export function BottomNav() {
@@ -8,6 +8,7 @@ export function BottomNav() {
   const navItems = [
     { href: "/", icon: Heart, label: "Discover" },
     { href: "/matches", icon: MessageCircle, label: "Matches" },
+    { href: "/premium", icon: Crown, label: "Premium" },
     { href: "/profile", icon: UserIcon, label: "Profile" },
   ];
 
