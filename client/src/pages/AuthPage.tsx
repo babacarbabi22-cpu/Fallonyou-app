@@ -30,7 +30,7 @@ export default function AuthPage() {
            </div>
         </div>
 
-        <h1 className="text-7xl font-display font-black tracking-tighter mb-6 bg-gradient-to-br from-[#ff7e5f] via-[#feb47b] to-[#2193b0] bg-clip-text text-transparent drop-shadow-sm animate-in slide-in-from-bottom duration-700">
+        <h1 className="text-8xl font-serif font-bold tracking-tight mb-6 bg-gradient-to-b from-[#ff7e5f] via-[#feb47b] to-[#2193b0] bg-clip-text text-transparent drop-shadow-[0_2px_10px_rgba(0,0,0,0.3)] animate-in slide-in-from-bottom duration-1000">
           Danceme
         </h1>
         
