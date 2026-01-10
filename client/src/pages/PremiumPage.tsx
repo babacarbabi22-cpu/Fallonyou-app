@@ -9,6 +9,8 @@ import { useLocation } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
+import { SiPaypal } from "react-icons/si";
+import PayPalButton from "@/components/PayPalButton";
 
 export default function PremiumPage() {
   const [, setLocation] = useLocation();
@@ -53,17 +55,54 @@ export default function PremiumPage() {
     }
   }, [success, canceled, toast]);
 
-  const { data: premiumStatus, isLoading: statusLoading } = useQuery({
+  interface PremiumStatus {
+    isPremium: boolean;
+    trialEndsAt?: string;
+    premiumExpiresAt?: string;
+  }
+
+  interface ProductsData {
+    products: Array<{
+      price_id: string;
+      unit_amount: number;
+      product_name: string;
+    }>;
+  }
+
+  interface LikedByData {
+    count: number;
+    users: Array<{
+      id: string;
+      firstName?: string;
+      photos?: Array<{ url: string }>;
+      profile?: any;
+    }>;
+    isPremium: boolean;
+  }
+
+  interface PaymentMethodsData {
+    stripe: boolean;
+    paypal: boolean;
+  }
+
+  const { data: premiumStatus, isLoading: statusLoading } = useQuery<PremiumStatus>({
     queryKey: ['/api/premium/status'],
   });
 
-  const { data: productsData, isLoading: productsLoading } = useQuery({
+  const { data: productsData, isLoading: productsLoading } = useQuery<ProductsData>({
     queryKey: ['/api/premium/products'],
   });
 
-  const { data: likedByData } = useQuery({
+  const { data: likedByData } = useQuery<LikedByData>({
     queryKey: ['/api/premium/liked-by'],
   });
+
+  const { data: paymentMethods } = useQuery<PaymentMethodsData>({
+    queryKey: ['/api/payment-methods'],
+  });
+
+  const [showPayPal, setShowPayPal] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'yearly'>('monthly');
 
   const checkoutMutation = useMutation({
     mutationFn: async ({ priceId, includeTrial }: { priceId: string; includeTrial?: boolean }) => {
@@ -343,8 +382,60 @@ export default function PremiumPage() {
                   <Badge variant="secondary" className="gap-1">
                     Google Pay
                   </Badge>
+                  {paymentMethods?.paypal && (
+                    <Badge variant="secondary" className="gap-1">
+                      <SiPaypal className="w-3 h-3" /> PayPal
+                    </Badge>
+                  )}
                 </CardContent>
               </Card>
+
+              {paymentMethods?.paypal && (
+                <Card className="border-blue-500/50">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <SiPaypal className="w-5 h-5 text-blue-600" />
+                      Pay with PayPal
+                    </CardTitle>
+                    <CardDescription>
+                      Quick and secure payment with your PayPal account
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex gap-2">
+                      <Button
+                        variant={selectedPlan === 'monthly' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setSelectedPlan('monthly')}
+                        data-testid="button-paypal-monthly"
+                      >
+                        Monthly (€7)
+                      </Button>
+                      <Button
+                        variant={selectedPlan === 'yearly' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setSelectedPlan('yearly')}
+                        data-testid="button-paypal-yearly"
+                      >
+                        Yearly (€59)
+                      </Button>
+                    </div>
+                    <PayPalButton
+                      amount={selectedPlan === 'monthly' ? '7.00' : '59.00'}
+                      currency="EUR"
+                      intent="CAPTURE"
+                      onSuccess={async () => {
+                        await apiRequest('POST', '/api/premium/activate-paypal', { plan: selectedPlan });
+                        queryClient.invalidateQueries({ queryKey: ['/api/premium/status'] });
+                        toast({
+                          title: "Welcome to Premium!",
+                          description: "Your PayPal payment was successful. Enjoy unlimited likes!",
+                        });
+                      }}
+                    />
+                  </CardContent>
+                </Card>
+              )}
             </section>
           </>
         )}

@@ -307,6 +307,27 @@ export async function registerRoutes(
     res.json(status);
   });
 
+  // Activate premium after PayPal payment
+  app.post('/api/premium/activate-paypal', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    const { plan } = req.body;
+    if (!plan || !['monthly', 'yearly'].includes(plan)) {
+      return res.status(400).json({ error: 'Invalid plan' });
+    }
+    
+    const durationMonths = plan === 'yearly' ? 12 : 1;
+    const expiresAt = new Date();
+    expiresAt.setMonth(expiresAt.getMonth() + durationMonths);
+    
+    await storage.updateUserStripeInfo(req.user!.id, {
+      isPremium: 'true',
+      premiumExpiresAt: expiresAt,
+    });
+    
+    res.json({ success: true, premiumExpiresAt: expiresAt });
+  });
+
   // PayPal routes (conditional - only if credentials are configured)
   app.get("/paypal/setup", async (req, res) => {
     const paypal = await loadPayPal();
