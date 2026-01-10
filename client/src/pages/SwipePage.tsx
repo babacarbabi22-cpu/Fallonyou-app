@@ -126,7 +126,7 @@ export default function SwipePage() {
     <div className="min-h-screen bg-background text-foreground overflow-hidden pb-20">
       {/* Header */}
       <div className="px-6 py-4 flex items-center justify-between">
-        <h1 className="text-3xl font-display font-black"><span className="text-rose-500">Fall</span><span className="text-amber-500">on</span><span className="text-violet-500">You</span></h1>
+        <h1 className="text-3xl font-display font-black"><span className="text-pink-500">Fall</span><span className="text-orange-400">on</span><span className="text-fuchsia-500">You</span></h1>
         <div className="flex items-center gap-2">
           <Sheet open={showFilters} onOpenChange={setShowFilters}>
             <SheetTrigger asChild>
