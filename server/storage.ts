@@ -1,7 +1,14 @@
 
 import { db } from "./db";
-import { users, profiles, photos, matches, ratings, type User, type Profile, type InsertProfile, type Photo, type Match, type Rating } from "@shared/schema";
-import { eq, or, and, ne, sql } from "drizzle-orm";
+import { 
+  users, profiles, photos, matches, ratings, messages, prompts, 
+  promptResponses, superLikes, preferences, blockedUsers, reports,
+  type User, type Profile, type InsertProfile, type Photo, type Match, 
+  type Rating, type Message, type InsertMessage, type Prompt, 
+  type PromptResponse, type SuperLike, type Preferences, type InsertPreferences,
+  type Report, type InsertReport
+} from "@shared/schema";
+import { eq, or, and, ne, sql, desc, gte } from "drizzle-orm";
 
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
@@ -82,6 +89,11 @@ export class DatabaseStorage implements IStorage {
         .returning();
       return created;
     }
+  }
+
+  async getMatchById(matchId: number): Promise<Match | undefined> {
+    const [match] = await db.select().from(matches).where(eq(matches.id, matchId));
+    return match;
   }
 
   async getMatches(userId: string): Promise<Match[]> {
@@ -208,6 +220,188 @@ export class DatabaseStorage implements IStorage {
     const [user] = await db.update(users)
       .set(data)
       .where(eq(users.stripeCustomerId, stripeCustomerId))
+      .returning();
+    return user;
+  }
+
+  // Messages
+  async getMessages(matchId: number): Promise<Message[]> {
+    return db.select().from(messages)
+      .where(eq(messages.matchId, matchId))
+      .orderBy(messages.createdAt);
+  }
+
+  async createMessage(message: InsertMessage): Promise<Message> {
+    const [newMessage] = await db.insert(messages).values(message).returning();
+    return newMessage;
+  }
+
+  async markMessagesAsRead(matchId: number, userId: string): Promise<void> {
+    await db.update(messages)
+      .set({ readAt: new Date() })
+      .where(and(
+        eq(messages.matchId, matchId),
+        ne(messages.senderId, userId),
+        sql`${messages.readAt} IS NULL`
+      ));
+  }
+
+  async getUnreadMessageCount(userId: string): Promise<number> {
+    const userMatches = await this.getMatches(userId);
+    let count = 0;
+    for (const match of userMatches) {
+      if (match.status === 'matched') {
+        const unread = await db.select().from(messages)
+          .where(and(
+            eq(messages.matchId, match.id),
+            ne(messages.senderId, userId),
+            sql`${messages.readAt} IS NULL`
+          ));
+        count += unread.length;
+      }
+    }
+    return count;
+  }
+
+  // Prompts
+  async getAllPrompts(): Promise<Prompt[]> {
+    return db.select().from(prompts);
+  }
+
+  async getPromptResponses(userId: string): Promise<(PromptResponse & { prompt: Prompt })[]> {
+    const responses = await db.select().from(promptResponses)
+      .where(eq(promptResponses.userId, userId));
+    
+    const result = [];
+    for (const response of responses) {
+      const [prompt] = await db.select().from(prompts).where(eq(prompts.id, response.promptId));
+      if (prompt) {
+        result.push({ ...response, prompt });
+      }
+    }
+    return result;
+  }
+
+  async upsertPromptResponse(userId: string, promptId: number, answer: string): Promise<PromptResponse> {
+    const [existing] = await db.select().from(promptResponses)
+      .where(and(eq(promptResponses.userId, userId), eq(promptResponses.promptId, promptId)));
+    
+    if (existing) {
+      const [updated] = await db.update(promptResponses)
+        .set({ answer })
+        .where(eq(promptResponses.id, existing.id))
+        .returning();
+      return updated;
+    } else {
+      const [created] = await db.insert(promptResponses)
+        .values({ userId, promptId, answer })
+        .returning();
+      return created;
+    }
+  }
+
+  // Super Likes
+  async canUserSuperLike(userId: string): Promise<{ canSuperLike: boolean; remaining: number }> {
+    const user = await this.getUser(userId);
+    if (!user) return { canSuperLike: false, remaining: 0 };
+
+    const isPremium = user.isPremium === 'true';
+    const dailyLimit = isPremium ? 5 : 1;
+    
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const lastReset = user.lastSuperLikeResetDate ? new Date(user.lastSuperLikeResetDate) : null;
+    
+    if (!lastReset || lastReset < today) {
+      await db.update(users)
+        .set({ dailySuperLikesUsed: '0', lastSuperLikeResetDate: today })
+        .where(eq(users.id, userId));
+      return { canSuperLike: true, remaining: dailyLimit };
+    }
+
+    const used = parseInt(user.dailySuperLikesUsed || '0');
+    const remaining = Math.max(0, dailyLimit - used);
+    return { canSuperLike: remaining > 0, remaining };
+  }
+
+  async createSuperLike(fromUserId: string, toUserId: string): Promise<SuperLike | null> {
+    const status = await this.canUserSuperLike(fromUserId);
+    if (!status.canSuperLike) return null;
+
+    const user = await this.getUser(fromUserId);
+    const used = parseInt(user?.dailySuperLikesUsed || '0');
+    await db.update(users)
+      .set({ dailySuperLikesUsed: String(used + 1) })
+      .where(eq(users.id, fromUserId));
+
+    const [superLike] = await db.insert(superLikes)
+      .values({ fromUserId, toUserId })
+      .returning();
+    return superLike;
+  }
+
+  async getSuperLikesReceived(userId: string): Promise<SuperLike[]> {
+    return db.select().from(superLikes)
+      .where(eq(superLikes.toUserId, userId))
+      .orderBy(desc(superLikes.createdAt));
+  }
+
+  // Preferences
+  async getPreferences(userId: string): Promise<Preferences | undefined> {
+    const [prefs] = await db.select().from(preferences).where(eq(preferences.userId, userId));
+    return prefs;
+  }
+
+  async upsertPreferences(userId: string, prefs: Partial<InsertPreferences>): Promise<Preferences> {
+    const existing = await this.getPreferences(userId);
+    if (existing) {
+      const [updated] = await db.update(preferences)
+        .set(prefs)
+        .where(eq(preferences.userId, userId))
+        .returning();
+      return updated;
+    } else {
+      const [created] = await db.insert(preferences)
+        .values({ ...prefs, userId } as any)
+        .returning();
+      return created;
+    }
+  }
+
+  // Block & Report
+  async blockUser(userId: string, blockedUserId: string): Promise<void> {
+    await db.insert(blockedUsers).values({ userId, blockedUserId });
+  }
+
+  async unblockUser(userId: string, blockedUserId: string): Promise<void> {
+    await db.delete(blockedUsers).where(
+      and(eq(blockedUsers.userId, userId), eq(blockedUsers.blockedUserId, blockedUserId))
+    );
+  }
+
+  async getBlockedUsers(userId: string): Promise<string[]> {
+    const blocked = await db.select().from(blockedUsers).where(eq(blockedUsers.userId, userId));
+    return blocked.map(b => b.blockedUserId);
+  }
+
+  async reportUser(report: InsertReport): Promise<Report> {
+    const [newReport] = await db.insert(reports).values(report).returning();
+    return newReport;
+  }
+
+  // Verification
+  async verifyUser(userId: string): Promise<User | undefined> {
+    const [user] = await db.update(users)
+      .set({ isVerified: 'true', verifiedAt: new Date() })
+      .where(eq(users.id, userId))
+      .returning();
+    return user;
+  }
+
+  async updateUserLocation(userId: string, location: string, lat?: string, lng?: string): Promise<User | undefined> {
+    const [user] = await db.update(users)
+      .set({ location, latitude: lat, longitude: lng })
+      .where(eq(users.id, userId))
       .returning();
     return user;
   }

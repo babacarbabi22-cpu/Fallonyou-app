@@ -2,7 +2,9 @@ import { useMatches, useCurrentUser } from "@/hooks/use-danceme";
 import { BottomNav } from "@/components/BottomNav";
 import { MatchRatingModal } from "@/components/MatchRatingModal";
 import { useState } from "react";
-import { Loader2, MessageCircle, Star } from "lucide-react";
+import { Loader2, MessageCircle, Star, Shield } from "lucide-react";
+import { Link } from "wouter";
+import { Button } from "@/components/ui/button";
 
 export default function MatchesPage() {
   const { data: currentUser } = useCurrentUser();
@@ -34,33 +36,51 @@ export default function MatchesPage() {
           matches?.map((match) => (
             <div 
               key={match.id}
-              onClick={() => setSelectedMatch({ id: match.id, user: match.otherUser })}
-              className="group relative bg-card p-4 rounded-2xl border shadow-sm hover:shadow-lg transition-all active:scale-[0.98] cursor-pointer flex items-center gap-4"
+              className="group relative bg-card p-4 rounded-2xl border shadow-sm hover:shadow-lg transition-all flex items-center gap-4"
+              data-testid={`match-card-${match.id}`}
             >
-              {/* Avatar */}
               <div className="relative">
                 <img 
-                  src={match.otherUser.photos?.[0]?.url || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=60"} 
-                  alt={match.otherUser.displayName}
+                  src={match.otherUser.photos?.[0]?.url || match.otherUser.profileImageUrl || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=60"} 
+                  alt={match.otherUser.firstName || "Match"}
                   className="w-16 h-16 rounded-full object-cover border-2 border-white shadow-md"
                 />
                 <div className="absolute bottom-0 right-0 w-4 h-4 bg-green-500 border-2 border-white rounded-full"></div>
               </div>
 
-              {/* Info */}
               <div className="flex-1 min-w-0">
-                <h3 className="text-lg font-bold font-display truncate">
-                  {match.otherUser.displayName}
+                <h3 className="text-lg font-bold font-display truncate flex items-center gap-1">
+                  {match.otherUser.firstName || "Someone"}
+                  {match.otherUser.isVerified === 'true' && (
+                    <Shield className="w-4 h-4 text-blue-500" />
+                  )}
                 </h3>
                 <p className="text-sm text-muted-foreground truncate">
-                   Tap to chat and rate...
+                  {match.otherUser.profile?.bio || "Tap to start chatting!"}
                 </p>
               </div>
 
-              {/* Action */}
-              <button className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                <Star className="w-5 h-5" />
-              </button>
+              <div className="flex gap-2">
+                <Link href={`/chat/${match.id}`}>
+                  <Button 
+                    variant="default" 
+                    size="icon"
+                    className="rounded-full"
+                    data-testid={`button-chat-${match.id}`}
+                  >
+                    <MessageCircle className="w-5 h-5" />
+                  </Button>
+                </Link>
+                <Button 
+                  variant="outline" 
+                  size="icon"
+                  className="rounded-full"
+                  onClick={() => setSelectedMatch({ id: match.id, user: match.otherUser })}
+                  data-testid={`button-rate-${match.id}`}
+                >
+                  <Star className="w-5 h-5" />
+                </Button>
+              </div>
             </div>
           ))
         )}

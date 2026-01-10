@@ -30,6 +30,13 @@ export const users = pgTable("users", {
   trialEndsAt: timestamp("trial_ends_at"),
   dailyLikesUsed: varchar("daily_likes_used").default("0"),
   lastLikeResetDate: timestamp("last_like_reset_date"),
+  isVerified: varchar("is_verified").default("false"),
+  verifiedAt: timestamp("verified_at"),
+  location: varchar("location"),
+  latitude: varchar("latitude"),
+  longitude: varchar("longitude"),
+  dailySuperLikesUsed: varchar("daily_super_likes_used").default("0"),
+  lastSuperLikeResetDate: timestamp("last_super_like_reset_date"),
 });
 
 export type UpsertUser = typeof users.$inferInsert;

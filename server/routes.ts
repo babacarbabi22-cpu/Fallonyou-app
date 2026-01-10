@@ -307,6 +307,222 @@ export async function registerRoutes(
     res.json(status);
   });
 
+  // Get single match with user details
+  app.get('/api/matches/:matchId', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const matchId = parseInt(req.params.matchId);
+    const match = await storage.getMatchById(matchId);
+    
+    if (!match) return res.sendStatus(404);
+    if (match.user1Id !== req.user!.id && match.user2Id !== req.user!.id) {
+      return res.sendStatus(403);
+    }
+    
+    const otherId = match.user1Id === req.user!.id ? match.user2Id : match.user1Id;
+    const otherUser = await storage.getUser(otherId);
+    const profile = await storage.getProfile(otherId);
+    const photos = await storage.getPhotos(otherId);
+    
+    res.json({ ...match, otherUser: { ...otherUser, profile, photos } });
+  });
+
+  // ============ MESSAGING ============
+  app.get('/api/matches/:matchId/messages', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const matchId = parseInt(req.params.matchId);
+    
+    const match = await storage.getMatchById(matchId);
+    if (!match) return res.sendStatus(404);
+    if (match.user1Id !== req.user!.id && match.user2Id !== req.user!.id) {
+      return res.sendStatus(403);
+    }
+    
+    const messages = await storage.getMessages(matchId);
+    await storage.markMessagesAsRead(matchId, req.user!.id);
+    res.json(messages);
+  });
+
+  app.post('/api/matches/:matchId/messages', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const matchId = parseInt(req.params.matchId);
+    
+    const match = await storage.getMatchById(matchId);
+    if (!match) return res.sendStatus(404);
+    if (match.user1Id !== req.user!.id && match.user2Id !== req.user!.id) {
+      return res.sendStatus(403);
+    }
+    
+    const { content } = req.body;
+    if (!content?.trim()) return res.status(400).json({ error: 'Message content required' });
+    
+    const message = await storage.createMessage({
+      matchId,
+      senderId: req.user!.id,
+      content: content.trim()
+    });
+    res.status(201).json(message);
+  });
+
+  app.get('/api/messages/unread-count', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const count = await storage.getUnreadMessageCount(req.user!.id);
+    res.json({ count });
+  });
+
+  // ============ PROMPTS ============
+  app.get('/api/prompts', async (req, res) => {
+    const allPrompts = await storage.getAllPrompts();
+    res.json(allPrompts);
+  });
+
+  app.get('/api/prompts/responses', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const responses = await storage.getPromptResponses(req.user!.id);
+    res.json(responses);
+  });
+
+  app.get('/api/users/:userId/prompts', async (req, res) => {
+    const responses = await storage.getPromptResponses(req.params.userId);
+    res.json(responses);
+  });
+
+  app.post('/api/prompts/respond', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const { promptId, answer } = req.body;
+    if (!promptId || !answer?.trim()) {
+      return res.status(400).json({ error: 'Prompt ID and answer required' });
+    }
+    const response = await storage.upsertPromptResponse(req.user!.id, promptId, answer.trim());
+    res.json(response);
+  });
+
+  // ============ SUPER LIKES ============
+  app.get('/api/super-likes/status', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const status = await storage.canUserSuperLike(req.user!.id);
+    res.json(status);
+  });
+
+  app.post('/api/super-likes', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const { toUserId } = req.body;
+    if (!toUserId) return res.status(400).json({ error: 'Target user ID required' });
+    
+    const superLike = await storage.createSuperLike(req.user!.id, toUserId);
+    if (!superLike) {
+      return res.status(429).json({ error: 'No super likes remaining today' });
+    }
+    
+    const match = await storage.createMatch(req.user!.id, toUserId);
+    res.json({ superLike, match, isMatch: match?.status === 'matched' });
+  });
+
+  app.get('/api/super-likes/received', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const user = await storage.getUser(req.user!.id);
+    const isPremium = user?.isPremium === 'true';
+    
+    if (!isPremium) {
+      const superLikes = await storage.getSuperLikesReceived(req.user!.id);
+      return res.json({ count: superLikes.length, users: [], isPremium: false });
+    }
+    
+    const superLikes = await storage.getSuperLikesReceived(req.user!.id);
+    const enriched = await Promise.all(superLikes.map(async sl => {
+      const user = await storage.getUser(sl.fromUserId);
+      const profile = await storage.getProfile(sl.fromUserId);
+      const photos = await storage.getPhotos(sl.fromUserId);
+      return { ...sl, user: { ...user, profile, photos } };
+    }));
+    res.json({ count: superLikes.length, users: enriched, isPremium: true });
+  });
+
+  // ============ PREFERENCES ============
+  app.get('/api/preferences', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const prefs = await storage.getPreferences(req.user!.id);
+    res.json(prefs || { minAge: 18, maxAge: 50, maxDistance: 50, showMe: 'everyone' });
+  });
+
+  app.patch('/api/preferences', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    const existingPrefs = await storage.getPreferences(req.user!.id);
+    const defaults = { minAge: 18, maxAge: 50, maxDistance: 50, showMe: 'everyone' };
+    const current = { ...defaults, ...existingPrefs };
+    
+    const updates: any = {};
+    if (req.body.minAge !== undefined) updates.minAge = req.body.minAge;
+    if (req.body.maxAge !== undefined) updates.maxAge = req.body.maxAge;
+    if (req.body.maxDistance !== undefined) updates.maxDistance = req.body.maxDistance;
+    if (req.body.showMe !== undefined) updates.showMe = req.body.showMe;
+    
+    const merged = { ...current, ...updates };
+    const prefs = await storage.upsertPreferences(req.user!.id, merged);
+    res.json(prefs);
+  });
+
+  // ============ SAFETY ============
+  app.post('/api/users/:userId/block', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    await storage.blockUser(req.user!.id, req.params.userId);
+    res.json({ success: true });
+  });
+
+  app.delete('/api/users/:userId/block', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    await storage.unblockUser(req.user!.id, req.params.userId);
+    res.json({ success: true });
+  });
+
+  app.get('/api/blocked-users', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const blocked = await storage.getBlockedUsers(req.user!.id);
+    res.json(blocked);
+  });
+
+  app.post('/api/users/:userId/report', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const { reason, details } = req.body;
+    if (!reason) return res.status(400).json({ error: 'Report reason required' });
+    
+    const report = await storage.reportUser({
+      reporterId: req.user!.id,
+      reportedUserId: req.params.userId,
+      reason,
+      details
+    });
+    res.json({ success: true, reportId: report.id });
+  });
+
+  // ============ VERIFICATION ============
+  app.get('/api/verification/status', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const user = await storage.getUser(req.user!.id);
+    res.json({
+      isVerified: user?.isVerified === 'true',
+      verifiedAt: user?.verifiedAt
+    });
+  });
+
+  app.post('/api/verification/request', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const user = await storage.verifyUser(req.user!.id);
+    res.json({
+      success: true,
+      isVerified: user?.isVerified === 'true',
+      verifiedAt: user?.verifiedAt
+    });
+  });
+
+  // ============ LOCATION ============
+  app.patch('/api/user/location', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const { location, latitude, longitude } = req.body;
+    const user = await storage.updateUserLocation(req.user!.id, location, latitude, longitude);
+    res.json({ success: true, location: user?.location });
+  });
+
   // Activate premium after PayPal payment
   app.post('/api/premium/activate-paypal', async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
