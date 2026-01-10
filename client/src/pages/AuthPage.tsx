@@ -30,7 +30,7 @@ export default function AuthPage() {
            </div>
         </div>
 
-        <h1 className="text-6xl font-black italic tracking-tighter mb-6 text-[#2193b0] drop-shadow-[0_2px_5px_rgba(33,147,176,0.2)] animate-in slide-in-from-bottom duration-1000">
+        <h1 className="text-6xl font-black italic tracking-tighter mb-6 bg-gradient-to-br from-[#ff5f6d] via-[#ffc371] to-[#2193b0] bg-clip-text text-transparent drop-shadow-[0_4px_12px_rgba(0,0,0,0.15)] animate-in slide-in-from-bottom duration-1000">
           FallonYou
         </h1>
         
