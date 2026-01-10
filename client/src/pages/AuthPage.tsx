@@ -31,7 +31,7 @@ export default function AuthPage() {
         </div>
 
         <h1 className="text-6xl font-black italic tracking-tighter mb-6 text-[#2193b0] drop-shadow-[0_2px_5px_rgba(33,147,176,0.2)] animate-in slide-in-from-bottom duration-1000">
-          Danceme
+          FallonYou
         </h1>
         
         <p className="text-lg text-muted-foreground mb-12 font-medium leading-relaxed italic">
