@@ -12,6 +12,14 @@ import { registerObjectStorageRoutes } from "./replit_integrations/object_storag
 import { stripeService } from "./stripeService";
 import { getStripePublishableKey } from "./stripeClient";
 
+let paypalModule: any = null;
+async function loadPayPal() {
+  if (!paypalModule && process.env.PAYPAL_CLIENT_ID && process.env.PAYPAL_CLIENT_SECRET) {
+    paypalModule = await import("./paypal");
+  }
+  return paypalModule;
+}
+
 const upload = multer({ dest: "uploads/" });
 
 export async function registerRoutes(
@@ -297,6 +305,40 @@ export async function registerRoutes(
     if (!req.isAuthenticated()) return res.sendStatus(401);
     const status = await storage.canUserLike(req.user!.id);
     res.json(status);
+  });
+
+  // PayPal routes (conditional - only if credentials are configured)
+  app.get("/paypal/setup", async (req, res) => {
+    const paypal = await loadPayPal();
+    if (!paypal) {
+      return res.status(503).json({ error: "PayPal not configured" });
+    }
+    await paypal.loadPaypalDefault(req, res);
+  });
+
+  app.post("/paypal/order", async (req, res) => {
+    const paypal = await loadPayPal();
+    if (!paypal) {
+      return res.status(503).json({ error: "PayPal not configured" });
+    }
+    await paypal.createPaypalOrder(req, res);
+  });
+
+  app.post("/paypal/order/:orderID/capture", async (req, res) => {
+    const paypal = await loadPayPal();
+    if (!paypal) {
+      return res.status(503).json({ error: "PayPal not configured" });
+    }
+    await paypal.capturePaypalOrder(req, res);
+  });
+
+  // Check available payment methods
+  app.get("/api/payment-methods", async (req, res) => {
+    const paypal = await loadPayPal();
+    res.json({
+      stripe: true,
+      paypal: !!paypal
+    });
   });
 
   return httpServer;
