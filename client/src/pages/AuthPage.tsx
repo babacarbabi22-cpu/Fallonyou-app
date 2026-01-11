@@ -6,7 +6,7 @@ import { SiGoogle, SiApple, SiGithub } from "react-icons/si";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { useTranslation } from "@/lib/i18n";
 import { Link } from "wouter";
-import fallonYouLogo from "@assets/IMG_1362_1768162016332.jpeg";
+import fallonYouLogo from "@assets/generated_images/fallonyou_logo_with_cupid.png";
 
 const fallingHearts = [
   { delay: 0, duration: 8, left: 5, size: 16, color: "text-blue-500" },
