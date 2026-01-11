@@ -5,13 +5,18 @@ import { useUpload } from "@/hooks/use-upload";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Camera, LogOut, Trash2 } from "lucide-react";
+import { Loader2, Camera, LogOut, Trash2, Globe, Shield } from "lucide-react";
 import { useState, useRef } from "react";
 import { api } from "@shared/routes";
+import { useTranslation } from "@/lib/i18n";
+import { LanguageSelector } from "@/components/LanguageSelector";
+import { VerificationStatus } from "@/components/VerificationBadge";
+import { NotificationToggle } from "@/components/NotificationToggle";
 
 export default function ProfilePage() {
   const { data: user, isLoading } = useCurrentUser();
   const { logout } = useAuth();
+  const t = useTranslation();
   const { mutate: updateProfile, isPending: isUpdating } = useUpdateProfile();
   const { mutate: deletePhoto } = useDeletePhoto();
   
@@ -87,10 +92,11 @@ export default function ProfilePage() {
             />
           </div>
         </div>
-        <div className="absolute top-4 right-4">
-           <Button variant="destructive" size="sm" onClick={() => logout()} className="shadow-lg rounded-full">
+        <div className="absolute top-4 right-4 flex gap-2">
+           <LanguageSelector />
+           <Button variant="destructive" size="sm" onClick={() => logout()} className="shadow-lg rounded-full" data-testid="button-logout">
              <LogOut className="w-4 h-4 mr-2" />
-             Logout
+             {t.profile.logout}
            </Button>
         </div>
       </div>
@@ -98,11 +104,11 @@ export default function ProfilePage() {
       <div className="mt-16 px-6 space-y-8">
         {/* Info Section */}
         <section>
-          <h2 className="text-2xl font-display font-bold mb-4">Edit Profile</h2>
+          <h2 className="text-2xl font-display font-bold mb-4">{t.profile.editProfile}</h2>
           <div className="grid gap-4">
             <div className="grid grid-cols-2 gap-4">
                <div className="space-y-2">
-                 <label className="text-sm font-medium text-muted-foreground">Name</label>
+                 <label className="text-sm font-medium text-muted-foreground">{t.profile.displayName}</label>
                  <Input 
                    value={formState.displayName} 
                    onChange={(e) => setFormState({...formState, displayName: e.target.value})}
@@ -110,7 +116,7 @@ export default function ProfilePage() {
                  />
                </div>
                <div className="space-y-2">
-                 <label className="text-sm font-medium text-muted-foreground">Age</label>
+                 <label className="text-sm font-medium text-muted-foreground">{t.profile.age}</label>
                  <Input 
                    type="number" 
                    value={formState.age}
@@ -121,32 +127,35 @@ export default function ProfilePage() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-muted-foreground">Bio</label>
+              <label className="text-sm font-medium text-muted-foreground">{t.profile.bio}</label>
               <Textarea 
                 value={formState.bio}
                 onChange={(e) => setFormState({...formState, bio: e.target.value})}
                 className="rounded-xl border-gray-200 focus:ring-primary/20 min-h-[100px]"
-                placeholder="Tell us about yourself..."
+                placeholder={t.profile.bio}
+                data-testid="input-bio"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
                <div className="space-y-2">
-                 <label className="text-sm font-medium text-muted-foreground">Gender</label>
+                 <label className="text-sm font-medium text-muted-foreground">{t.profile.gender}</label>
                  <Input 
                    value={formState.gender}
                    onChange={(e) => setFormState({...formState, gender: e.target.value})}
                    className="rounded-xl border-gray-200 focus:ring-primary/20"
-                   placeholder="e.g. Woman"
+                   placeholder={t.profile.gender}
+                   data-testid="input-gender"
                  />
                </div>
                <div className="space-y-2">
-                 <label className="text-sm font-medium text-muted-foreground">Interested In</label>
+                 <label className="text-sm font-medium text-muted-foreground">{t.profile.lookingFor}</label>
                  <Input 
                    value={formState.preference}
                    onChange={(e) => setFormState({...formState, preference: e.target.value})}
                    className="rounded-xl border-gray-200 focus:ring-primary/20"
-                   placeholder="e.g. Men"
+                   placeholder={t.profile.lookingFor}
+                   data-testid="input-preference"
                  />
                </div>
             </div>
@@ -156,14 +165,21 @@ export default function ProfilePage() {
               disabled={isUpdating}
               className="w-full h-12 rounded-xl bg-primary text-primary-foreground font-bold shadow-lg shadow-primary/25 hover:shadow-xl hover:-translate-y-0.5 transition-all mt-4"
             >
-              {isUpdating ? "Saving..." : "Save Changes"}
+              {isUpdating ? t.common.loading : t.profile.save}
             </Button>
           </div>
         </section>
 
+        {/* Verification & Notifications Section */}
+        <section className="space-y-4">
+          <h2 className="text-xl font-display font-bold mb-4">{t.settings.title}</h2>
+          <VerificationStatus />
+          <NotificationToggle />
+        </section>
+
         {/* Photos Section */}
         <section>
-          <h2 className="text-xl font-display font-bold mb-4">My Photos</h2>
+          <h2 className="text-xl font-display font-bold mb-4">{t.profile.photos}</h2>
           <div className="grid grid-cols-3 gap-3">
              {user.photos?.map((photo) => (
                <div key={photo.id} className="relative aspect-square rounded-xl overflow-hidden group">
@@ -184,7 +200,7 @@ export default function ProfilePage() {
                className="aspect-square rounded-xl border-2 border-dashed border-gray-300 flex flex-col items-center justify-center text-gray-400 hover:border-primary hover:text-primary transition-colors bg-gray-50"
              >
                <Camera className="w-6 h-6 mb-1" />
-               <span className="text-xs font-bold">Add</span>
+               <span className="text-xs font-bold">{t.profile.addPhoto}</span>
              </button>
           </div>
         </section>

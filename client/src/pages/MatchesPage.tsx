@@ -2,14 +2,16 @@ import { useMatches, useCurrentUser } from "@/hooks/use-danceme";
 import { BottomNav } from "@/components/BottomNav";
 import { MatchRatingModal } from "@/components/MatchRatingModal";
 import { useState } from "react";
-import { Loader2, MessageCircle, Star, Shield } from "lucide-react";
+import { Loader2, MessageCircle, Star, Shield, Heart } from "lucide-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "@/lib/i18n";
 
 export default function MatchesPage() {
   const { data: currentUser } = useCurrentUser();
   const { data: matches, isLoading } = useMatches();
   const [selectedMatch, setSelectedMatch] = useState<{ id: number, user: any } | null>(null);
+  const t = useTranslation();
 
   if (!currentUser) return null;
 
@@ -23,14 +25,17 @@ export default function MatchesPage() {
 
   return (
     <div className="min-h-screen bg-background pb-24 px-4 pt-6">
-      <h1 className="text-3xl font-display font-bold mb-6 px-2">Matches</h1>
+      <h1 className="text-3xl font-display font-bold mb-6 px-2">{t.matches.title}</h1>
       
       <div className="space-y-4">
         {matches?.length === 0 ? (
           <div className="text-center py-20 opacity-50">
-            <MessageCircle className="w-16 h-16 mx-auto mb-4" />
-            <p className="text-lg font-medium">No matches yet</p>
-            <p className="text-sm">Start swiping to find people!</p>
+            <Heart className="w-16 h-16 mx-auto mb-4" />
+            <p className="text-lg font-medium">{t.matches.noMatches}</p>
+            <p className="text-sm mb-4">{t.matches.startSwiping}</p>
+            <Link href="/">
+              <Button data-testid="button-go-discover">{t.matches.goDiscover}</Button>
+            </Link>
           </div>
         ) : (
           matches?.map((match) => (

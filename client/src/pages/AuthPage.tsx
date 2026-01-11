@@ -1,15 +1,24 @@
 import { Button } from "@/components/ui/button";
 import { Sparkles, Mail } from "lucide-react";
 import { SiGoogle, SiApple, SiGithub } from "react-icons/si";
+import { LanguageSelector } from "@/components/LanguageSelector";
+import { useTranslation } from "@/lib/i18n";
 import generatedLogo from "@assets/generated_images/danceme_logo_with_heart_sunset_scene.png";
 
 export default function AuthPage() {
+  const t = useTranslation();
+  
   const handleLogin = () => {
     window.location.href = "/api/login";
   };
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-background relative overflow-hidden">
+      {/* Language selector */}
+      <div className="absolute top-4 right-4 z-20">
+        <LanguageSelector />
+      </div>
+      
       {/* Decorative blobs */}
       <div className="absolute top-[-10%] right-[-10%] w-[500px] h-[500px] bg-primary/20 rounded-full blur-[100px]" />
       <div className="absolute bottom-[-10%] left-[-10%] w-[500px] h-[500px] bg-secondary/20 rounded-full blur-[100px]" />
@@ -22,7 +31,7 @@ export default function AuthPage() {
            <div className="absolute inset-0 flex items-center justify-center">
              <img 
                src={generatedLogo} 
-               alt="Danceme Logo" 
+               alt="FallonYou Logo" 
                className="w-44 h-44 object-contain rounded-full drop-shadow-[0_20px_50px_rgba(255,0,0,0.4)] animate-in zoom-in duration-700 ease-out border-4 border-white/20"
              />
            </div>
@@ -31,12 +40,12 @@ export default function AuthPage() {
            </div>
         </div>
 
-        <h1 className="text-5xl font-black italic tracking-tighter mb-4 text-black drop-shadow-[0_2px_4px_rgba(0,0,0,0.1)] animate-in slide-in-from-bottom duration-1000">
-          FallonYou
+        <h1 className="text-5xl font-black italic tracking-tighter mb-4 text-foreground drop-shadow-[0_2px_4px_rgba(0,0,0,0.1)] animate-in slide-in-from-bottom duration-1000">
+          {t.app.name}
         </h1>
         
         <p className="text-base text-muted-foreground mb-8 font-medium leading-relaxed italic">
-          "Find your rhythm. Match with people who move like you do."
+          "{t.app.tagline}"
         </p>
 
         <div className="space-y-3">
@@ -45,13 +54,13 @@ export default function AuthPage() {
             className="w-full h-12 text-base rounded-xl font-semibold bg-foreground text-background shadow-lg transition-all"
             data-testid="button-login"
           >
-            Iniciar Sesión / Registrarse
+            {t.auth.loginButton}
           </Button>
           
           {/* Login options info */}
           <div className="pt-4 pb-2">
             <p className="text-sm text-muted-foreground mb-3">
-              Puedes entrar con:
+              {t.auth.loginWith}
             </p>
             <div className="flex justify-center gap-4">
               <div className="flex flex-col items-center gap-1">
@@ -82,7 +91,7 @@ export default function AuthPage() {
           </div>
           
           <p className="text-xs text-muted-foreground mt-6">
-            Al registrarte, aceptas nuestros Términos de Servicio y Política de Privacidad.
+            {t.auth.terms}
           </p>
         </div>
       </div>

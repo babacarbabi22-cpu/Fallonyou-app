@@ -3,6 +3,7 @@ import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { I18nProvider } from "@/lib/i18n";
 import NotFound from "@/pages/not-found";
 import AuthPage from "@/pages/AuthPage";
 import SwipePage from "@/pages/SwipePage";
@@ -10,6 +11,7 @@ import MatchesPage from "@/pages/MatchesPage";
 import ProfilePage from "@/pages/ProfilePage";
 import PremiumPage from "@/pages/PremiumPage";
 import ChatPage from "@/pages/ChatPage";
+import OnboardingPage from "@/pages/OnboardingPage";
 import { useCurrentUser } from "@/hooks/use-danceme";
 
 function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
@@ -40,6 +42,9 @@ function Router() {
       <Route path="/chat/:matchId">
         {() => <ProtectedRoute component={ChatPage} />}
       </Route>
+      <Route path="/onboarding">
+        {() => <ProtectedRoute component={OnboardingPage} />}
+      </Route>
       <Route component={NotFound} />
     </Switch>
   );
@@ -48,10 +53,12 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Router />
-      </TooltipProvider>
+      <I18nProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Router />
+        </TooltipProvider>
+      </I18nProvider>
     </QueryClientProvider>
   );
 }

@@ -1,0 +1,583 @@
+import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
+
+export type Language = "es" | "en" | "fr";
+
+export const translations = {
+  es: {
+    app: {
+      name: "FallonYou",
+      tagline: "Encuentra tu ritmo. Conecta con personas que se mueven como tú.",
+    },
+    auth: {
+      loginButton: "Iniciar Sesión / Registrarse",
+      loginWith: "Puedes entrar con:",
+      terms: "Al registrarte, aceptas nuestros Términos de Servicio y Política de Privacidad.",
+    },
+    nav: {
+      discover: "Descubrir",
+      matches: "Matches",
+      premium: "Premium",
+      profile: "Perfil",
+    },
+    swipe: {
+      noMoreProfiles: "No hay más perfiles",
+      checkBackLater: "Vuelve más tarde para ver nuevos perfiles",
+      filters: "Filtros",
+      ageRange: "Rango de edad",
+      maxDistance: "Distancia máxima",
+      showMe: "Mostrarme",
+      everyone: "Todos",
+      men: "Hombres",
+      women: "Mujeres",
+      apply: "Aplicar filtros",
+      yearsOld: "años",
+      km: "km",
+      superLike: "Super Like",
+      like: "Me gusta",
+      pass: "Pasar",
+      itsAMatch: "¡Es un Match!",
+      matchMessage: "Tú y {name} se han gustado mutuamente",
+      sendMessage: "Enviar mensaje",
+      keepSwiping: "Seguir buscando",
+      dailyLimitReached: "Límite diario alcanzado",
+      upgradeToPremium: "Hazte Premium para likes ilimitados",
+      likesRemaining: "Te quedan {count} likes hoy",
+    },
+    matches: {
+      title: "Tus Matches",
+      noMatches: "Aún no tienes matches",
+      startSwiping: "¡Empieza a deslizar para encontrar tu match!",
+      goDiscover: "Ir a Descubrir",
+      newMatch: "Nuevo",
+      rateMatch: "Calificar",
+      message: "Mensaje",
+      verified: "Verificado",
+    },
+    chat: {
+      typeMessage: "Escribe un mensaje...",
+      send: "Enviar",
+      online: "En línea",
+      offline: "Desconectado",
+      report: "Reportar usuario",
+      block: "Bloquear usuario",
+      unblock: "Desbloquear",
+      blocked: "Has bloqueado a este usuario",
+      reportSent: "Reporte enviado",
+      userBlocked: "Usuario bloqueado",
+      userUnblocked: "Usuario desbloqueado",
+    },
+    profile: {
+      title: "Mi Perfil",
+      editProfile: "Editar perfil",
+      displayName: "Nombre",
+      bio: "Sobre mí",
+      age: "Edad",
+      gender: "Género",
+      lookingFor: "Busco",
+      photos: "Mis fotos",
+      addPhoto: "Añadir foto",
+      deletePhoto: "Eliminar",
+      save: "Guardar cambios",
+      logout: "Cerrar sesión",
+      male: "Hombre",
+      female: "Mujer",
+      other: "Otro",
+      verification: "Verificación",
+      notVerified: "No verificado",
+      verified: "Verificado",
+      verifyNow: "Verificar ahora",
+    },
+    premium: {
+      title: "Hazte Premium",
+      subtitle: "Desbloquea todas las funciones",
+      currentPlan: "Plan actual",
+      freePlan: "Plan Gratuito",
+      features: {
+        unlimitedLikes: "Likes ilimitados",
+        seeWhoLikes: "Ve quién te dio like",
+        priorityVisibility: "Visibilidad prioritaria",
+        noAds: "Sin anuncios",
+        superLikes: "5 Super Likes diarios",
+        rewind: "Deshacer último swipe",
+        passport: "Cambiar ubicación",
+      },
+      monthly: "Mensual",
+      yearly: "Anual",
+      subscribe: "Suscribirse",
+      cancel: "Cancelar suscripción",
+      restore: "Restaurar compras",
+      trial: "Prueba gratis por 7 días",
+      popular: "Más popular",
+      bestValue: "Mejor valor",
+      payWith: "Pagar con",
+    },
+    onboarding: {
+      welcome: "¡Bienvenido a FallonYou!",
+      step1Title: "Completa tu perfil",
+      step1Desc: "Añade tus fotos y cuéntanos sobre ti",
+      step2Title: "Configura tus preferencias",
+      step2Desc: "Dinos qué tipo de personas te gustaría conocer",
+      step3Title: "Verifica tu cuenta",
+      step3Desc: "Añade una selfie para verificar tu identidad",
+      step4Title: "¡Listo para empezar!",
+      step4Desc: "Ya puedes empezar a conocer gente nueva",
+      next: "Siguiente",
+      skip: "Omitir",
+      finish: "Empezar",
+      uploadPhoto: "Subir foto",
+      takePhoto: "Tomar selfie",
+      photoTip: "Tu primera foto será la principal de tu perfil",
+    },
+    verification: {
+      title: "Verifica tu identidad",
+      subtitle: "Toma una selfie para demostrar que eres real",
+      instructions: "Asegúrate de que tu cara esté bien iluminada y visible",
+      takePhoto: "Tomar selfie",
+      retake: "Volver a tomar",
+      submit: "Enviar verificación",
+      pending: "Verificación pendiente",
+      approved: "¡Cuenta verificada!",
+      rejected: "Verificación rechazada. Intenta de nuevo.",
+      benefits: "Los usuarios verificados obtienen más matches",
+    },
+    notifications: {
+      newMatch: "¡Tienes un nuevo match!",
+      newMessage: "Nuevo mensaje de {name}",
+      superLike: "¡{name} te dio Super Like!",
+      enable: "Activar notificaciones",
+      disable: "Desactivar notificaciones",
+    },
+    settings: {
+      title: "Configuración",
+      language: "Idioma",
+      notifications: "Notificaciones",
+      privacy: "Privacidad",
+      help: "Ayuda",
+      about: "Acerca de",
+      deleteAccount: "Eliminar cuenta",
+    },
+    common: {
+      loading: "Cargando...",
+      error: "Algo salió mal",
+      retry: "Reintentar",
+      cancel: "Cancelar",
+      confirm: "Confirmar",
+      save: "Guardar",
+      delete: "Eliminar",
+      edit: "Editar",
+      back: "Volver",
+      close: "Cerrar",
+      yes: "Sí",
+      no: "No",
+      ok: "OK",
+    },
+  },
+  en: {
+    app: {
+      name: "FallonYou",
+      tagline: "Find your rhythm. Match with people who move like you do.",
+    },
+    auth: {
+      loginButton: "Sign In / Sign Up",
+      loginWith: "You can sign in with:",
+      terms: "By signing up, you agree to our Terms of Service and Privacy Policy.",
+    },
+    nav: {
+      discover: "Discover",
+      matches: "Matches",
+      premium: "Premium",
+      profile: "Profile",
+    },
+    swipe: {
+      noMoreProfiles: "No more profiles",
+      checkBackLater: "Check back later for new profiles",
+      filters: "Filters",
+      ageRange: "Age range",
+      maxDistance: "Max distance",
+      showMe: "Show me",
+      everyone: "Everyone",
+      men: "Men",
+      women: "Women",
+      apply: "Apply filters",
+      yearsOld: "years old",
+      km: "km",
+      superLike: "Super Like",
+      like: "Like",
+      pass: "Pass",
+      itsAMatch: "It's a Match!",
+      matchMessage: "You and {name} have liked each other",
+      sendMessage: "Send message",
+      keepSwiping: "Keep swiping",
+      dailyLimitReached: "Daily limit reached",
+      upgradeToPremium: "Go Premium for unlimited likes",
+      likesRemaining: "You have {count} likes left today",
+    },
+    matches: {
+      title: "Your Matches",
+      noMatches: "No matches yet",
+      startSwiping: "Start swiping to find your match!",
+      goDiscover: "Go to Discover",
+      newMatch: "New",
+      rateMatch: "Rate",
+      message: "Message",
+      verified: "Verified",
+    },
+    chat: {
+      typeMessage: "Type a message...",
+      send: "Send",
+      online: "Online",
+      offline: "Offline",
+      report: "Report user",
+      block: "Block user",
+      unblock: "Unblock",
+      blocked: "You have blocked this user",
+      reportSent: "Report sent",
+      userBlocked: "User blocked",
+      userUnblocked: "User unblocked",
+    },
+    profile: {
+      title: "My Profile",
+      editProfile: "Edit profile",
+      displayName: "Name",
+      bio: "About me",
+      age: "Age",
+      gender: "Gender",
+      lookingFor: "Looking for",
+      photos: "My photos",
+      addPhoto: "Add photo",
+      deletePhoto: "Delete",
+      save: "Save changes",
+      logout: "Log out",
+      male: "Male",
+      female: "Female",
+      other: "Other",
+      verification: "Verification",
+      notVerified: "Not verified",
+      verified: "Verified",
+      verifyNow: "Verify now",
+    },
+    premium: {
+      title: "Go Premium",
+      subtitle: "Unlock all features",
+      currentPlan: "Current plan",
+      freePlan: "Free Plan",
+      features: {
+        unlimitedLikes: "Unlimited likes",
+        seeWhoLikes: "See who liked you",
+        priorityVisibility: "Priority visibility",
+        noAds: "No ads",
+        superLikes: "5 Super Likes daily",
+        rewind: "Undo last swipe",
+        passport: "Change location",
+      },
+      monthly: "Monthly",
+      yearly: "Yearly",
+      subscribe: "Subscribe",
+      cancel: "Cancel subscription",
+      restore: "Restore purchases",
+      trial: "Free 7-day trial",
+      popular: "Most popular",
+      bestValue: "Best value",
+      payWith: "Pay with",
+    },
+    onboarding: {
+      welcome: "Welcome to FallonYou!",
+      step1Title: "Complete your profile",
+      step1Desc: "Add your photos and tell us about yourself",
+      step2Title: "Set your preferences",
+      step2Desc: "Tell us what kind of people you'd like to meet",
+      step3Title: "Verify your account",
+      step3Desc: "Add a selfie to verify your identity",
+      step4Title: "Ready to go!",
+      step4Desc: "You can now start meeting new people",
+      next: "Next",
+      skip: "Skip",
+      finish: "Start",
+      uploadPhoto: "Upload photo",
+      takePhoto: "Take selfie",
+      photoTip: "Your first photo will be your main profile picture",
+    },
+    verification: {
+      title: "Verify your identity",
+      subtitle: "Take a selfie to prove you're real",
+      instructions: "Make sure your face is well-lit and visible",
+      takePhoto: "Take selfie",
+      retake: "Retake",
+      submit: "Submit verification",
+      pending: "Verification pending",
+      approved: "Account verified!",
+      rejected: "Verification rejected. Try again.",
+      benefits: "Verified users get more matches",
+    },
+    notifications: {
+      newMatch: "You have a new match!",
+      newMessage: "New message from {name}",
+      superLike: "{name} gave you a Super Like!",
+      enable: "Enable notifications",
+      disable: "Disable notifications",
+    },
+    settings: {
+      title: "Settings",
+      language: "Language",
+      notifications: "Notifications",
+      privacy: "Privacy",
+      help: "Help",
+      about: "About",
+      deleteAccount: "Delete account",
+    },
+    common: {
+      loading: "Loading...",
+      error: "Something went wrong",
+      retry: "Retry",
+      cancel: "Cancel",
+      confirm: "Confirm",
+      save: "Save",
+      delete: "Delete",
+      edit: "Edit",
+      back: "Back",
+      close: "Close",
+      yes: "Yes",
+      no: "No",
+      ok: "OK",
+    },
+  },
+  fr: {
+    app: {
+      name: "FallonYou",
+      tagline: "Trouvez votre rythme. Connectez-vous avec des gens qui bougent comme vous.",
+    },
+    auth: {
+      loginButton: "Se connecter / S'inscrire",
+      loginWith: "Connectez-vous avec:",
+      terms: "En vous inscrivant, vous acceptez nos Conditions d'utilisation et Politique de confidentialité.",
+    },
+    nav: {
+      discover: "Découvrir",
+      matches: "Matches",
+      premium: "Premium",
+      profile: "Profil",
+    },
+    swipe: {
+      noMoreProfiles: "Plus de profils",
+      checkBackLater: "Revenez plus tard pour de nouveaux profils",
+      filters: "Filtres",
+      ageRange: "Tranche d'âge",
+      maxDistance: "Distance max",
+      showMe: "Montrez-moi",
+      everyone: "Tout le monde",
+      men: "Hommes",
+      women: "Femmes",
+      apply: "Appliquer les filtres",
+      yearsOld: "ans",
+      km: "km",
+      superLike: "Super Like",
+      like: "J'aime",
+      pass: "Passer",
+      itsAMatch: "C'est un Match!",
+      matchMessage: "Vous et {name} vous êtes plu mutuellement",
+      sendMessage: "Envoyer un message",
+      keepSwiping: "Continuer à swiper",
+      dailyLimitReached: "Limite quotidienne atteinte",
+      upgradeToPremium: "Passez Premium pour des likes illimités",
+      likesRemaining: "Il vous reste {count} likes aujourd'hui",
+    },
+    matches: {
+      title: "Vos Matches",
+      noMatches: "Pas encore de matches",
+      startSwiping: "Commencez à swiper pour trouver votre match!",
+      goDiscover: "Aller à Découvrir",
+      newMatch: "Nouveau",
+      rateMatch: "Noter",
+      message: "Message",
+      verified: "Vérifié",
+    },
+    chat: {
+      typeMessage: "Écrivez un message...",
+      send: "Envoyer",
+      online: "En ligne",
+      offline: "Hors ligne",
+      report: "Signaler l'utilisateur",
+      block: "Bloquer l'utilisateur",
+      unblock: "Débloquer",
+      blocked: "Vous avez bloqué cet utilisateur",
+      reportSent: "Signalement envoyé",
+      userBlocked: "Utilisateur bloqué",
+      userUnblocked: "Utilisateur débloqué",
+    },
+    profile: {
+      title: "Mon Profil",
+      editProfile: "Modifier le profil",
+      displayName: "Nom",
+      bio: "À propos de moi",
+      age: "Âge",
+      gender: "Genre",
+      lookingFor: "Je cherche",
+      photos: "Mes photos",
+      addPhoto: "Ajouter une photo",
+      deletePhoto: "Supprimer",
+      save: "Enregistrer",
+      logout: "Déconnexion",
+      male: "Homme",
+      female: "Femme",
+      other: "Autre",
+      verification: "Vérification",
+      notVerified: "Non vérifié",
+      verified: "Vérifié",
+      verifyNow: "Vérifier maintenant",
+    },
+    premium: {
+      title: "Passez Premium",
+      subtitle: "Débloquez toutes les fonctionnalités",
+      currentPlan: "Plan actuel",
+      freePlan: "Plan Gratuit",
+      features: {
+        unlimitedLikes: "Likes illimités",
+        seeWhoLikes: "Voyez qui vous a liké",
+        priorityVisibility: "Visibilité prioritaire",
+        noAds: "Sans publicités",
+        superLikes: "5 Super Likes par jour",
+        rewind: "Annuler le dernier swipe",
+        passport: "Changer de lieu",
+      },
+      monthly: "Mensuel",
+      yearly: "Annuel",
+      subscribe: "S'abonner",
+      cancel: "Annuler l'abonnement",
+      restore: "Restaurer les achats",
+      trial: "Essai gratuit de 7 jours",
+      popular: "Le plus populaire",
+      bestValue: "Meilleur rapport qualité-prix",
+      payWith: "Payer avec",
+    },
+    onboarding: {
+      welcome: "Bienvenue sur FallonYou!",
+      step1Title: "Complétez votre profil",
+      step1Desc: "Ajoutez vos photos et parlez-nous de vous",
+      step2Title: "Définissez vos préférences",
+      step2Desc: "Dites-nous quel type de personnes vous aimeriez rencontrer",
+      step3Title: "Vérifiez votre compte",
+      step3Desc: "Ajoutez un selfie pour vérifier votre identité",
+      step4Title: "Prêt à commencer!",
+      step4Desc: "Vous pouvez maintenant commencer à rencontrer de nouvelles personnes",
+      next: "Suivant",
+      skip: "Passer",
+      finish: "Commencer",
+      uploadPhoto: "Télécharger une photo",
+      takePhoto: "Prendre un selfie",
+      photoTip: "Votre première photo sera votre photo de profil principale",
+    },
+    verification: {
+      title: "Vérifiez votre identité",
+      subtitle: "Prenez un selfie pour prouver que vous êtes réel",
+      instructions: "Assurez-vous que votre visage est bien éclairé et visible",
+      takePhoto: "Prendre un selfie",
+      retake: "Reprendre",
+      submit: "Soumettre la vérification",
+      pending: "Vérification en cours",
+      approved: "Compte vérifié!",
+      rejected: "Vérification rejetée. Réessayez.",
+      benefits: "Les utilisateurs vérifiés obtiennent plus de matches",
+    },
+    notifications: {
+      newMatch: "Vous avez un nouveau match!",
+      newMessage: "Nouveau message de {name}",
+      superLike: "{name} vous a donné un Super Like!",
+      enable: "Activer les notifications",
+      disable: "Désactiver les notifications",
+    },
+    settings: {
+      title: "Paramètres",
+      language: "Langue",
+      notifications: "Notifications",
+      privacy: "Confidentialité",
+      help: "Aide",
+      about: "À propos",
+      deleteAccount: "Supprimer le compte",
+    },
+    common: {
+      loading: "Chargement...",
+      error: "Une erreur s'est produite",
+      retry: "Réessayer",
+      cancel: "Annuler",
+      confirm: "Confirmer",
+      save: "Enregistrer",
+      delete: "Supprimer",
+      edit: "Modifier",
+      back: "Retour",
+      close: "Fermer",
+      yes: "Oui",
+      no: "Non",
+      ok: "OK",
+    },
+  },
+};
+
+type TranslationKeys = typeof translations.es;
+
+interface I18nContextType {
+  language: Language;
+  setLanguage: (lang: Language) => void;
+  t: TranslationKeys;
+}
+
+const I18nContext = createContext<I18nContextType | null>(null);
+
+const LANGUAGE_STORAGE_KEY = "fallonyou_language";
+
+const languageNames: Record<Language, string> = {
+  es: "Español",
+  en: "English",
+  fr: "Français",
+};
+
+export function I18nProvider({ children }: { children: ReactNode }) {
+  const [language, setLanguageState] = useState<Language>(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem(LANGUAGE_STORAGE_KEY);
+      if (saved && (saved === "es" || saved === "en" || saved === "fr")) {
+        return saved as Language;
+      }
+      const browserLang = navigator.language.split("-")[0];
+      if (browserLang === "es" || browserLang === "en" || browserLang === "fr") {
+        return browserLang as Language;
+      }
+    }
+    return "es";
+  });
+
+  const setLanguage = (lang: Language) => {
+    setLanguageState(lang);
+    localStorage.setItem(LANGUAGE_STORAGE_KEY, lang);
+  };
+
+  useEffect(() => {
+    document.documentElement.lang = language;
+  }, [language]);
+
+  return (
+    <I18nContext.Provider
+      value={{
+        language,
+        setLanguage,
+        t: translations[language],
+      }}
+    >
+      {children}
+    </I18nContext.Provider>
+  );
+}
+
+export function useI18n() {
+  const context = useContext(I18nContext);
+  if (!context) {
+    throw new Error("useI18n must be used within an I18nProvider");
+  }
+  return context;
+}
+
+export function useTranslation() {
+  const { t } = useI18n();
+  return t;
+}
+
+export { languageNames };

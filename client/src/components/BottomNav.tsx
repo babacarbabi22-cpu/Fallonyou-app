@@ -1,15 +1,17 @@
 import { Link, useLocation } from "wouter";
 import { Heart, MessageCircle, User as UserIcon, Crown } from "lucide-react";
 import { clsx } from "clsx";
+import { useTranslation } from "@/lib/i18n";
 
 export function BottomNav() {
   const [location] = useLocation();
+  const t = useTranslation();
 
   const navItems = [
-    { href: "/", icon: Heart, label: "Discover" },
-    { href: "/matches", icon: MessageCircle, label: "Matches" },
-    { href: "/premium", icon: Crown, label: "Premium" },
-    { href: "/profile", icon: UserIcon, label: "Profile" },
+    { href: "/", icon: Heart, label: t.nav.discover },
+    { href: "/matches", icon: MessageCircle, label: t.nav.matches },
+    { href: "/premium", icon: Crown, label: t.nav.premium },
+    { href: "/profile", icon: UserIcon, label: t.nav.profile },
   ];
 
   return (
