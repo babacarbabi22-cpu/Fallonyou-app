@@ -15,9 +15,9 @@ export function BottomNav() {
   ];
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 p-4 bg-gradient-to-t from-background via-background/95 to-transparent">
+    <div className="fixed bottom-0 left-0 right-0 z-50 p-4 safe-area-bottom bg-gradient-to-t from-background via-background/95 to-transparent">
       <div className="mx-auto max-w-md">
-        <nav className="glass-panel flex items-center justify-around p-2 rounded-full shadow-lg shadow-black/5">
+        <nav className="glass-panel flex items-center justify-around p-2 rounded-full shadow-lg shadow-black/5 touch-manipulation">
           {navItems.map(({ href, icon: Icon, label }) => {
             const isActive = location === href;
             return (

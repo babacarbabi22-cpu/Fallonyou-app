@@ -1,0 +1,26 @@
+{
+  "name": "Fall on You",
+  "short_name": "Fall on You",
+  "description": "Find your perfect match with Fall on You - the modern dating app",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fdf7f8",
+  "theme_color": "#e11d62",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["social", "lifestyle"],
+  "prefer_related_applications": false
+}
