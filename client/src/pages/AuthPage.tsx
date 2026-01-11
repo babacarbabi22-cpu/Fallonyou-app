@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Heart, Sparkles } from "lucide-react";
 import { SiGoogle, SiApple, SiGithub } from "react-icons/si";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { useTranslation } from "@/lib/i18n";
 import { Link } from "wouter";
+import fallonYouLogo from "@assets/IMG_1362_1768162016332.jpeg";
 
 export default function AuthPage() {
   const t = useTranslation();
@@ -30,49 +30,19 @@ export default function AuthPage() {
         <div className="absolute top-[40%] left-[50%] w-[300px] h-[300px] bg-primary/10 rounded-full blur-[80px] animate-pulse" style={{ animationDelay: '0.5s' }} />
       </div>
 
-      {/* Floating hearts decoration */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {[...Array(6)].map((_, i) => (
-          <Heart 
-            key={i}
-            className="absolute text-primary/10 fill-primary/5 animate-pulse"
-            style={{
-              width: `${20 + i * 8}px`,
-              height: `${20 + i * 8}px`,
-              top: `${10 + i * 15}%`,
-              left: `${5 + i * 15}%`,
-              animationDelay: `${i * 0.3}s`,
-              transform: `rotate(${i * 15}deg)`
-            }}
-          />
-        ))}
-      </div>
-
+      
       <div className="relative z-10 w-full max-w-md px-8 text-center">
         
-        {/* Elegant Logo */}
-        <div className="mb-10">
-          {/* Animated heart icon */}
-          <div className="relative mx-auto w-24 h-24 mb-6">
-            <div className="absolute inset-0 bg-gradient-to-br from-primary via-pink-500 to-secondary rounded-full shadow-2xl shadow-primary/40 flex items-center justify-center">
-              <Heart className="w-12 h-12 text-white fill-white" />
-            </div>
-            <div className="absolute inset-0 bg-gradient-to-br from-primary via-pink-500 to-secondary rounded-full animate-ping opacity-20" />
-            <div className="absolute -top-2 -right-2 w-8 h-8 bg-secondary rounded-full flex items-center justify-center shadow-lg animate-bounce">
-              <Sparkles className="w-4 h-4 text-white" />
-            </div>
-          </div>
-
-          {/* FallonYou text logo */}
-          <h1 className="text-6xl font-display font-black tracking-tight leading-none mb-3">
-            <span className="bg-gradient-to-r from-primary via-pink-500 to-secondary bg-clip-text text-transparent drop-shadow-sm">
-              Fallon
-            </span>
-            <span className="text-foreground">You</span>
-          </h1>
+        {/* Logo */}
+        <div className="mb-8">
+          <img 
+            src={fallonYouLogo} 
+            alt="FallonYou Logo" 
+            className="w-64 h-64 mx-auto object-contain drop-shadow-lg"
+          />
           
           {/* Tagline */}
-          <p className="text-base text-muted-foreground font-medium leading-relaxed italic max-w-xs mx-auto">
+          <p className="text-base text-muted-foreground font-medium leading-relaxed italic max-w-xs mx-auto mt-2">
             "{t.app.tagline}"
           </p>
         </div>
