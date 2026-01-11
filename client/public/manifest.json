@@ -1,7 +1,7 @@
 {
-  "name": "Fall on You",
-  "short_name": "Fall on You",
-  "description": "Find your perfect match with Fall on You - the modern dating app",
+  "name": "FallonYou",
+  "short_name": "FallonYou",
+  "description": "Find your perfect match with FallonYou - the modern dating app",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#fdf7f8",

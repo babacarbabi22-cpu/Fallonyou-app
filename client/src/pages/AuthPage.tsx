@@ -1,12 +1,11 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Sparkles, Mail } from "lucide-react";
+import { Heart, Sparkles } from "lucide-react";
 import { SiGoogle, SiApple, SiGithub } from "react-icons/si";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { useTranslation } from "@/lib/i18n";
 import { Link } from "wouter";
-import generatedLogo from "@assets/generated_images/danceme_logo_with_heart_sunset_scene.png";
 
 export default function AuthPage() {
   const t = useTranslation();
@@ -24,100 +23,115 @@ export default function AuthPage() {
         <LanguageSelector />
       </div>
       
-      {/* Decorative blobs */}
-      <div className="absolute top-[-10%] right-[-10%] w-[500px] h-[500px] bg-primary/20 rounded-full blur-[100px]" />
-      <div className="absolute bottom-[-10%] left-[-10%] w-[500px] h-[500px] bg-secondary/20 rounded-full blur-[100px]" />
+      {/* Premium animated background */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute top-[-20%] right-[-20%] w-[600px] h-[600px] bg-gradient-to-br from-primary/30 via-pink-400/20 to-secondary/30 rounded-full blur-[120px] animate-pulse" />
+        <div className="absolute bottom-[-20%] left-[-20%] w-[600px] h-[600px] bg-gradient-to-tr from-secondary/30 via-purple-400/20 to-primary/30 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '1s' }} />
+        <div className="absolute top-[40%] left-[50%] w-[300px] h-[300px] bg-primary/10 rounded-full blur-[80px] animate-pulse" style={{ animationDelay: '0.5s' }} />
+      </div>
+
+      {/* Floating hearts decoration */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {[...Array(6)].map((_, i) => (
+          <Heart 
+            key={i}
+            className="absolute text-primary/10 fill-primary/5 animate-pulse"
+            style={{
+              width: `${20 + i * 8}px`,
+              height: `${20 + i * 8}px`,
+              top: `${10 + i * 15}%`,
+              left: `${5 + i * 15}%`,
+              animationDelay: `${i * 0.3}s`,
+              transform: `rotate(${i * 15}deg)`
+            }}
+          />
+        ))}
+      </div>
 
       <div className="relative z-10 w-full max-w-md px-8 text-center">
         
-        {/* Logo/Icon Animation */}
-        <div className="mx-auto mb-8 w-48 h-48 relative">
-           <div className="absolute inset-0 bg-red-500/10 rounded-full animate-pulse" />
-           <div className="absolute inset-0 flex items-center justify-center">
-             <img 
-               src={generatedLogo} 
-               alt="Fall on You Logo" 
-               className="w-44 h-44 object-contain rounded-full drop-shadow-[0_20px_50px_rgba(255,0,0,0.4)] animate-in zoom-in duration-700 ease-out border-4 border-white/20"
-             />
-           </div>
-           <div className="absolute top-1 right-1 bg-white rounded-full p-2 shadow-xl animate-bounce">
-             <Sparkles className="w-6 h-6 text-red-500 fill-red-200" />
-           </div>
+        {/* Elegant Logo */}
+        <div className="mb-10">
+          {/* Animated heart icon */}
+          <div className="relative mx-auto w-24 h-24 mb-6">
+            <div className="absolute inset-0 bg-gradient-to-br from-primary via-pink-500 to-secondary rounded-full shadow-2xl shadow-primary/40 flex items-center justify-center">
+              <Heart className="w-12 h-12 text-white fill-white" />
+            </div>
+            <div className="absolute inset-0 bg-gradient-to-br from-primary via-pink-500 to-secondary rounded-full animate-ping opacity-20" />
+            <div className="absolute -top-2 -right-2 w-8 h-8 bg-secondary rounded-full flex items-center justify-center shadow-lg animate-bounce">
+              <Sparkles className="w-4 h-4 text-white" />
+            </div>
+          </div>
+
+          {/* FallonYou text logo */}
+          <h1 className="text-6xl font-display font-black tracking-tight leading-none mb-3">
+            <span className="bg-gradient-to-r from-primary via-pink-500 to-secondary bg-clip-text text-transparent drop-shadow-sm">
+              Fallon
+            </span>
+            <span className="text-foreground">You</span>
+          </h1>
+          
+          {/* Tagline */}
+          <p className="text-base text-muted-foreground font-medium leading-relaxed italic max-w-xs mx-auto">
+            "{t.app.tagline}"
+          </p>
         </div>
 
-        <h1 className="text-5xl font-black italic tracking-tighter mb-4 text-foreground drop-shadow-[0_2px_4px_rgba(0,0,0,0.1)] animate-in slide-in-from-bottom duration-1000">
-          {t.app.name}
-        </h1>
-        
-        <p className="text-base text-muted-foreground mb-8 font-medium leading-relaxed italic">
-          "{t.app.tagline}"
-        </p>
-
-        <div className="space-y-3">
+        <div className="space-y-4">
           {/* Age verification checkbox */}
-          <div className="flex items-start gap-3 p-4 bg-muted/50 rounded-xl text-left">
+          <div className="flex items-start gap-3 p-4 bg-card/80 backdrop-blur-sm rounded-2xl border border-border/50 text-left shadow-sm">
             <Checkbox 
               id="age-confirm" 
               checked={ageConfirmed}
               onCheckedChange={(checked) => setAgeConfirmed(checked === true)}
+              className="mt-0.5"
               data-testid="checkbox-age-confirm"
             />
             <label htmlFor="age-confirm" className="text-sm leading-tight cursor-pointer">
-              {t.legal.ageConfirm}
+              <span className="font-medium">{t.legal.ageConfirm}</span>
               <span className="block text-xs text-muted-foreground mt-1">
                 {t.legal.ageRestriction}
               </span>
             </label>
           </div>
 
+          {/* Main login button */}
           <Button 
             onClick={handleLogin}
             disabled={!ageConfirmed}
-            className="w-full h-12 text-base rounded-xl font-semibold bg-foreground text-background shadow-lg transition-all disabled:opacity-50"
+            className="w-full h-14 text-lg rounded-2xl font-bold bg-gradient-to-r from-primary via-pink-500 to-secondary text-white shadow-xl shadow-primary/30 hover:shadow-2xl hover:shadow-primary/40 hover:-translate-y-0.5 transition-all duration-300 disabled:opacity-50 disabled:shadow-none disabled:translate-y-0"
             data-testid="button-login"
           >
             {t.auth.loginButton}
           </Button>
           
           {/* Login options info */}
-          <div className="pt-4 pb-2">
-            <p className="text-sm text-muted-foreground mb-3">
+          <div className="pt-6">
+            <p className="text-sm text-muted-foreground mb-4">
               {t.auth.loginWith}
             </p>
-            <div className="flex justify-center gap-4">
-              <div className="flex flex-col items-center gap-1">
-                <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
-                  <SiGoogle className="w-5 h-5 text-foreground" />
+            <div className="flex justify-center gap-6">
+              {[
+                { icon: SiGoogle, name: "Google" },
+                { icon: SiApple, name: "Apple" },
+                { icon: SiGithub, name: "GitHub" }
+              ].map(({ icon: Icon, name }) => (
+                <div key={name} className="flex flex-col items-center gap-2 group">
+                  <div className="w-12 h-12 rounded-full bg-card border border-border/50 flex items-center justify-center shadow-sm group-hover:shadow-md group-hover:border-primary/30 transition-all duration-300">
+                    <Icon className="w-5 h-5 text-foreground" />
+                  </div>
+                  <span className="text-xs text-muted-foreground">{name}</span>
                 </div>
-                <span className="text-xs text-muted-foreground">Google</span>
-              </div>
-              <div className="flex flex-col items-center gap-1">
-                <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
-                  <SiApple className="w-5 h-5 text-foreground" />
-                </div>
-                <span className="text-xs text-muted-foreground">Apple</span>
-              </div>
-              <div className="flex flex-col items-center gap-1">
-                <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
-                  <SiGithub className="w-5 h-5 text-foreground" />
-                </div>
-                <span className="text-xs text-muted-foreground">GitHub</span>
-              </div>
-              <div className="flex flex-col items-center gap-1">
-                <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
-                  <Mail className="w-5 h-5 text-foreground" />
-                </div>
-                <span className="text-xs text-muted-foreground">Email</span>
-              </div>
+              ))}
             </div>
           </div>
-          
-          <p className="text-xs text-muted-foreground mt-6">
-            {t.auth.terms}{" "}
-            <Link href="/legal" className="underline hover:text-foreground" data-testid="link-legal">
-              {t.legal.title}
+
+          {/* Legal link */}
+          <div className="pt-6">
+            <Link href="/legal" className="text-sm text-muted-foreground hover:text-primary transition-colors underline-offset-4 hover:underline" data-testid="link-legal">
+              {t.legal.terms} & {t.legal.privacy}
             </Link>
-          </p>
+          </div>
         </div>
       </div>
     </div>

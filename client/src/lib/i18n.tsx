@@ -5,7 +5,7 @@ export type Language = "es" | "en" | "fr";
 export const translations = {
   es: {
     app: {
-      name: "Fall on You",
+      name: "FallonYou",
       tagline: "Encuentra tu ritmo. Conecta con personas que se mueven como tú.",
     },
     auth: {
@@ -112,7 +112,7 @@ export const translations = {
       payWith: "Pagar con",
     },
     onboarding: {
-      welcome: "¡Bienvenido a Fall on You!",
+      welcome: "¡Bienvenido a FallonYou!",
       step1Title: "Completa tu perfil",
       step1Desc: "Añade tus fotos y cuéntanos sobre ti",
       step2Title: "Configura tus preferencias",
@@ -164,7 +164,7 @@ export const translations = {
       privacy: "Política de Privacidad",
       ageRestriction: "Debes tener 18 años o más para usar esta aplicación.",
       ageConfirm: "Confirmo que tengo 18 años o más",
-      termsContent: "Al usar Fall on You, aceptas cumplir con estos términos. Nos reservamos el derecho de suspender cuentas que violen nuestras políticas de uso. Está prohibido el contenido inapropiado, el acoso y cualquier comportamiento que ponga en riesgo la seguridad de otros usuarios.",
+      termsContent: "Al usar FallonYou, aceptas cumplir con estos términos. Nos reservamos el derecho de suspender cuentas que violen nuestras políticas de uso. Está prohibido el contenido inapropiado, el acoso y cualquier comportamiento que ponga en riesgo la seguridad de otros usuarios.",
       privacyContent: "Recopilamos información personal para mejorar tu experiencia. Tus datos están protegidos y no serán compartidos con terceros sin tu consentimiento. Puedes solicitar la eliminación de tu cuenta y datos en cualquier momento.",
       lastUpdated: "Última actualización",
       lastUpdatedDate: "Enero 2026",
@@ -206,7 +206,7 @@ export const translations = {
   },
   en: {
     app: {
-      name: "Fall on You",
+      name: "FallonYou",
       tagline: "Find your rhythm. Match with people who move like you do.",
     },
     auth: {
@@ -313,7 +313,7 @@ export const translations = {
       payWith: "Pay with",
     },
     onboarding: {
-      welcome: "Welcome to Fall on You!",
+      welcome: "Welcome to FallonYou!",
       step1Title: "Complete your profile",
       step1Desc: "Add your photos and tell us about yourself",
       step2Title: "Set your preferences",
@@ -365,7 +365,7 @@ export const translations = {
       privacy: "Privacy Policy",
       ageRestriction: "You must be 18 years or older to use this app.",
       ageConfirm: "I confirm I am 18 years or older",
-      termsContent: "By using Fall on You, you agree to comply with these terms. We reserve the right to suspend accounts that violate our usage policies. Inappropriate content, harassment, and any behavior that puts other users at risk is prohibited.",
+      termsContent: "By using FallonYou, you agree to comply with these terms. We reserve the right to suspend accounts that violate our usage policies. Inappropriate content, harassment, and any behavior that puts other users at risk is prohibited.",
       privacyContent: "We collect personal information to improve your experience. Your data is protected and will not be shared with third parties without your consent. You can request deletion of your account and data at any time.",
       lastUpdated: "Last updated",
       lastUpdatedDate: "January 2026",
@@ -407,7 +407,7 @@ export const translations = {
   },
   fr: {
     app: {
-      name: "Fall on You",
+      name: "FallonYou",
       tagline: "Trouvez votre rythme. Connectez-vous avec des gens qui bougent comme vous.",
     },
     auth: {
@@ -514,7 +514,7 @@ export const translations = {
       payWith: "Payer avec",
     },
     onboarding: {
-      welcome: "Bienvenue sur Fall on You!",
+      welcome: "Bienvenue sur FallonYou!",
       step1Title: "Complétez votre profil",
       step1Desc: "Ajoutez vos photos et parlez-nous de vous",
       step2Title: "Définissez vos préférences",
@@ -566,7 +566,7 @@ export const translations = {
       privacy: "Politique de confidentialité",
       ageRestriction: "Vous devez avoir 18 ans ou plus pour utiliser cette application.",
       ageConfirm: "Je confirme avoir 18 ans ou plus",
-      termsContent: "En utilisant Fall on You, vous acceptez de respecter ces conditions. Nous nous réservons le droit de suspendre les comptes qui violent nos politiques d'utilisation. Le contenu inapproprié, le harcèlement et tout comportement mettant en danger la sécurité des autres utilisateurs sont interdits.",
+      termsContent: "En utilisant FallonYou, vous acceptez de respecter ces conditions. Nous nous réservons le droit de suspendre les comptes qui violent nos politiques d'utilisation. Le contenu inapproprié, le harcèlement et tout comportement mettant en danger la sécurité des autres utilisateurs sont interdits.",
       privacyContent: "Nous collectons des informations personnelles pour améliorer votre expérience. Vos données sont protégées et ne seront pas partagées avec des tiers sans votre consentement. Vous pouvez demander la suppression de votre compte et de vos données à tout moment.",
       lastUpdated: "Dernière mise à jour",
       lastUpdatedDate: "Janvier 2026",

@@ -1,6 +1,6 @@
 {
   "appId": "com.fallonyou.app",
-  "appName": "Fall on You",
+  "appName": "FallonYou",
   "webDir": "dist/public",
   "bundledWebRuntime": false,
   "server": {
