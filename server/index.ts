@@ -54,7 +54,9 @@ async function initStripe() {
   }
 }
 
-initStripe();
+initStripe().catch(err => {
+  console.error('Stripe initialization error (non-fatal):', err);
+});
 
 app.post(
   '/api/stripe/webhook',
