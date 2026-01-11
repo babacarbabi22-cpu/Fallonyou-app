@@ -12,6 +12,7 @@ import ProfilePage from "@/pages/ProfilePage";
 import PremiumPage from "@/pages/PremiumPage";
 import ChatPage from "@/pages/ChatPage";
 import OnboardingPage from "@/pages/OnboardingPage";
+import LegalPage from "@/pages/LegalPage";
 import { useCurrentUser } from "@/hooks/use-danceme";
 
 function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
@@ -45,6 +46,7 @@ function Router() {
       <Route path="/onboarding">
         {() => <ProtectedRoute component={OnboardingPage} />}
       </Route>
+      <Route path="/legal" component={LegalPage} />
       <Route component={NotFound} />
     </Switch>
   );

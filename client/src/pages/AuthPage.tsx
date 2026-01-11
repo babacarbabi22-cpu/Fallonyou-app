@@ -1,14 +1,19 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Sparkles, Mail } from "lucide-react";
 import { SiGoogle, SiApple, SiGithub } from "react-icons/si";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { useTranslation } from "@/lib/i18n";
+import { Link } from "wouter";
 import generatedLogo from "@assets/generated_images/danceme_logo_with_heart_sunset_scene.png";
 
 export default function AuthPage() {
   const t = useTranslation();
+  const [ageConfirmed, setAgeConfirmed] = useState(false);
   
   const handleLogin = () => {
+    if (!ageConfirmed) return;
     window.location.href = "/api/login";
   };
 
@@ -49,9 +54,26 @@ export default function AuthPage() {
         </p>
 
         <div className="space-y-3">
+          {/* Age verification checkbox */}
+          <div className="flex items-start gap-3 p-4 bg-muted/50 rounded-xl text-left">
+            <Checkbox 
+              id="age-confirm" 
+              checked={ageConfirmed}
+              onCheckedChange={(checked) => setAgeConfirmed(checked === true)}
+              data-testid="checkbox-age-confirm"
+            />
+            <label htmlFor="age-confirm" className="text-sm leading-tight cursor-pointer">
+              {t.legal.ageConfirm}
+              <span className="block text-xs text-muted-foreground mt-1">
+                {t.legal.ageRestriction}
+              </span>
+            </label>
+          </div>
+
           <Button 
             onClick={handleLogin}
-            className="w-full h-12 text-base rounded-xl font-semibold bg-foreground text-background shadow-lg transition-all"
+            disabled={!ageConfirmed}
+            className="w-full h-12 text-base rounded-xl font-semibold bg-foreground text-background shadow-lg transition-all disabled:opacity-50"
             data-testid="button-login"
           >
             {t.auth.loginButton}
@@ -91,7 +113,10 @@ export default function AuthPage() {
           </div>
           
           <p className="text-xs text-muted-foreground mt-6">
-            {t.auth.terms}
+            {t.auth.terms}{" "}
+            <Link href="/legal" className="underline hover:text-foreground" data-testid="link-legal">
+              {t.legal.title}
+            </Link>
           </p>
         </div>
       </div>

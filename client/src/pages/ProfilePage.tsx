@@ -12,6 +12,9 @@ import { useTranslation } from "@/lib/i18n";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { VerificationStatus } from "@/components/VerificationBadge";
 import { NotificationToggle } from "@/components/NotificationToggle";
+import { Link } from "wouter";
+import { Card, CardContent } from "@/components/ui/card";
+import { FileText, Mail } from "lucide-react";
 
 export default function ProfilePage() {
   const { data: user, isLoading } = useCurrentUser();
@@ -175,6 +178,37 @@ export default function ProfilePage() {
           <h2 className="text-xl font-display font-bold mb-4">{t.settings.title}</h2>
           <VerificationStatus />
           <NotificationToggle />
+          
+          {/* Legal & Support */}
+          <Link href="/legal">
+            <Card className="border-dashed cursor-pointer hover-elevate">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
+                    <FileText className="w-5 h-5 text-muted-foreground" />
+                  </div>
+                  <div>
+                    <p className="font-medium">{t.legal.title}</p>
+                    <p className="text-sm text-muted-foreground">{t.legal.terms} & {t.legal.privacy}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+          
+          <Card className="border-dashed">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
+                  <Mail className="w-5 h-5 text-muted-foreground" />
+                </div>
+                <div>
+                  <p className="font-medium">{t.settings.support}</p>
+                  <p className="text-sm text-muted-foreground">{t.settings.contactEmail}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </section>
 
         {/* Photos Section */}
