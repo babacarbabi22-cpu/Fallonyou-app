@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
-import { Loader2, Sparkles } from "lucide-react";
+import { Sparkles, Mail } from "lucide-react";
+import { SiGoogle, SiApple, SiGithub } from "react-icons/si";
 import generatedLogo from "@assets/generated_images/danceme_logo_with_heart_sunset_scene.png";
 
 export default function AuthPage() {
@@ -16,38 +17,72 @@ export default function AuthPage() {
       <div className="relative z-10 w-full max-w-md px-8 text-center">
         
         {/* Logo/Icon Animation */}
-        <div className="mx-auto mb-10 w-56 h-56 relative">
+        <div className="mx-auto mb-8 w-48 h-48 relative">
            <div className="absolute inset-0 bg-red-500/10 rounded-full animate-pulse" />
            <div className="absolute inset-0 flex items-center justify-center">
              <img 
                src={generatedLogo} 
                alt="Danceme Logo" 
-               className="w-52 h-52 object-contain rounded-full drop-shadow-[0_20px_50px_rgba(255,0,0,0.4)] animate-in zoom-in duration-700 ease-out border-4 border-white/20"
+               className="w-44 h-44 object-contain rounded-full drop-shadow-[0_20px_50px_rgba(255,0,0,0.4)] animate-in zoom-in duration-700 ease-out border-4 border-white/20"
              />
            </div>
-           <div className="absolute top-2 right-2 bg-white rounded-full p-3 shadow-xl animate-bounce">
-             <Sparkles className="w-8 h-8 text-red-500 fill-red-200" />
+           <div className="absolute top-1 right-1 bg-white rounded-full p-2 shadow-xl animate-bounce">
+             <Sparkles className="w-6 h-6 text-red-500 fill-red-200" />
            </div>
         </div>
 
-        <h1 className="text-6xl font-black italic tracking-tighter mb-6 text-black drop-shadow-[0_2px_4px_rgba(0,0,0,0.1)] animate-in slide-in-from-bottom duration-1000">
+        <h1 className="text-5xl font-black italic tracking-tighter mb-4 text-black drop-shadow-[0_2px_4px_rgba(0,0,0,0.1)] animate-in slide-in-from-bottom duration-1000">
           FallonYou
         </h1>
         
-        <p className="text-lg text-muted-foreground mb-12 font-medium leading-relaxed italic">
+        <p className="text-base text-muted-foreground mb-8 font-medium leading-relaxed italic">
           "Find your rhythm. Match with people who move like you do."
         </p>
 
-        <div className="space-y-4">
+        <div className="space-y-3">
           <Button 
             onClick={handleLogin}
-            className="w-full h-14 text-lg rounded-2xl font-bold bg-foreground text-background hover:bg-foreground/90 shadow-xl transition-all hover:scale-[1.02] active:scale-[0.98]"
+            className="w-full h-12 text-base rounded-xl font-semibold bg-foreground text-background shadow-lg transition-all"
+            data-testid="button-login"
           >
-            Continue with Replit Auth
+            Iniciar Sesión / Registrarse
           </Button>
           
-          <p className="text-xs text-muted-foreground mt-8">
-            By signing up, you agree to our Terms of Service and Privacy Policy.
+          {/* Login options info */}
+          <div className="pt-4 pb-2">
+            <p className="text-sm text-muted-foreground mb-3">
+              Puedes entrar con:
+            </p>
+            <div className="flex justify-center gap-4">
+              <div className="flex flex-col items-center gap-1">
+                <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
+                  <SiGoogle className="w-5 h-5 text-foreground" />
+                </div>
+                <span className="text-xs text-muted-foreground">Google</span>
+              </div>
+              <div className="flex flex-col items-center gap-1">
+                <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
+                  <SiApple className="w-5 h-5 text-foreground" />
+                </div>
+                <span className="text-xs text-muted-foreground">Apple</span>
+              </div>
+              <div className="flex flex-col items-center gap-1">
+                <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
+                  <SiGithub className="w-5 h-5 text-foreground" />
+                </div>
+                <span className="text-xs text-muted-foreground">GitHub</span>
+              </div>
+              <div className="flex flex-col items-center gap-1">
+                <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
+                  <Mail className="w-5 h-5 text-foreground" />
+                </div>
+                <span className="text-xs text-muted-foreground">Email</span>
+              </div>
+            </div>
+          </div>
+          
+          <p className="text-xs text-muted-foreground mt-6">
+            Al registrarte, aceptas nuestros Términos de Servicio y Política de Privacidad.
           </p>
         </div>
       </div>
