@@ -31,7 +31,7 @@ export default function AuthPage() {
            <div className="absolute inset-0 flex items-center justify-center">
              <img 
                src={generatedLogo} 
-               alt="FallonYou Logo" 
+               alt="Fall on You Logo" 
                className="w-44 h-44 object-contain rounded-full drop-shadow-[0_20px_50px_rgba(255,0,0,0.4)] animate-in zoom-in duration-700 ease-out border-4 border-white/20"
              />
            </div>

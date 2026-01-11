@@ -5,7 +5,7 @@ export type Language = "es" | "en" | "fr";
 export const translations = {
   es: {
     app: {
-      name: "FallonYou",
+      name: "Fall on You",
       tagline: "Encuentra tu ritmo. Conecta con personas que se mueven como tú.",
     },
     auth: {
@@ -112,7 +112,7 @@ export const translations = {
       payWith: "Pagar con",
     },
     onboarding: {
-      welcome: "¡Bienvenido a FallonYou!",
+      welcome: "¡Bienvenido a Fall on You!",
       step1Title: "Completa tu perfil",
       step1Desc: "Añade tus fotos y cuéntanos sobre ti",
       step2Title: "Configura tus preferencias",
@@ -174,7 +174,7 @@ export const translations = {
   },
   en: {
     app: {
-      name: "FallonYou",
+      name: "Fall on You",
       tagline: "Find your rhythm. Match with people who move like you do.",
     },
     auth: {
@@ -281,7 +281,7 @@ export const translations = {
       payWith: "Pay with",
     },
     onboarding: {
-      welcome: "Welcome to FallonYou!",
+      welcome: "Welcome to Fall on You!",
       step1Title: "Complete your profile",
       step1Desc: "Add your photos and tell us about yourself",
       step2Title: "Set your preferences",
@@ -343,7 +343,7 @@ export const translations = {
   },
   fr: {
     app: {
-      name: "FallonYou",
+      name: "Fall on You",
       tagline: "Trouvez votre rythme. Connectez-vous avec des gens qui bougent comme vous.",
     },
     auth: {
@@ -450,7 +450,7 @@ export const translations = {
       payWith: "Payer avec",
     },
     onboarding: {
-      welcome: "Bienvenue sur FallonYou!",
+      welcome: "Bienvenue sur Fall on You!",
       step1Title: "Complétez votre profil",
       step1Desc: "Ajoutez vos photos et parlez-nous de vous",
       step2Title: "Définissez vos préférences",
