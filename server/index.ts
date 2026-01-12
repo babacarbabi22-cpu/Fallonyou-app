@@ -9,6 +9,11 @@ import { WebhookHandlers } from './webhookHandlers';
 const app = express();
 const httpServer = createServer(app);
 
+// Health check endpoint - must respond immediately for deployment
+app.get('/health', (_req, res) => {
+  res.status(200).json({ status: 'ok', timestamp: Date.now() });
+});
+
 declare module "http" {
   interface IncomingMessage {
     rawBody: unknown;
