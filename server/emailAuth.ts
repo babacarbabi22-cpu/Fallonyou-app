@@ -82,11 +82,17 @@ export async function setupAuth(app: Express) {
         lastName: newUser.lastName,
       };
 
-      res.status(201).json({
-        id: newUser.id,
-        email: newUser.email,
-        firstName: newUser.firstName,
-        lastName: newUser.lastName,
+      req.session.save((err) => {
+        if (err) {
+          console.error("Session save error:", err);
+          return res.status(500).json({ error: "Registration failed" });
+        }
+        res.status(201).json({
+          id: newUser.id,
+          email: newUser.email,
+          firstName: newUser.firstName,
+          lastName: newUser.lastName,
+        });
       });
     } catch (error: any) {
       console.error("Registration error:", error);
@@ -122,11 +128,17 @@ export async function setupAuth(app: Express) {
         lastName: user.lastName,
       };
 
-      res.json({
-        id: user.id,
-        email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
+      req.session.save((err) => {
+        if (err) {
+          console.error("Session save error:", err);
+          return res.status(500).json({ error: "Login failed" });
+        }
+        res.json({
+          id: user.id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+        });
       });
     } catch (error: any) {
       console.error("Login error:", error);
