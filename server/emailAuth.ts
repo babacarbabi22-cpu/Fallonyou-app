@@ -18,12 +18,13 @@ declare global {
 }
 
 export function getSession() {
-  const sessionTtl = 7 * 24 * 60 * 60 * 1000; // 1 week
+  const sessionTtlSeconds = 7 * 24 * 60 * 60; // 1 week in seconds
+  const sessionTtlMs = sessionTtlSeconds * 1000; // 1 week in milliseconds
   const pgStore = connectPg(session);
   const sessionStore = new pgStore({
     conString: process.env.DATABASE_URL,
     createTableIfMissing: false,
-    ttl: sessionTtl,
+    ttl: sessionTtlSeconds, // connect-pg-simple expects seconds
     tableName: "sessions",
   });
   return session({
@@ -34,7 +35,7 @@ export function getSession() {
     cookie: {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      maxAge: sessionTtl,
+      maxAge: sessionTtlMs, // cookie maxAge expects milliseconds
       sameSite: "lax",
     },
   });
@@ -146,16 +147,19 @@ export async function setupAuth(app: Express) {
     }
   });
 
-  // Logout endpoint
-  app.post("/api/logout", (req, res) => {
-    req.session.destroy((err) => {
+  // Logout endpoint - support both GET and POST for flexibility
+  const handleLogout = (req: any, res: any) => {
+    req.session.destroy((err: any) => {
       if (err) {
         return res.status(500).json({ error: "Logout failed" });
       }
       res.clearCookie("connect.sid");
       res.json({ success: true });
     });
-  });
+  };
+  
+  app.post("/api/logout", handleLogout);
+  app.get("/api/logout", handleLogout);
 
   // Get current user
   app.get("/api/user", async (req, res) => {
