@@ -57,8 +57,8 @@ export function SwipeCard({ user, onSwipe }: SwipeCardProps) {
           <span className="text-4xl font-bold text-red-500 uppercase tracking-widest">Nope</span>
         </motion.div>
 
-        {/* Gradient Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/80 pointer-events-none" />
+        {/* Gradient Overlay - pointer-events-none to allow clicking through */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/80 pointer-events-none z-0" />
 
         {/* Content */}
         <div className="absolute bottom-0 left-0 right-0 p-6 text-white z-10">
@@ -67,16 +67,18 @@ export function SwipeCard({ user, onSwipe }: SwipeCardProps) {
               {user.displayName}, <span className="text-3xl font-medium opacity-90">{user.age}</span>
             </h2>
             {/* Action buttons embedded in card for tap interaction */}
-            <div className="flex gap-4 mb-2">
+            <div className="flex gap-4 mb-2 relative z-30">
               <button 
                 onClick={(e) => { e.stopPropagation(); setExitX(-200); onSwipe("left"); }}
                 className="w-12 h-12 flex items-center justify-center rounded-full bg-white/20 backdrop-blur-md border border-white/30 text-red-400 hover:bg-white hover:scale-110 transition-all"
+                data-testid="button-pass"
               >
                 <X size={24} strokeWidth={3} />
               </button>
               <button 
                 onClick={(e) => { e.stopPropagation(); setExitX(200); onSwipe("right"); }}
                 className="w-12 h-12 flex items-center justify-center rounded-full bg-primary text-white shadow-lg hover:scale-110 transition-all"
+                data-testid="button-like"
               >
                 <Heart size={24} fill="currentColor" />
               </button>
