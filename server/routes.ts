@@ -101,6 +101,19 @@ export async function registerRoutes(
     res.sendStatus(204);
   });
 
+  // Set profile image
+  app.patch('/api/profile-image', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const { url } = req.body;
+    if (!url || typeof url !== 'string') {
+      return res.status(400).json({ error: 'URL is required' });
+    }
+    await db.update(users)
+      .set({ profileImageUrl: url })
+      .where(eq(users.id, req.user!.id));
+    res.json({ success: true, profileImageUrl: url });
+  });
+
   // Matches
   app.post(api.matches.create.path, async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);

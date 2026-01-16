@@ -5,7 +5,7 @@ import { useUpload } from "@/hooks/use-upload";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Camera, LogOut, Trash2, Globe, Shield } from "lucide-react";
+import { Loader2, Camera, LogOut, Trash2, Globe, Shield, User, Star } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { api } from "@shared/routes";
 import { useToast } from "@/hooks/use-toast";
@@ -16,6 +16,7 @@ import { NotificationToggle } from "@/components/NotificationToggle";
 import { Link } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { FileText, Mail } from "lucide-react";
+import { queryClient } from "@/lib/queryClient";
 
 export default function ProfilePage() {
   const { data: user, isLoading } = useCurrentUser();
@@ -88,9 +89,36 @@ export default function ProfilePage() {
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // In a real implementation, we would bridge the Object Storage upload 
-      // with the Danceme Photo API. For this demo, we assume the hook works.
       await uploadFile(file);
+    }
+  };
+
+  const [isSettingProfilePic, setIsSettingProfilePic] = useState(false);
+  
+  const setAsProfilePicture = async (photoUrl: string) => {
+    setIsSettingProfilePic(true);
+    try {
+      const res = await fetch('/api/profile-image', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: photoUrl }),
+        credentials: 'include'
+      });
+      if (res.ok) {
+        toast({
+          title: t.profile.profilePhotoSet || "Profile photo set",
+          description: t.profile.profilePhotoSetDescription || "Your profile photo has been updated",
+        });
+        queryClient.invalidateQueries({ queryKey: [api.auth.me.path] });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to set profile photo",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSettingProfilePic(false);
     }
   };
 
@@ -101,7 +129,7 @@ export default function ProfilePage() {
         <div className="absolute -bottom-12 left-6">
           <div className="relative w-24 h-24">
             <img 
-              src={user.photos?.[0]?.url || "https://images.unsplash.com/photo-1511367461989-f85a21fda167?w=200&auto=format&fit=crop&q=60"} 
+              src={user.profileImageUrl || user.photos?.[0]?.url || "https://images.unsplash.com/photo-1511367461989-f85a21fda167?w=200&auto=format&fit=crop&q=60"} 
               className="w-full h-full rounded-full object-cover border-4 border-background shadow-lg"
               alt="Profile"
             />
@@ -109,6 +137,7 @@ export default function ProfilePage() {
               onClick={() => fileInputRef.current?.click()}
               disabled={isUploading}
               className="absolute bottom-0 right-0 p-2 bg-primary text-white rounded-full shadow-lg hover:scale-110 transition-transform"
+              data-testid="button-upload-photo"
             >
               {isUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Camera className="w-4 h-4" />}
             </button>
@@ -116,8 +145,9 @@ export default function ProfilePage() {
               type="file" 
               ref={fileInputRef} 
               className="hidden" 
-              accept="image/*"
+              accept="image/*,video/*"
               onChange={handleFileChange}
+              data-testid="input-file-upload"
             />
           </div>
         </div>
@@ -240,24 +270,48 @@ export default function ProfilePage() {
         {/* Photos Section */}
         <section>
           <h2 className="text-xl font-display font-bold mb-4">{t.profile.photos}</h2>
+          <p className="text-sm text-muted-foreground mb-3">{t.profile.tapToSetProfile || "Tap a photo to set as profile picture"}</p>
           <div className="grid grid-cols-3 gap-3">
-             {user.photos?.map((photo) => (
-               <div key={photo.id} className="relative aspect-square rounded-xl overflow-hidden group">
-                 <img src={photo.url} className="w-full h-full object-cover" alt="User photo" />
-                 <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                   <button 
-                     onClick={() => deletePhoto(photo.id)}
-                     className="p-2 bg-red-500 rounded-full text-white hover:bg-red-600 transition-colors"
-                   >
-                     <Trash2 className="w-4 h-4" />
-                   </button>
+             {user.photos?.map((photo) => {
+               const isProfilePic = user.profileImageUrl === photo.url;
+               return (
+                 <div key={photo.id} className="relative aspect-square rounded-xl overflow-hidden group">
+                   <img src={photo.url} className="w-full h-full object-cover" alt="User photo" />
+                   {isProfilePic && (
+                     <div className="absolute top-2 left-2 bg-primary text-white p-1 rounded-full">
+                       <Star className="w-3 h-3 fill-current" />
+                     </div>
+                   )}
+                   <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                     <Button 
+                       size="icon"
+                       onClick={() => setAsProfilePicture(photo.url)}
+                       disabled={isSettingProfilePic || isProfilePic}
+                       className="rounded-full"
+                       title={t.profile.setAsProfile || "Set as profile picture"}
+                       data-testid={`button-set-profile-${photo.id}`}
+                     >
+                       <User className="w-4 h-4" />
+                     </Button>
+                     <Button 
+                       size="icon"
+                       variant="destructive"
+                       onClick={() => deletePhoto(photo.id)}
+                       className="rounded-full"
+                       title={t.profile.deletePhoto || "Delete photo"}
+                       data-testid={`button-delete-photo-${photo.id}`}
+                     >
+                       <Trash2 className="w-4 h-4" />
+                     </Button>
+                   </div>
                  </div>
-               </div>
-             ))}
+               );
+             })}
              {/* Add button placeholder */}
              <button 
                onClick={() => fileInputRef.current?.click()}
                className="aspect-square rounded-xl border-2 border-dashed border-gray-300 flex flex-col items-center justify-center text-gray-400 hover:border-primary hover:text-primary transition-colors bg-gray-50"
+               data-testid="button-add-photo"
              >
                <Camera className="w-6 h-6 mb-1" />
                <span className="text-xs font-bold">{t.profile.addPhoto}</span>

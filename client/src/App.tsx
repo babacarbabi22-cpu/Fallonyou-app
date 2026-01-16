@@ -5,6 +5,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { I18nProvider, useTranslation } from "@/lib/i18n";
+import { HeartCascade } from "@/components/HeartCascade";
 import NotFound from "@/pages/not-found";
 import AuthPage from "@/pages/AuthPage";
 import SwipePage from "@/pages/SwipePage";
@@ -123,6 +124,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <I18nProvider>
         <TooltipProvider>
+          <HeartCascade />
           <Toaster />
           <Router />
         </TooltipProvider>

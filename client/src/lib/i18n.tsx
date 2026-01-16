@@ -99,6 +99,10 @@ export const translations = {
       notVerified: "No verificado",
       verified: "Verificado",
       verifyNow: "Verificar ahora",
+      profilePhotoSet: "Foto de perfil establecida",
+      profilePhotoSetDescription: "Tu foto de perfil ha sido actualizada",
+      tapToSetProfile: "Toca una foto para establecerla como foto de perfil",
+      setAsProfile: "Establecer como foto de perfil",
     },
     premium: {
       title: "Hazte Premium",
@@ -315,6 +319,10 @@ export const translations = {
       notVerified: "Not verified",
       verified: "Verified",
       verifyNow: "Verify now",
+      profilePhotoSet: "Profile photo set",
+      profilePhotoSetDescription: "Your profile photo has been updated",
+      tapToSetProfile: "Tap a photo to set as profile picture",
+      setAsProfile: "Set as profile picture",
     },
     premium: {
       title: "Go Premium",
@@ -531,6 +539,10 @@ export const translations = {
       notVerified: "Non vérifié",
       verified: "Vérifié",
       verifyNow: "Vérifier maintenant",
+      profilePhotoSet: "Photo de profil définie",
+      profilePhotoSetDescription: "Votre photo de profil a été mise à jour",
+      tapToSetProfile: "Appuyez sur une photo pour la définir comme photo de profil",
+      setAsProfile: "Définir comme photo de profil",
     },
     premium: {
       title: "Passez Premium",
