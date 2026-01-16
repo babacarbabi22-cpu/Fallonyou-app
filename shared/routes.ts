@@ -15,13 +15,36 @@ export const errorSchemas = {
   }),
 };
 
+// Extended user type returned by /api/user endpoint
+export type CurrentUserResponse = {
+  id: string;
+  email: string | null;
+  firstName: string | null;
+  lastName: string | null;
+  displayName: string | null;
+  profileImageUrl: string | null;
+  isPremium: string | null;
+  isVerified: string | null;
+  location: string | null;
+  createdAt: Date | null;
+  ageConfirmed: boolean;
+  ageConfirmedAt: Date | null;
+  profile: typeof profiles.$inferSelect | null;
+  photos: (typeof photos.$inferSelect)[];
+  // Profile fields at top level for convenience
+  bio: string | null | undefined;
+  age: number | null | undefined;
+  gender: string | null | undefined;
+  preference: string | null | undefined;
+};
+
 export const api = {
   auth: {
     me: {
       method: 'GET' as const,
       path: '/api/user',
       responses: {
-        200: z.custom<typeof users.$inferSelect & { profile: typeof profiles.$inferSelect | null }>().nullable(),
+        200: z.custom<CurrentUserResponse>().nullable(),
       },
     }
   },

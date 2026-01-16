@@ -28,11 +28,12 @@ export default function ProfilePage() {
   // Custom upload hook
   const { uploadFile, isUploading } = useUpload({
     onSuccess: async (response) => {
+       // Use objectPath which is the normalized path to access the file
        await fetch(api.photos.upload.path, {
          method: 'POST',
          headers: { 'Content-Type': 'application/json' },
          body: JSON.stringify({ 
-           url: response.uploadURL.split('?')[0],
+           url: response.objectPath,
            type: 'image' 
          }),
          credentials: 'include'
