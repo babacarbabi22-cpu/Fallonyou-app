@@ -5,7 +5,9 @@ import { useUpload } from "@/hooks/use-upload";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Camera, LogOut, Trash2, Globe, Shield, User, Star } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { Loader2, Camera, LogOut, Trash2, Globe, Shield, User, Star, Sparkles, Heart, GraduationCap, MapPin, Baby, Dog, Dumbbell, Wine, Cigarette, Eye, EyeOff } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { api } from "@shared/routes";
 import { useToast } from "@/hooks/use-toast";
@@ -51,6 +53,19 @@ export default function ProfilePage() {
     age: 18,
     gender: "",
     preference: "",
+    zodiacSign: "",
+    smoking: "",
+    drinking: "",
+    children: "",
+    education: "",
+    occupation: "",
+    birthplace: "",
+    height: 0,
+    religion: "",
+    politics: "",
+    pets: "",
+    exercise: "",
+    incognito: false,
   });
 
   useEffect(() => {
@@ -61,6 +76,19 @@ export default function ProfilePage() {
         age: user.age || user.profile?.age || 18,
         gender: user.gender || user.profile?.gender || "",
         preference: user.preference || user.profile?.preference || "",
+        zodiacSign: user.profile?.zodiacSign || "",
+        smoking: user.profile?.smoking || "",
+        drinking: user.profile?.drinking || "",
+        children: user.profile?.children || "",
+        education: user.profile?.education || "",
+        occupation: user.profile?.occupation || "",
+        birthplace: user.profile?.birthplace || "",
+        height: user.profile?.height || 0,
+        religion: user.profile?.religion || "",
+        politics: user.profile?.politics || "",
+        pets: user.profile?.pets || "",
+        exercise: user.profile?.exercise || "",
+        incognito: user.profile?.incognito || false,
       });
     }
   }, [user]);
@@ -226,6 +254,269 @@ export default function ProfilePage() {
             >
               {isUpdating ? t.common.loading : t.profile.save}
             </Button>
+          </div>
+        </section>
+
+        {/* Incognito Mode */}
+        <section>
+          <Card className={formState.incognito ? "border-primary bg-primary/5" : ""}>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center ${formState.incognito ? 'bg-primary text-white' : 'bg-muted'}`}>
+                    {formState.incognito ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5 text-muted-foreground" />}
+                  </div>
+                  <div>
+                    <p className="font-medium">{t.profileDetails?.incognito || "Incognito Mode"}</p>
+                    <p className="text-sm text-muted-foreground">{t.profileDetails?.incognitoDesc || "Browse profiles without being seen"}</p>
+                  </div>
+                </div>
+                <Switch 
+                  checked={formState.incognito}
+                  onCheckedChange={(checked) => setFormState({...formState, incognito: checked})}
+                  data-testid="switch-incognito"
+                />
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+
+        {/* Basics Section */}
+        <section>
+          <h2 className="text-xl font-display font-bold mb-4 flex items-center gap-2">
+            <Sparkles className="w-5 h-5 text-primary" />
+            {t.profileDetails?.basics || "Basics"}
+          </h2>
+          <div className="grid gap-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-muted-foreground">{t.profileDetails?.zodiac || "Zodiac Sign"}</label>
+                <Select value={formState.zodiacSign} onValueChange={(v) => setFormState({...formState, zodiacSign: v})}>
+                  <SelectTrigger className="rounded-xl" data-testid="select-zodiac">
+                    <SelectValue placeholder={t.profileDetails?.selectZodiac || "Select sign"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="aries">{t.zodiac?.aries || "Aries"}</SelectItem>
+                    <SelectItem value="taurus">{t.zodiac?.taurus || "Taurus"}</SelectItem>
+                    <SelectItem value="gemini">{t.zodiac?.gemini || "Gemini"}</SelectItem>
+                    <SelectItem value="cancer">{t.zodiac?.cancer || "Cancer"}</SelectItem>
+                    <SelectItem value="leo">{t.zodiac?.leo || "Leo"}</SelectItem>
+                    <SelectItem value="virgo">{t.zodiac?.virgo || "Virgo"}</SelectItem>
+                    <SelectItem value="libra">{t.zodiac?.libra || "Libra"}</SelectItem>
+                    <SelectItem value="scorpio">{t.zodiac?.scorpio || "Scorpio"}</SelectItem>
+                    <SelectItem value="sagittarius">{t.zodiac?.sagittarius || "Sagittarius"}</SelectItem>
+                    <SelectItem value="capricorn">{t.zodiac?.capricorn || "Capricorn"}</SelectItem>
+                    <SelectItem value="aquarius">{t.zodiac?.aquarius || "Aquarius"}</SelectItem>
+                    <SelectItem value="pisces">{t.zodiac?.pisces || "Pisces"}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-muted-foreground">{t.profileDetails?.height || "Height (cm)"}</label>
+                <Input 
+                  type="number"
+                  value={formState.height || ""}
+                  onChange={(e) => setFormState({...formState, height: parseInt(e.target.value) || 0})}
+                  className="rounded-xl"
+                  placeholder="175"
+                  data-testid="input-height"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                  <GraduationCap className="w-4 h-4" />
+                  {t.profileDetails?.education || "Education"}
+                </label>
+                <Select value={formState.education} onValueChange={(v) => setFormState({...formState, education: v})}>
+                  <SelectTrigger className="rounded-xl" data-testid="select-education">
+                    <SelectValue placeholder={t.profileDetails?.selectEducation || "Select level"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="high_school">{t.education?.highSchool || "High School"}</SelectItem>
+                    <SelectItem value="some_college">{t.education?.someCollege || "Some College"}</SelectItem>
+                    <SelectItem value="bachelors">{t.education?.bachelors || "Bachelor's Degree"}</SelectItem>
+                    <SelectItem value="masters">{t.education?.masters || "Master's Degree"}</SelectItem>
+                    <SelectItem value="doctorate">{t.education?.doctorate || "Doctorate"}</SelectItem>
+                    <SelectItem value="trade_school">{t.education?.tradeSchool || "Trade School"}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-muted-foreground">{t.profileDetails?.occupation || "Occupation"}</label>
+                <Input 
+                  value={formState.occupation}
+                  onChange={(e) => setFormState({...formState, occupation: e.target.value})}
+                  className="rounded-xl"
+                  placeholder={t.profileDetails?.occupationPlaceholder || "What do you do?"}
+                  data-testid="input-occupation"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                <MapPin className="w-4 h-4" />
+                {t.profileDetails?.birthplace || "Birthplace"}
+              </label>
+              <Input 
+                value={formState.birthplace}
+                onChange={(e) => setFormState({...formState, birthplace: e.target.value})}
+                className="rounded-xl"
+                placeholder={t.profileDetails?.birthplacePlaceholder || "Where are you from?"}
+                data-testid="input-birthplace"
+              />
+            </div>
+          </div>
+        </section>
+
+        {/* Lifestyle Section */}
+        <section>
+          <h2 className="text-xl font-display font-bold mb-4 flex items-center gap-2">
+            <Heart className="w-5 h-5 text-primary" />
+            {t.profileDetails?.lifestyle || "Lifestyle"}
+          </h2>
+          <div className="grid gap-4">
+            <div className="grid grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                  <Cigarette className="w-4 h-4" />
+                  {t.profileDetails?.smoking || "Smoking"}
+                </label>
+                <Select value={formState.smoking} onValueChange={(v) => setFormState({...formState, smoking: v})}>
+                  <SelectTrigger className="rounded-xl" data-testid="select-smoking">
+                    <SelectValue placeholder={t.profileDetails?.select || "Select"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="never">{t.lifestyle?.never || "Never"}</SelectItem>
+                    <SelectItem value="sometimes">{t.lifestyle?.sometimes || "Sometimes"}</SelectItem>
+                    <SelectItem value="regularly">{t.lifestyle?.regularly || "Regularly"}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                  <Wine className="w-4 h-4" />
+                  {t.profileDetails?.drinking || "Drinking"}
+                </label>
+                <Select value={formState.drinking} onValueChange={(v) => setFormState({...formState, drinking: v})}>
+                  <SelectTrigger className="rounded-xl" data-testid="select-drinking">
+                    <SelectValue placeholder={t.profileDetails?.select || "Select"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="never">{t.lifestyle?.never || "Never"}</SelectItem>
+                    <SelectItem value="socially">{t.lifestyle?.socially || "Socially"}</SelectItem>
+                    <SelectItem value="regularly">{t.lifestyle?.regularly || "Regularly"}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                  <Dumbbell className="w-4 h-4" />
+                  {t.profileDetails?.exercise || "Exercise"}
+                </label>
+                <Select value={formState.exercise} onValueChange={(v) => setFormState({...formState, exercise: v})}>
+                  <SelectTrigger className="rounded-xl" data-testid="select-exercise">
+                    <SelectValue placeholder={t.profileDetails?.select || "Select"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="never">{t.lifestyle?.never || "Never"}</SelectItem>
+                    <SelectItem value="sometimes">{t.lifestyle?.sometimes || "Sometimes"}</SelectItem>
+                    <SelectItem value="active">{t.lifestyle?.active || "Active"}</SelectItem>
+                    <SelectItem value="daily">{t.lifestyle?.daily || "Daily"}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Family & Future Section */}
+        <section>
+          <h2 className="text-xl font-display font-bold mb-4 flex items-center gap-2">
+            <Baby className="w-5 h-5 text-primary" />
+            {t.profileDetails?.familyFuture || "Family & Future"}
+          </h2>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-muted-foreground">{t.profileDetails?.children || "Children"}</label>
+              <Select value={formState.children} onValueChange={(v) => setFormState({...formState, children: v})}>
+                <SelectTrigger className="rounded-xl" data-testid="select-children">
+                  <SelectValue placeholder={t.profileDetails?.select || "Select"} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="want">{t.children?.want || "Want someday"}</SelectItem>
+                  <SelectItem value="dont_want">{t.children?.dontWant || "Don't want"}</SelectItem>
+                  <SelectItem value="have">{t.children?.have || "Have & want more"}</SelectItem>
+                  <SelectItem value="have_done">{t.children?.haveDone || "Have & don't want more"}</SelectItem>
+                  <SelectItem value="not_sure">{t.children?.notSure || "Not sure yet"}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                <Dog className="w-4 h-4" />
+                {t.profileDetails?.pets || "Pets"}
+              </label>
+              <Select value={formState.pets} onValueChange={(v) => setFormState({...formState, pets: v})}>
+                <SelectTrigger className="rounded-xl" data-testid="select-pets">
+                  <SelectValue placeholder={t.profileDetails?.select || "Select"} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="dog">{t.pets?.dog || "Dog"}</SelectItem>
+                  <SelectItem value="cat">{t.pets?.cat || "Cat"}</SelectItem>
+                  <SelectItem value="both">{t.pets?.both || "Dog & Cat"}</SelectItem>
+                  <SelectItem value="other">{t.pets?.other || "Other pets"}</SelectItem>
+                  <SelectItem value="want">{t.pets?.want || "Want a pet"}</SelectItem>
+                  <SelectItem value="allergic">{t.pets?.allergic || "Allergic"}</SelectItem>
+                  <SelectItem value="none">{t.pets?.none || "No pets"}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </section>
+
+        {/* Religion & Politics Section */}
+        <section>
+          <h2 className="text-xl font-display font-bold mb-4">{t.profileDetails?.beliefs || "Beliefs"}</h2>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-muted-foreground">{t.profileDetails?.religion || "Religion"}</label>
+              <Select value={formState.religion} onValueChange={(v) => setFormState({...formState, religion: v})}>
+                <SelectTrigger className="rounded-xl" data-testid="select-religion">
+                  <SelectValue placeholder={t.profileDetails?.select || "Select"} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="agnostic">{t.religion?.agnostic || "Agnostic"}</SelectItem>
+                  <SelectItem value="atheist">{t.religion?.atheist || "Atheist"}</SelectItem>
+                  <SelectItem value="buddhist">{t.religion?.buddhist || "Buddhist"}</SelectItem>
+                  <SelectItem value="catholic">{t.religion?.catholic || "Catholic"}</SelectItem>
+                  <SelectItem value="christian">{t.religion?.christian || "Christian"}</SelectItem>
+                  <SelectItem value="hindu">{t.religion?.hindu || "Hindu"}</SelectItem>
+                  <SelectItem value="jewish">{t.religion?.jewish || "Jewish"}</SelectItem>
+                  <SelectItem value="muslim">{t.religion?.muslim || "Muslim"}</SelectItem>
+                  <SelectItem value="spiritual">{t.religion?.spiritual || "Spiritual"}</SelectItem>
+                  <SelectItem value="other">{t.religion?.other || "Other"}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-muted-foreground">{t.profileDetails?.politics || "Politics"}</label>
+              <Select value={formState.politics} onValueChange={(v) => setFormState({...formState, politics: v})}>
+                <SelectTrigger className="rounded-xl" data-testid="select-politics">
+                  <SelectValue placeholder={t.profileDetails?.select || "Select"} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="liberal">{t.politics?.liberal || "Liberal"}</SelectItem>
+                  <SelectItem value="moderate">{t.politics?.moderate || "Moderate"}</SelectItem>
+                  <SelectItem value="conservative">{t.politics?.conservative || "Conservative"}</SelectItem>
+                  <SelectItem value="apolitical">{t.politics?.apolitical || "Apolitical"}</SelectItem>
+                  <SelectItem value="other">{t.politics?.other || "Other"}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </section>
 

@@ -49,7 +49,11 @@ export async function registerRoutes(
   app.patch(api.users.updateProfile.path, async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     
-    const { displayName, bio, age, gender, preference } = req.body;
+    const { 
+      displayName, bio, age, gender, preference,
+      zodiacSign, smoking, drinking, children, education,
+      occupation, birthplace, height, religion, politics, pets, exercise, incognito
+    } = req.body;
     
     // Update user's display name if provided
     if (displayName) {
@@ -64,6 +68,19 @@ export async function registerRoutes(
     if (age !== undefined) profileData.age = age;
     if (gender !== undefined) profileData.gender = gender;
     if (preference !== undefined) profileData.preference = preference;
+    if (zodiacSign !== undefined) profileData.zodiacSign = zodiacSign;
+    if (smoking !== undefined) profileData.smoking = smoking;
+    if (drinking !== undefined) profileData.drinking = drinking;
+    if (children !== undefined) profileData.children = children;
+    if (education !== undefined) profileData.education = education;
+    if (occupation !== undefined) profileData.occupation = occupation;
+    if (birthplace !== undefined) profileData.birthplace = birthplace;
+    if (height !== undefined) profileData.height = height;
+    if (religion !== undefined) profileData.religion = religion;
+    if (politics !== undefined) profileData.politics = politics;
+    if (pets !== undefined) profileData.pets = pets;
+    if (exercise !== undefined) profileData.exercise = exercise;
+    if (incognito !== undefined) profileData.incognito = incognito;
     
     const updated = await storage.upsertProfile(req.user!.id, profileData);
     res.json({ ...updated, displayName });

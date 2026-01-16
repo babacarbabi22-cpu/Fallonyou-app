@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { motion, useMotionValue, useTransform, PanInfo } from "framer-motion";
 import { UserWithPhotos } from "@/hooks/use-danceme";
-import { X, Heart, MapPin, Briefcase } from "lucide-react";
+import { X, Heart, MapPin, Briefcase, Ruler, GraduationCap, Star } from "lucide-react";
+import { useLanguage } from "@/lib/i18n";
 
 interface SwipeCardProps {
   user: UserWithPhotos;
@@ -9,6 +10,7 @@ interface SwipeCardProps {
 }
 
 export function SwipeCard({ user, onSwipe }: SwipeCardProps) {
+  const { t } = useLanguage();
   const [exitX, setExitX] = useState<number>(0);
   const x = useMotionValue(0);
   const rotate = useTransform(x, [-200, 200], [-15, 15]);
@@ -92,16 +94,37 @@ export function SwipeCard({ user, onSwipe }: SwipeCardProps) {
               </p>
             )}
             
-            <div className="flex items-center gap-4 text-sm font-medium mt-4">
-               {/* Just placeholders for visual density */}
-               <div className="flex items-center gap-1 bg-white/20 backdrop-blur px-3 py-1 rounded-full">
-                 <MapPin size={14} />
-                 <span>2 miles away</span>
-               </div>
-               <div className="flex items-center gap-1 bg-white/20 backdrop-blur px-3 py-1 rounded-full">
-                 <Briefcase size={14} />
-                 <span>Designer</span>
-               </div>
+            <div className="flex flex-wrap items-center gap-2 text-sm font-medium mt-4">
+               {user.birthplace && (
+                 <div className="flex items-center gap-1 bg-white/20 backdrop-blur px-3 py-1 rounded-full">
+                   <MapPin size={14} />
+                   <span>{user.birthplace}</span>
+                 </div>
+               )}
+               {user.occupation && (
+                 <div className="flex items-center gap-1 bg-white/20 backdrop-blur px-3 py-1 rounded-full">
+                   <Briefcase size={14} />
+                   <span>{user.occupation}</span>
+                 </div>
+               )}
+               {user.height && (
+                 <div className="flex items-center gap-1 bg-white/20 backdrop-blur px-3 py-1 rounded-full">
+                   <Ruler size={14} />
+                   <span>{user.height} cm</span>
+                 </div>
+               )}
+               {user.education && (
+                 <div className="flex items-center gap-1 bg-white/20 backdrop-blur px-3 py-1 rounded-full">
+                   <GraduationCap size={14} />
+                   <span>{t(`education.${user.education}` as any) || user.education}</span>
+                 </div>
+               )}
+               {user.zodiacSign && (
+                 <div className="flex items-center gap-1 bg-white/20 backdrop-blur px-3 py-1 rounded-full">
+                   <Star size={14} />
+                   <span>{t(`zodiac.${user.zodiacSign}` as any) || user.zodiacSign}</span>
+                 </div>
+               )}
             </div>
           </div>
         </div>
