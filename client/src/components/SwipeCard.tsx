@@ -2,7 +2,7 @@ import { useState } from "react";
 import { motion, useMotionValue, useTransform, PanInfo } from "framer-motion";
 import { UserWithPhotos } from "@/hooks/use-danceme";
 import { X, Heart, MapPin, Briefcase, Ruler, GraduationCap, Star } from "lucide-react";
-import { useLanguage } from "@/lib/i18n";
+import { useI18n } from "@/lib/i18n";
 
 interface SwipeCardProps {
   user: UserWithPhotos;
@@ -10,7 +10,7 @@ interface SwipeCardProps {
 }
 
 export function SwipeCard({ user, onSwipe }: SwipeCardProps) {
-  const { t } = useLanguage();
+  const { t } = useI18n();
   const [exitX, setExitX] = useState<number>(0);
   const x = useMotionValue(0);
   const rotate = useTransform(x, [-200, 200], [-15, 15]);
@@ -31,6 +31,39 @@ export function SwipeCard({ user, onSwipe }: SwipeCardProps) {
   };
 
   const primaryPhoto = user.photos?.[0]?.url || "https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=800&auto=format&fit=crop&q=60"; // Default fallback
+  const displayName = user.firstName || "User";
+  const profile = user.profile;
+
+  // Helper to get translated value for education/zodiac
+  const getEducationLabel = (key: string) => {
+    const educationMap: Record<string, string> = {
+      highSchool: t.education.highSchool,
+      someCollege: t.education.someCollege,
+      bachelors: t.education.bachelors,
+      masters: t.education.masters,
+      doctorate: t.education.doctorate,
+      tradeSchool: t.education.tradeSchool,
+    };
+    return educationMap[key] || key;
+  };
+
+  const getZodiacLabel = (key: string) => {
+    const zodiacMap: Record<string, string> = {
+      aries: t.zodiac.aries,
+      taurus: t.zodiac.taurus,
+      gemini: t.zodiac.gemini,
+      cancer: t.zodiac.cancer,
+      leo: t.zodiac.leo,
+      virgo: t.zodiac.virgo,
+      libra: t.zodiac.libra,
+      scorpio: t.zodiac.scorpio,
+      sagittarius: t.zodiac.sagittarius,
+      capricorn: t.zodiac.capricorn,
+      aquarius: t.zodiac.aquarius,
+      pisces: t.zodiac.pisces,
+    };
+    return zodiacMap[key] || key;
+  };
 
   return (
     <motion.div
@@ -46,7 +79,7 @@ export function SwipeCard({ user, onSwipe }: SwipeCardProps) {
         {/* Photo */}
         <img 
           src={primaryPhoto} 
-          alt={user.displayName || "User"} 
+          alt={displayName} 
           className="w-full h-full object-cover"
         />
 
@@ -66,7 +99,7 @@ export function SwipeCard({ user, onSwipe }: SwipeCardProps) {
         <div className="absolute bottom-0 left-0 right-0 p-6 text-white z-10">
           <div className="flex items-end justify-between mb-2">
             <h2 className="text-4xl font-display font-bold text-shadow">
-              {user.displayName}, <span className="text-3xl font-medium opacity-90">{user.age}</span>
+              {displayName}{profile?.age ? <>, <span className="text-3xl font-medium opacity-90">{profile.age}</span></> : null}
             </h2>
             {/* Action buttons embedded in card for tap interaction */}
             <div className="flex gap-4 mb-2 relative z-30">
@@ -88,41 +121,41 @@ export function SwipeCard({ user, onSwipe }: SwipeCardProps) {
           </div>
 
           <div className="space-y-2 opacity-90">
-            {user.bio && (
+            {profile?.bio && (
               <p className="text-lg leading-relaxed line-clamp-2 text-shadow">
-                {user.bio}
+                {profile.bio}
               </p>
             )}
             
             <div className="flex flex-wrap items-center gap-2 text-sm font-medium mt-4">
-               {user.birthplace && (
+               {profile?.birthplace && (
                  <div className="flex items-center gap-1 bg-white/20 backdrop-blur px-3 py-1 rounded-full">
                    <MapPin size={14} />
-                   <span>{user.birthplace}</span>
+                   <span>{profile.birthplace}</span>
                  </div>
                )}
-               {user.occupation && (
+               {profile?.occupation && (
                  <div className="flex items-center gap-1 bg-white/20 backdrop-blur px-3 py-1 rounded-full">
                    <Briefcase size={14} />
-                   <span>{user.occupation}</span>
+                   <span>{profile.occupation}</span>
                  </div>
                )}
-               {user.height && (
+               {profile?.height && (
                  <div className="flex items-center gap-1 bg-white/20 backdrop-blur px-3 py-1 rounded-full">
                    <Ruler size={14} />
-                   <span>{user.height} cm</span>
+                   <span>{profile.height} cm</span>
                  </div>
                )}
-               {user.education && (
+               {profile?.education && (
                  <div className="flex items-center gap-1 bg-white/20 backdrop-blur px-3 py-1 rounded-full">
                    <GraduationCap size={14} />
-                   <span>{t(`education.${user.education}` as any) || user.education}</span>
+                   <span>{getEducationLabel(profile.education)}</span>
                  </div>
                )}
-               {user.zodiacSign && (
+               {profile?.zodiacSign && (
                  <div className="flex items-center gap-1 bg-white/20 backdrop-blur px-3 py-1 rounded-full">
                    <Star size={14} />
-                   <span>{t(`zodiac.${user.zodiacSign}` as any) || user.zodiacSign}</span>
+                   <span>{getZodiacLabel(profile.zodiacSign)}</span>
                  </div>
                )}
             </div>

@@ -61,7 +61,28 @@ export function useDeletePhoto() {
 
 // --- Swiping / Users ---
 
-export type UserWithPhotos = User & { photos: Photo[] };
+export type UserWithPhotos = User & { 
+  photos: Photo[];
+  profile: {
+    bio?: string | null;
+    age?: number | null;
+    gender?: string | null;
+    preference?: string | null;
+    zodiacSign?: string | null;
+    smoking?: string | null;
+    drinking?: string | null;
+    children?: string | null;
+    education?: string | null;
+    occupation?: string | null;
+    birthplace?: string | null;
+    height?: number | null;
+    religion?: string | null;
+    politics?: string | null;
+    pets?: string | null;
+    exercise?: string | null;
+    incognito?: boolean | null;
+  } | null;
+};
 
 export function useSwipeFeed() {
   return useQuery({
