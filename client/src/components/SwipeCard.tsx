@@ -7,11 +7,13 @@ import { useI18n } from "@/lib/i18n";
 interface SwipeCardProps {
   user: UserWithPhotos;
   onSwipe: (direction: "left" | "right") => void;
+  onTap?: () => void;
 }
 
-export function SwipeCard({ user, onSwipe }: SwipeCardProps) {
+export function SwipeCard({ user, onSwipe, onTap }: SwipeCardProps) {
   const { t } = useI18n();
   const [exitX, setExitX] = useState<number>(0);
+  const [dragDistance, setDragDistance] = useState(0);
   const x = useMotionValue(0);
   const rotate = useTransform(x, [-200, 200], [-15, 15]);
   const opacity = useTransform(x, [-200, -150, 0, 150, 200], [0.5, 1, 1, 1, 0.5]);
@@ -20,6 +22,10 @@ export function SwipeCard({ user, onSwipe }: SwipeCardProps) {
   const likeOpacity = useTransform(x, [0, 150], [0, 1]);
   const nopeOpacity = useTransform(x, [0, -150], [0, 1]);
 
+  const handleDrag = (_: unknown, info: PanInfo) => {
+    setDragDistance(Math.abs(info.offset.x));
+  };
+
   const handleDragEnd = (_: unknown, info: PanInfo) => {
     if (info.offset.x > 100) {
       setExitX(200);
@@ -27,6 +33,15 @@ export function SwipeCard({ user, onSwipe }: SwipeCardProps) {
     } else if (info.offset.x < -100) {
       setExitX(-200);
       onSwipe("left");
+    }
+    // Reset drag distance after a short delay to allow click handling
+    setTimeout(() => setDragDistance(0), 100);
+  };
+
+  const handleTap = () => {
+    // Only trigger tap if drag distance is minimal (not a swipe)
+    if (dragDistance < 10 && onTap) {
+      onTap();
     }
   };
 
@@ -70,10 +85,13 @@ export function SwipeCard({ user, onSwipe }: SwipeCardProps) {
       style={{ x, rotate, opacity }}
       drag="x"
       dragConstraints={{ left: 0, right: 0 }}
+      onDrag={handleDrag}
       onDragEnd={handleDragEnd}
+      onTap={handleTap}
       animate={exitX !== 0 ? { x: exitX, opacity: 0 } : { x: 0, opacity: 1 }}
       transition={{ duration: 0.3 }}
       className="absolute top-0 left-0 w-full h-full cursor-grab active:cursor-grabbing"
+      data-testid="swipe-card"
     >
       <div className="relative w-full h-[75vh] rounded-3xl overflow-hidden shadow-2xl bg-card border border-white/10">
         {/* Photo */}

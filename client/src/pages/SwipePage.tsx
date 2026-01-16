@@ -1,6 +1,7 @@
-import { useSwipeFeed, useSwipeRight, useCurrentUser } from "@/hooks/use-danceme";
+import { useSwipeFeed, useSwipeRight, useCurrentUser, UserWithPhotos } from "@/hooks/use-danceme";
 import { SwipeCard } from "@/components/SwipeCard";
 import { BottomNav } from "@/components/BottomNav";
+import { ProfileDetailSheet } from "@/components/ProfileDetailSheet";
 import { AnimatePresence, motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
@@ -22,6 +23,8 @@ export default function SwipePage() {
   const [activeUsers, setActiveUsers] = useState<typeof users>([]);
   const [matchAnimation, setMatchAnimation] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<UserWithPhotos | null>(null);
+  const [showProfileDetail, setShowProfileDetail] = useState(false);
   const [localPrefs, setLocalPrefs] = useState({
     minAge: 18,
     maxAge: 50,
@@ -211,7 +214,14 @@ export default function SwipePage() {
               if (index > activeUsers.length - 3) {
                  return (
                    <div key={user.id} className="absolute inset-x-4 inset-y-0" style={{ zIndex: index }}>
-                     <SwipeCard user={user} onSwipe={(dir) => handleSwipe(user.id, dir)} />
+                     <SwipeCard 
+                       user={user} 
+                       onSwipe={(dir) => handleSwipe(user.id, dir)} 
+                       onTap={() => {
+                         setSelectedUser(user);
+                         setShowProfileDetail(true);
+                       }}
+                     />
                    </div>
                  );
               }
@@ -301,6 +311,13 @@ export default function SwipePage() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Profile Detail Sheet */}
+      <ProfileDetailSheet 
+        user={selectedUser}
+        open={showProfileDetail}
+        onOpenChange={setShowProfileDetail}
+      />
 
       <BottomNav />
     </div>
