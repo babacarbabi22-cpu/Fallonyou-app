@@ -14,6 +14,19 @@ export const profiles = pgTable("profiles", {
   age: integer("age"),
   gender: text("gender"),
   preference: text("preference"),
+  zodiacSign: text("zodiac_sign"),
+  smoking: text("smoking"),
+  drinking: text("drinking"),
+  children: text("children"),
+  education: text("education"),
+  occupation: text("occupation"),
+  birthplace: text("birthplace"),
+  height: integer("height"),
+  religion: text("religion"),
+  politics: text("politics"),
+  pets: text("pets"),
+  exercise: text("exercise"),
+  incognito: boolean("incognito").default(false),
 });
 
 export const photos = pgTable("photos", {
