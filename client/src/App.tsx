@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Switch, Route } from "wouter";
+import { Switch, Route, Redirect } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -69,7 +69,7 @@ function AgeConfirmationModal() {
   );
 }
 
-function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
+function ProtectedRoute({ component: Component, skipOnboarding = false }: { component: React.ComponentType; skipOnboarding?: boolean }) {
   const { data: user, isLoading } = useCurrentUser();
   const { ageConfirmed } = useAuth();
 
@@ -86,6 +86,12 @@ function ProtectedRoute({ component: Component }: { component: React.ComponentTy
         </div>
       </>
     );
+  }
+
+  // Redirect new users to onboarding if they don't have a profile yet
+  // (unless we're already on the onboarding page)
+  if (!skipOnboarding && !user.profile) {
+    return <Redirect to="/onboarding" />;
   }
 
   return <Component />;
@@ -111,7 +117,7 @@ function Router() {
         {() => <ProtectedRoute component={ChatPage} />}
       </Route>
       <Route path="/onboarding">
-        {() => <ProtectedRoute component={OnboardingPage} />}
+        {() => <ProtectedRoute component={OnboardingPage} skipOnboarding />}
       </Route>
       <Route path="/legal" component={LegalPage} />
       <Route component={NotFound} />

@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -8,7 +8,9 @@ import { useTranslation } from "@/lib/i18n";
 import { useUpdateProfile, useCurrentUser } from "@/hooks/use-danceme";
 import { useUpload } from "@/hooks/use-upload";
 import { useLocation } from "wouter";
-import { Camera, Upload, Check, ArrowRight, User, Heart, Shield, Sparkles } from "lucide-react";
+import { Camera, Upload, Check, ArrowRight, User, Heart, Shield, Sparkles, Loader2 } from "lucide-react";
+import { useMutation } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 
 type OnboardingStep = "profile" | "preferences" | "verification" | "complete";
 
@@ -86,6 +88,31 @@ export default function OnboardingPage() {
   const handleComplete = () => {
     setLocation("/");
   };
+
+  // Auto-verification mutation
+  const autoVerifyMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("POST", "/api/verification/request");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/verification/status"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
+      // Auto-proceed to complete step after verification
+      setStep("complete");
+    },
+    onError: () => {
+      // If verification fails, still proceed
+      setStep("complete");
+    },
+  });
+
+  // Auto-verify when reaching the verification step
+  useEffect(() => {
+    if (step === "verification" && !autoVerifyMutation.isPending && !autoVerifyMutation.isSuccess) {
+      autoVerifyMutation.mutate();
+    }
+  }, [step]);
 
   const stepIcons = {
     profile: User,
@@ -303,30 +330,25 @@ export default function OnboardingPage() {
               <CardContent className="p-6 space-y-6">
                 <div className="text-center">
                   <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                    <Shield className="w-10 h-10 text-primary" />
+                    {autoVerifyMutation.isPending ? (
+                      <Loader2 className="w-10 h-10 text-primary animate-spin" />
+                    ) : (
+                      <Shield className="w-10 h-10 text-primary" />
+                    )}
                   </div>
                   <h2 className="text-2xl font-bold mb-2">{t.onboarding.step3Title}</h2>
-                  <p className="text-muted-foreground">{t.onboarding.step3Desc}</p>
+                  <p className="text-muted-foreground">
+                    {autoVerifyMutation.isPending 
+                      ? (t.verification.verifying || "Verifying your account...")
+                      : t.onboarding.step3Desc}
+                  </p>
                 </div>
 
-                <div className="bg-muted/50 rounded-lg p-4 text-center">
-                  <p className="text-sm text-muted-foreground mb-4">{t.verification.instructions}</p>
-                  <Button variant="outline" className="gap-2" data-testid="button-take-selfie">
-                    <Camera className="w-4 h-4" />
-                    {t.verification.takePhoto}
-                  </Button>
-                </div>
-
-                <p className="text-xs text-center text-muted-foreground">{t.verification.benefits}</p>
-
-                <div className="space-y-2">
-                  <Button onClick={() => setStep("complete")} className="w-full" data-testid="button-submit-verification">
-                    {t.verification.submit}
-                  </Button>
-                  <Button variant="ghost" onClick={handleSkipVerification} className="w-full" data-testid="button-skip-verification">
-                    {t.onboarding.skip}
-                  </Button>
-                </div>
+                {autoVerifyMutation.isPending && (
+                  <div className="bg-muted/50 rounded-lg p-4 text-center">
+                    <p className="text-sm text-muted-foreground">{t.verification.benefits}</p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           )}

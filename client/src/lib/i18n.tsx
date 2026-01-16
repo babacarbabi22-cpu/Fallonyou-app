@@ -156,6 +156,7 @@ export const translations = {
       approved: "¡Cuenta verificada!",
       rejected: "Verificación rechazada. Intenta de nuevo.",
       benefits: "Los usuarios verificados obtienen más matches",
+      verifying: "Verificando tu cuenta...",
     },
     notifications: {
       newMatch: "¡Tienes un nuevo match!",
@@ -376,6 +377,7 @@ export const translations = {
       approved: "Account verified!",
       rejected: "Verification rejected. Try again.",
       benefits: "Verified users get more matches",
+      verifying: "Verifying your account...",
     },
     notifications: {
       newMatch: "You have a new match!",
@@ -596,6 +598,7 @@ export const translations = {
       approved: "Compte vérifié!",
       rejected: "Vérification rejetée. Réessayez.",
       benefits: "Les utilisateurs vérifiés obtiennent plus de matches",
+      verifying: "Vérification de votre compte...",
     },
     notifications: {
       newMatch: "Vous avez un nouveau match!",
