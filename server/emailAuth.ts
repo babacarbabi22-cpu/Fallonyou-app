@@ -48,7 +48,7 @@ export async function setupAuth(app: Express) {
   // Register endpoint
   app.post("/api/register", async (req, res) => {
     try {
-      const { email, password, firstName, lastName } = req.body;
+      const { email, password, firstName, lastName, ageConfirmed } = req.body;
 
       if (!email || !password) {
         return res.status(400).json({ error: "Email and password are required" });
@@ -72,6 +72,8 @@ export async function setupAuth(app: Express) {
           password: hashedPassword,
           firstName: firstName || null,
           lastName: lastName || null,
+          ageConfirmed: ageConfirmed ? "true" : "false",
+          ageConfirmedAt: ageConfirmed ? new Date() : null,
         })
         .returning();
 
@@ -104,7 +106,7 @@ export async function setupAuth(app: Express) {
   // Login endpoint
   app.post("/api/login", async (req, res) => {
     try {
-      const { email, password } = req.body;
+      const { email, password, ageConfirmed } = req.body;
 
       if (!email || !password) {
         return res.status(400).json({ error: "Email and password are required" });
@@ -119,6 +121,16 @@ export async function setupAuth(app: Express) {
       const isValidPassword = await bcrypt.compare(password, user.password);
       if (!isValidPassword) {
         return res.status(401).json({ error: "Invalid email or password" });
+      }
+
+      // Update age confirmation if provided and not already confirmed
+      if (ageConfirmed && user.ageConfirmed !== "true") {
+        await db.update(users)
+          .set({ 
+            ageConfirmed: "true", 
+            ageConfirmedAt: new Date() 
+          })
+          .where(eq(users.id, user.id));
       }
 
       (req.session as any).userId = user.id;
@@ -139,6 +151,7 @@ export async function setupAuth(app: Express) {
           email: user.email,
           firstName: user.firstName,
           lastName: user.lastName,
+          ageConfirmed: ageConfirmed || user.ageConfirmed === "true",
         });
       });
     } catch (error: any) {
@@ -190,6 +203,8 @@ export async function setupAuth(app: Express) {
       isVerified: user.isVerified,
       location: user.location,
       createdAt: user.createdAt,
+      ageConfirmed: user.ageConfirmed === "true",
+      ageConfirmedAt: user.ageConfirmedAt,
       profile: profile || null,
       photos: userPhotos,
       // Also expose profile fields at top level for convenience
@@ -198,6 +213,23 @@ export async function setupAuth(app: Express) {
       gender: profile?.gender,
       preference: profile?.preference,
     });
+  });
+
+  // Confirm age for existing users
+  app.post("/api/confirm-age", async (req, res) => {
+    const userId = (req.session as any)?.userId;
+    if (!userId) {
+      return res.status(401).json({ error: "Not authenticated" });
+    }
+
+    await db.update(users)
+      .set({ 
+        ageConfirmed: "true", 
+        ageConfirmedAt: new Date() 
+      })
+      .where(eq(users.id, userId));
+
+    res.json({ success: true });
   });
 
   // Middleware to check authentication

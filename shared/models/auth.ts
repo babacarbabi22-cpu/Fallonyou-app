@@ -37,6 +37,8 @@ export const users = pgTable("users", {
   longitude: varchar("longitude"),
   dailySuperLikesUsed: varchar("daily_super_likes_used").default("0"),
   lastSuperLikeResetDate: timestamp("last_super_like_reset_date"),
+  ageConfirmed: varchar("age_confirmed").default("false"),
+  ageConfirmedAt: timestamp("age_confirmed_at"),
 });
 
 export type UpsertUser = typeof users.$inferInsert;
