@@ -50,16 +50,28 @@ export async function registerRoutes(
     res.json(updated);
   });
 
-  // Photos
+  // Photos - supports both file upload and URL registration
   app.post(api.photos.upload.path, upload.single('file'), async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
-    if (!req.file) return res.status(400).send("No file uploaded");
     
-    const url = `/uploads/${req.file.filename}`;
+    let url: string;
+    let type: string = 'image';
+    
+    // Check if this is a JSON request with a URL (from object storage)
+    if (req.body && req.body.url && typeof req.body.url === 'string') {
+      url = req.body.url;
+      type = req.body.type || 'image';
+    } else if (req.file) {
+      // Traditional file upload
+      url = `/uploads/${req.file.filename}`;
+    } else {
+      return res.status(400).json({ error: "No file or URL provided" });
+    }
+    
     const photo = await storage.createPhoto({
       userId: req.user!.id,
       url: url,
-      type: 'image'
+      type: type
     });
     res.status(201).json(photo);
   });
