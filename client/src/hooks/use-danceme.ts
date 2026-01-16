@@ -22,16 +22,15 @@ export function useCurrentUser() {
 export function useUpdateProfile() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, ...updates }: { id: number } & Partial<InsertUser>) => {
-      const url = buildUrl(api.users.update.path, { id });
-      const res = await fetch(url, {
-        method: api.users.update.method,
+    mutationFn: async (updates: { id?: string | number; displayName?: string; bio?: string; age?: number; gender?: string; preference?: string }) => {
+      const res = await fetch(api.users.updateProfile.path, {
+        method: api.users.updateProfile.method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(updates),
         credentials: "include",
       });
       if (!res.ok) throw new Error("Failed to update profile");
-      return api.users.update.responses[200].parse(await res.json());
+      return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [api.auth.me.path] });

@@ -3,7 +3,7 @@ import session from "express-session";
 import connectPg from "connect-pg-simple";
 import bcrypt from "bcryptjs";
 import { db } from "./db";
-import { users } from "@shared/schema";
+import { users, profiles, photos } from "@shared/schema";
 import { eq } from "drizzle-orm";
 
 declare global {
@@ -161,7 +161,7 @@ export async function setupAuth(app: Express) {
   app.post("/api/logout", handleLogout);
   app.get("/api/logout", handleLogout);
 
-  // Get current user
+  // Get current user with profile and photos
   app.get("/api/user", async (req, res) => {
     const userId = (req.session as any)?.userId;
     if (!userId) {
@@ -173,16 +173,30 @@ export async function setupAuth(app: Express) {
       return res.status(401).json({ error: "User not found" });
     }
 
+    // Fetch profile data
+    const [profile] = await db.select().from(profiles).where(eq(profiles.userId, userId));
+    
+    // Fetch photos
+    const userPhotos = await db.select().from(photos).where(eq(photos.userId, userId));
+
     res.json({
       id: user.id,
       email: user.email,
       firstName: user.firstName,
       lastName: user.lastName,
+      displayName: user.firstName,
       profileImageUrl: user.profileImageUrl,
       isPremium: user.isPremium,
       isVerified: user.isVerified,
       location: user.location,
       createdAt: user.createdAt,
+      profile: profile || null,
+      photos: userPhotos,
+      // Also expose profile fields at top level for convenience
+      bio: profile?.bio,
+      age: profile?.age,
+      gender: profile?.gender,
+      preference: profile?.preference,
     });
   });
 

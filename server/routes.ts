@@ -3,6 +3,9 @@ import type { Express } from "express";
 import type { Server } from "http";
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
+import { db } from "./db";
+import { users } from "@shared/schema";
+import { eq } from "drizzle-orm";
 import { api } from "@shared/routes";
 import { z } from "zod";
 import multer from "multer";
@@ -45,9 +48,25 @@ export async function registerRoutes(
 
   app.patch(api.users.updateProfile.path, async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
-    const input = api.users.updateProfile.input.parse(req.body);
-    const updated = await storage.upsertProfile(req.user!.id, input);
-    res.json(updated);
+    
+    const { displayName, bio, age, gender, preference } = req.body;
+    
+    // Update user's display name if provided
+    if (displayName) {
+      await db.update(users)
+        .set({ firstName: displayName })
+        .where(eq(users.id, req.user!.id));
+    }
+    
+    // Update profile data
+    const profileData: any = {};
+    if (bio !== undefined) profileData.bio = bio;
+    if (age !== undefined) profileData.age = age;
+    if (gender !== undefined) profileData.gender = gender;
+    if (preference !== undefined) profileData.preference = preference;
+    
+    const updated = await storage.upsertProfile(req.user!.id, profileData);
+    res.json({ ...updated, displayName });
   });
 
   // Photos - supports both file upload and URL registration

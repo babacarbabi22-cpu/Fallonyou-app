@@ -6,8 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Loader2, Camera, LogOut, Trash2, Globe, Shield } from "lucide-react";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { api } from "@shared/routes";
+import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "@/lib/i18n";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { VerificationStatus } from "@/components/VerificationBadge";
@@ -20,43 +21,67 @@ export default function ProfilePage() {
   const { data: user, isLoading } = useCurrentUser();
   const { logout } = useAuth();
   const t = useTranslation();
+  const { toast } = useToast();
   const { mutate: updateProfile, isPending: isUpdating } = useUpdateProfile();
   const { mutate: deletePhoto } = useDeletePhoto();
   
   // Custom upload hook
   const { uploadFile, isUploading } = useUpload({
     onSuccess: async (response) => {
-       // After uploading to object storage, we need to register it in our DB
-       // This is a bit manual since the schema separates the two concepts
-       // We'll call the standard photos API with the URL we got
        await fetch(api.photos.upload.path, {
          method: 'POST',
          headers: { 'Content-Type': 'application/json' },
          body: JSON.stringify({ 
-           url: response.uploadURL.split('?')[0], // Clean URL without signatures for storage if public, or keep signature if needed
+           url: response.uploadURL.split('?')[0],
            type: 'image' 
-         })
+         }),
+         credentials: 'include'
        });
-       // Then refetch user
-       window.location.reload(); // Simple reload to refresh data for now
+       window.location.reload();
     }
   });
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [formState, setFormState] = useState({
-    displayName: user?.displayName || "",
-    bio: user?.bio || "",
-    age: user?.age || 18,
-    gender: user?.gender || "",
-    preference: user?.preference || "",
+    displayName: "",
+    bio: "",
+    age: 18,
+    gender: "",
+    preference: "",
   });
+
+  useEffect(() => {
+    if (user) {
+      setFormState({
+        displayName: user.displayName || user.firstName || "",
+        bio: user.bio || user.profile?.bio || "",
+        age: user.age || user.profile?.age || 18,
+        gender: user.gender || user.profile?.gender || "",
+        preference: user.preference || user.profile?.preference || "",
+      });
+    }
+  }, [user]);
 
   if (isLoading) return <div className="h-screen w-full flex items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>;
   if (!user) return null;
 
   const handleSave = () => {
-    updateProfile({ id: user.id, ...formState });
+    updateProfile(formState, {
+      onSuccess: () => {
+        toast({
+          title: t.profile.saved || "Profile saved",
+          description: t.profile.savedDescription || "Your profile has been updated successfully",
+        });
+      },
+      onError: () => {
+        toast({
+          title: "Error",
+          description: "Failed to save profile. Please try again.",
+          variant: "destructive",
+        });
+      }
+    });
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
