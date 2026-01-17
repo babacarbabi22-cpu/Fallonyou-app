@@ -8,36 +8,36 @@
   --font-sans: 'DM Sans', sans-serif;
   --font-display: 'Outfit', sans-serif;
 
-  /* Hinge-inspired Premium Palette - Warm Gray with Vibrant Accent */
-  --background: 30 15% 98%;
-  --foreground: 20 15% 12%;
+  /* Calm, Peaceful Palette - Soft and Neutral */
+  --background: 220 15% 98%;
+  --foreground: 220 10% 20%;
 
-  /* Warm Coral/Rose Primary - Hinge-like */
-  --primary: 350 75% 55%;
+  /* Soft Lavender/Purple Primary - Calming */
+  --primary: 260 45% 60%;
   --primary-foreground: 0 0% 100%;
 
-  /* Muted Purple Secondary */
-  --secondary: 270 50% 65%;
+  /* Warm Sage Green Secondary */
+  --secondary: 160 30% 55%;
   --secondary-foreground: 0 0% 100%;
 
   --card: 0 0% 100%;
-  --card-foreground: 20 15% 12%;
+  --card-foreground: 220 10% 20%;
 
   --popover: 0 0% 100%;
-  --popover-foreground: 20 15% 12%;
+  --popover-foreground: 220 10% 20%;
 
-  --muted: 30 10% 94%;
-  --muted-foreground: 20 10% 45%;
+  --muted: 220 10% 94%;
+  --muted-foreground: 220 10% 45%;
 
-  --accent: 30 15% 96%;
-  --accent-foreground: 350 75% 50%;
+  --accent: 220 15% 96%;
+  --accent-foreground: 260 45% 55%;
 
-  --destructive: 0 84% 60%;
+  --destructive: 25 70% 55%;
   --destructive-foreground: 0 0% 98%;
 
-  --border: 30 10% 90%;
-  --input: 30 10% 92%;
-  --ring: 350 75% 55%;
+  --border: 220 10% 90%;
+  --input: 220 10% 92%;
+  --ring: 260 45% 60%;
 
   --radius: 0.75rem;
 }
