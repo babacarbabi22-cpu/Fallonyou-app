@@ -634,6 +634,23 @@ export default function ProfilePage() {
           <VerificationStatus />
           <NotificationToggle />
           
+          {/* Safety Center */}
+          <Link href="/safety">
+            <Card className="border-dashed cursor-pointer hover-elevate border-green-500/30 bg-green-500/5">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center">
+                    <Shield className="w-5 h-5 text-green-600" />
+                  </div>
+                  <div>
+                    <p className="font-medium">{t.safety?.title || "Safety Center"}</p>
+                    <p className="text-sm text-muted-foreground">{t.safety?.heroTitle || "Your safety is our priority"}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+
           {/* Legal & Support */}
           <Link href="/legal">
             <Card className="border-dashed cursor-pointer hover-elevate">
@@ -664,6 +681,25 @@ export default function ProfilePage() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Admin Panel - Only visible to admins */}
+          {(user as any).isAdmin === 'true' && (
+            <Link href="/admin">
+              <Card className="border-dashed cursor-pointer hover-elevate border-primary/30 bg-primary/5">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+                      <Shield className="w-5 h-5 text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-medium">{t.admin?.title || "Admin Panel"}</p>
+                      <p className="text-sm text-muted-foreground">{t.admin?.users || "Manage users"} & {t.admin?.reports || "Reports"}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+          )}
         </section>
 
         {/* Photos Section */}

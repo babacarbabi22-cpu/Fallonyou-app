@@ -412,6 +412,17 @@ export class DatabaseStorage implements IStorage {
       .returning();
     return user;
   }
+
+  // Admin functions
+  async getReports(): Promise<Report[]> {
+    return db.select().from(reports).orderBy(desc(reports.createdAt));
+  }
+
+  async resolveReport(reportId: number): Promise<void> {
+    await db.update(reports)
+      .set({ status: 'resolved' })
+      .where(eq(reports.id, reportId));
+  }
 }
 
 export const storage = new DatabaseStorage();

@@ -39,6 +39,10 @@ export const users = pgTable("users", {
   lastSuperLikeResetDate: timestamp("last_super_like_reset_date"),
   ageConfirmed: varchar("age_confirmed").default("false"),
   ageConfirmedAt: timestamp("age_confirmed_at"),
+  isAdmin: varchar("is_admin").default("false"),
+  isBanned: varchar("is_banned").default("false"),
+  bannedAt: timestamp("banned_at"),
+  banReason: varchar("ban_reason"),
 });
 
 export type UpsertUser = typeof users.$inferInsert;

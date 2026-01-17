@@ -15,6 +15,8 @@ import PremiumPage from "@/pages/PremiumPage";
 import ChatPage from "@/pages/ChatPage";
 import OnboardingPage from "@/pages/OnboardingPage";
 import LegalPage from "@/pages/LegalPage";
+import SafetyPage from "@/pages/SafetyPage";
+import AdminPage from "@/pages/AdminPage";
 import { useCurrentUser } from "@/hooks/use-danceme";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
@@ -120,6 +122,12 @@ function Router() {
         {() => <ProtectedRoute component={OnboardingPage} skipOnboarding />}
       </Route>
       <Route path="/legal" component={LegalPage} />
+      <Route path="/safety">
+        {() => <ProtectedRoute component={SafetyPage} />}
+      </Route>
+      <Route path="/admin">
+        {() => <ProtectedRoute component={AdminPage} />}
+      </Route>
       <Route component={NotFound} />
     </Switch>
   );

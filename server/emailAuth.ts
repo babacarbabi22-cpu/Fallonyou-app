@@ -123,6 +123,14 @@ export async function setupAuth(app: Express) {
         return res.status(401).json({ error: "Invalid email or password" });
       }
 
+      // Check if user is banned
+      if (user.isBanned === 'true') {
+        return res.status(403).json({ 
+          error: "Account suspended", 
+          reason: user.banReason || "Your account has been suspended" 
+        });
+      }
+
       // Update age confirmation if provided and not already confirmed
       if (ageConfirmed && user.ageConfirmed !== "true") {
         await db.update(users)
@@ -192,6 +200,14 @@ export async function setupAuth(app: Express) {
     // Fetch photos
     const userPhotos = await db.select().from(photos).where(eq(photos.userId, userId));
 
+    // Check if banned - return error for banned users
+    if (user.isBanned === 'true') {
+      return res.status(403).json({ 
+        error: "Account suspended", 
+        reason: user.banReason || "Your account has been suspended" 
+      });
+    }
+
     res.json({
       id: user.id,
       email: user.email,
@@ -201,6 +217,8 @@ export async function setupAuth(app: Express) {
       profileImageUrl: user.profileImageUrl,
       isPremium: user.isPremium,
       isVerified: user.isVerified,
+      isAdmin: user.isAdmin,
+      isBanned: user.isBanned,
       location: user.location,
       createdAt: user.createdAt,
       ageConfirmed: user.ageConfirmed === "true",

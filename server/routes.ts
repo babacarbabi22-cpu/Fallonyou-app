@@ -654,5 +654,76 @@ export async function registerRoutes(
     });
   });
 
+  // ============ ADMIN ROUTES ============
+  
+  // Middleware to check admin status
+  const requireAdmin = async (req: any, res: any, next: any) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const user = await storage.getUser(req.user!.id);
+    if (user?.isAdmin !== 'true') return res.status(403).json({ error: 'Admin access required' });
+    next();
+  };
+
+  // Get all users (admin only)
+  app.get('/api/admin/users', requireAdmin, async (req, res) => {
+    const allUsers = await db.select().from(users);
+    const enriched = await Promise.all(allUsers.map(async u => {
+      const profile = await storage.getProfile(u.id);
+      return { ...u, profile };
+    }));
+    res.json(enriched);
+  });
+
+  // Ban a user (admin only)
+  app.post('/api/admin/users/:userId/ban', requireAdmin, async (req, res) => {
+    const { userId } = req.params;
+    const { reason } = req.body;
+    
+    await db.update(users)
+      .set({ 
+        isBanned: 'true', 
+        bannedAt: new Date(),
+        banReason: reason 
+      })
+      .where(eq(users.id, userId));
+    
+    res.json({ success: true });
+  });
+
+  // Unban a user (admin only)
+  app.post('/api/admin/users/:userId/unban', requireAdmin, async (req, res) => {
+    const { userId } = req.params;
+    
+    await db.update(users)
+      .set({ 
+        isBanned: 'false', 
+        bannedAt: null,
+        banReason: null 
+      })
+      .where(eq(users.id, userId));
+    
+    res.json({ success: true });
+  });
+
+  // Get all reports (admin only)
+  app.get('/api/admin/reports', requireAdmin, async (req, res) => {
+    const allReports = await storage.getReports();
+    res.json(allReports);
+  });
+
+  // Resolve a report (admin only)
+  app.post('/api/admin/reports/:reportId/resolve', requireAdmin, async (req, res) => {
+    const { reportId } = req.params;
+    await storage.resolveReport(parseInt(reportId));
+    res.json({ success: true });
+  });
+
+  // Check if current user is admin
+  app.get('/api/admin/check', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const user = await storage.getUser(req.user!.id);
+    res.json({ isAdmin: user?.isAdmin === 'true' });
+  });
+
   return httpServer;
 }
