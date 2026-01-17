@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion, useMotionValue, useTransform, PanInfo } from "framer-motion";
 import { UserWithPhotos } from "@/hooks/use-danceme";
-import { X, Heart, MapPin, Briefcase, Ruler, GraduationCap, Star } from "lucide-react";
+import { X, Heart, MapPin, Briefcase, Ruler, GraduationCap, Star, User } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 
 interface SwipeCardProps {
@@ -14,6 +14,8 @@ export function SwipeCard({ user, onSwipe, onTap }: SwipeCardProps) {
   const { t } = useI18n();
   const [exitX, setExitX] = useState<number>(0);
   const [dragDistance, setDragDistance] = useState(0);
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [imageError, setImageError] = useState(false);
   const x = useMotionValue(0);
   const rotate = useTransform(x, [-200, 200], [-15, 15]);
   const opacity = useTransform(x, [-200, -150, 0, 150, 200], [0.5, 1, 1, 1, 0.5]);
@@ -45,7 +47,8 @@ export function SwipeCard({ user, onSwipe, onTap }: SwipeCardProps) {
     }
   };
 
-  const primaryPhoto = user.photos?.[0]?.url || "https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=800&auto=format&fit=crop&q=60"; // Default fallback
+  // Get photo URL - prioritize the first photo, then profile image
+  const primaryPhoto = user.photos?.[0]?.url || user.profileImageUrl || null;
   const displayName = user.firstName || "User";
   const profile = user.profile;
 
@@ -93,13 +96,24 @@ export function SwipeCard({ user, onSwipe, onTap }: SwipeCardProps) {
       className="absolute top-0 left-0 w-full h-full cursor-grab active:cursor-grabbing"
       data-testid="swipe-card"
     >
-      <div className="relative w-full h-[75vh] rounded-3xl overflow-hidden shadow-2xl bg-card border border-white/10">
+      <div className="relative w-full h-[75vh] rounded-3xl overflow-hidden shadow-2xl bg-gradient-to-br from-primary/30 via-secondary/20 to-primary/10 border border-white/10">
         {/* Photo */}
-        <img 
-          src={primaryPhoto} 
-          alt={displayName} 
-          className="w-full h-full object-cover"
-        />
+        {primaryPhoto && !imageError ? (
+          <img 
+            src={primaryPhoto} 
+            alt={displayName} 
+            className={`w-full h-full object-cover transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+            onLoad={() => setImageLoaded(true)}
+            onError={() => setImageError(true)}
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/20 via-secondary/10 to-primary/5">
+            <div className="text-center">
+              <User className="w-32 h-32 text-white/40 mx-auto" />
+              <p className="text-white/60 mt-4 text-lg">{t.profile.noPhotos || "No photo available"}</p>
+            </div>
+          </div>
+        )}
 
         {/* Overlays */}
         <motion.div style={{ opacity: likeOpacity }} className="absolute top-8 left-8 border-4 border-green-500 rounded-lg px-4 py-2 -rotate-12 z-20">
