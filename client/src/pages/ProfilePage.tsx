@@ -67,6 +67,8 @@ export default function ProfilePage() {
     pets: "",
     exercise: "",
     incognito: false,
+    interests: [] as string[],
+    relationshipType: "",
   });
 
   useEffect(() => {
@@ -90,6 +92,8 @@ export default function ProfilePage() {
         pets: user.profile?.pets || "",
         exercise: user.profile?.exercise || "",
         incognito: user.profile?.incognito || false,
+        interests: user.profile?.interests || [],
+        relationshipType: user.profile?.relationshipType || "",
       });
     }
   }, [user]);
@@ -203,6 +207,50 @@ export default function ProfilePage() {
       </div>
 
       <div className="mt-16 px-6 space-y-8">
+        {/* Profile Completion Indicator */}
+        {(() => {
+          const fields = [
+            formState.displayName,
+            formState.bio,
+            formState.age > 18,
+            formState.gender,
+            formState.zodiacSign,
+            formState.occupation,
+            formState.birthplace,
+            formState.relationshipType,
+            formState.interests.length > 0,
+            (user?.photos?.length || 0) > 0,
+          ];
+          const completed = fields.filter(Boolean).length;
+          const total = fields.length;
+          const percentage = Math.round((completed / total) * 100);
+          
+          if (percentage < 100) {
+            return (
+              <section>
+                <Card className="border-primary/20 bg-gradient-to-r from-primary/5 to-secondary/5">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="font-medium">{t.profileDetails?.profileCompletion || "Profile Completion"}</p>
+                      <span className="text-primary font-bold">{percentage}%</span>
+                    </div>
+                    <div className="w-full bg-muted rounded-full h-2">
+                      <div 
+                        className="bg-primary rounded-full h-2 transition-all duration-500"
+                        style={{ width: `${percentage}%` }}
+                      />
+                    </div>
+                    <p className="text-sm text-muted-foreground mt-2">
+                      {t.profileDetails?.completeProfile || "Complete your profile for more matches"}
+                    </p>
+                  </CardContent>
+                </Card>
+              </section>
+            );
+          }
+          return null;
+        })()}
+
         {/* Info Section */}
         <section>
           <h2 className="text-2xl font-display font-bold mb-4">{t.profile.editProfile}</h2>
@@ -293,6 +341,57 @@ export default function ProfilePage() {
               </div>
             </CardContent>
           </Card>
+        </section>
+
+        {/* Relationship Type Section */}
+        <section>
+          <h2 className="text-xl font-display font-bold mb-4 flex items-center gap-2">
+            <Heart className="w-5 h-5 text-primary" />
+            {t.profileDetails?.relationshipType || "Relationship Type"}
+          </h2>
+          <Select value={formState.relationshipType} onValueChange={(v) => setFormState({...formState, relationshipType: v})}>
+            <SelectTrigger className="rounded-xl" data-testid="select-relationship-type">
+              <SelectValue placeholder={t.profileDetails?.selectRelationship || "What are you looking for?"} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="longTerm">{t.relationshipTypes?.longTerm || "Long-term relationship"}</SelectItem>
+              <SelectItem value="shortTerm">{t.relationshipTypes?.shortTerm || "Something casual"}</SelectItem>
+              <SelectItem value="friends">{t.relationshipTypes?.friends || "New friends"}</SelectItem>
+              <SelectItem value="figuring">{t.relationshipTypes?.figuring || "Still figuring it out"}</SelectItem>
+              <SelectItem value="marriage">{t.relationshipTypes?.marriage || "Marriage"}</SelectItem>
+            </SelectContent>
+          </Select>
+        </section>
+
+        {/* Interests Section */}
+        <section>
+          <h2 className="text-xl font-display font-bold mb-4 flex items-center gap-2">
+            <Star className="w-5 h-5 text-primary" />
+            {t.profileDetails?.interests || "Interests"}
+          </h2>
+          <div className="flex flex-wrap gap-2">
+            {["music", "movies", "travel", "reading", "sports", "gaming", "cooking", "art", "photography", "dancing", "fitness", "yoga", "hiking", "beach", "coffee", "wine", "foodie", "fashion", "tech", "nature", "pets", "volunteering"].map((interest) => {
+              const isSelected = formState.interests.includes(interest);
+              return (
+                <Button
+                  key={interest}
+                  variant={isSelected ? "default" : "outline"}
+                  size="sm"
+                  className="rounded-full"
+                  onClick={() => {
+                    if (isSelected) {
+                      setFormState({...formState, interests: formState.interests.filter(i => i !== interest)});
+                    } else {
+                      setFormState({...formState, interests: [...formState.interests, interest]});
+                    }
+                  }}
+                  data-testid={`button-interest-${interest}`}
+                >
+                  {t.interests?.[interest as keyof typeof t.interests] || interest}
+                </Button>
+              );
+            })}
+          </div>
         </section>
 
         {/* Basics Section */}
@@ -648,6 +747,8 @@ export default function ProfilePage() {
             pets: user.profile?.pets || null,
             religion: user.profile?.religion || null,
             politics: user.profile?.politics || null,
+            interests: user.profile?.interests || null,
+            relationshipType: user.profile?.relationshipType || null,
           }
         } as UserWithPhotos : null}
         open={showPreview}

@@ -27,6 +27,9 @@ export const profiles = pgTable("profiles", {
   pets: text("pets"),
   exercise: text("exercise"),
   incognito: boolean("incognito").default(false),
+  interests: text("interests").array(),
+  relationshipType: text("relationship_type"),
+  lastActive: timestamp("last_active").defaultNow(),
 });
 
 export const photos = pgTable("photos", {

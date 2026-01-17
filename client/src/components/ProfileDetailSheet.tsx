@@ -133,6 +133,45 @@ export function ProfileDetailSheet({ user, open, onOpenChange }: ProfileDetailSh
     return politicsMap[key] || key;
   };
 
+  const getRelationshipTypeLabel = (key: string) => {
+    const relationshipMap: Record<string, string> = {
+      longTerm: t.relationshipTypes?.longTerm || "Long-term relationship",
+      shortTerm: t.relationshipTypes?.shortTerm || "Something casual",
+      friends: t.relationshipTypes?.friends || "New friends",
+      figuring: t.relationshipTypes?.figuring || "Still figuring it out",
+      marriage: t.relationshipTypes?.marriage || "Marriage",
+    };
+    return relationshipMap[key] || key;
+  };
+
+  const getInterestLabel = (key: string) => {
+    const interestMap: Record<string, string> = {
+      music: t.interests?.music || "Music",
+      movies: t.interests?.movies || "Movies",
+      travel: t.interests?.travel || "Travel",
+      reading: t.interests?.reading || "Reading",
+      sports: t.interests?.sports || "Sports",
+      gaming: t.interests?.gaming || "Gaming",
+      cooking: t.interests?.cooking || "Cooking",
+      art: t.interests?.art || "Art",
+      photography: t.interests?.photography || "Photography",
+      dancing: t.interests?.dancing || "Dancing",
+      fitness: t.interests?.fitness || "Fitness",
+      yoga: t.interests?.yoga || "Yoga",
+      hiking: t.interests?.hiking || "Hiking",
+      beach: t.interests?.beach || "Beach",
+      coffee: t.interests?.coffee || "Coffee",
+      wine: t.interests?.wine || "Wine",
+      foodie: t.interests?.foodie || "Foodie",
+      fashion: t.interests?.fashion || "Fashion",
+      tech: t.interests?.tech || "Technology",
+      nature: t.interests?.nature || "Nature",
+      pets: t.interests?.pets || "Pets",
+      volunteering: t.interests?.volunteering || "Volunteering",
+    };
+    return interestMap[key] || key;
+  };
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="bottom" className="h-[90vh] rounded-t-3xl overflow-y-auto p-0">
@@ -202,6 +241,30 @@ export function ProfileDetailSheet({ user, open, onOpenChange }: ProfileDetailSh
             {profile?.bio && (
               <div>
                 <p className="text-lg text-foreground">{profile.bio}</p>
+              </div>
+            )}
+
+            {profile?.relationshipType && (
+              <div>
+                <h3 className="text-sm font-semibold text-muted-foreground mb-3">{t.profileDetails?.relationshipType || "Looking for"}</h3>
+                <Badge variant="default" className="flex items-center gap-1 w-fit">
+                  <Heart size={14} />
+                  {getRelationshipTypeLabel(profile.relationshipType)}
+                </Badge>
+              </div>
+            )}
+
+            {profile?.interests && profile.interests.length > 0 && (
+              <div>
+                <h3 className="text-sm font-semibold text-muted-foreground mb-3">{t.profileDetails?.interests || "Interests"}</h3>
+                <div className="flex flex-wrap gap-2">
+                  {profile.interests.map((interest: string) => (
+                    <Badge key={interest} variant="secondary" className="flex items-center gap-1">
+                      <Star size={14} />
+                      {getInterestLabel(interest)}
+                    </Badge>
+                  ))}
+                </div>
               </div>
             )}
 
