@@ -683,7 +683,7 @@ export default function ProfilePage() {
           </Card>
 
           {/* Admin Panel - Only visible to admins */}
-          {(user as any).isAdmin === 'true' && (
+          {user.isAdmin === 'true' && (
             <Link href="/admin">
               <Card className="border-dashed cursor-pointer hover-elevate border-primary/30 bg-primary/5">
                 <CardContent className="p-4">

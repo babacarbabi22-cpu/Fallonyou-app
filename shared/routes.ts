@@ -25,6 +25,8 @@ export type CurrentUserResponse = {
   profileImageUrl: string | null;
   isPremium: string | null;
   isVerified: string | null;
+  isAdmin: string | null;
+  isBanned: string | null;
   location: string | null;
   createdAt: Date | null;
   ageConfirmed: boolean;

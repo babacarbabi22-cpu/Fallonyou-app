@@ -264,8 +264,19 @@ export async function setupAuth(app: Express) {
   });
 }
 
-export const isAuthenticated: RequestHandler = (req: any, res, next) => {
+export const isAuthenticated: RequestHandler = async (req: any, res, next) => {
   if (req.isAuthenticated && req.isAuthenticated()) {
+    const userId = (req.session as any)?.userId;
+    if (userId) {
+      const [user] = await db.select().from(users).where(eq(users.id, userId));
+      if (user?.isBanned === 'true') {
+        req.session.destroy(() => {});
+        return res.status(403).json({ 
+          message: "Account suspended", 
+          reason: user.banReason || "Your account has been suspended" 
+        });
+      }
+    }
     return next();
   }
   res.status(401).json({ message: "Unauthorized" });
