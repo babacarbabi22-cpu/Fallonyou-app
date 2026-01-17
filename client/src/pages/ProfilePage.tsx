@@ -1,4 +1,4 @@
-import { useCurrentUser, useUpdateProfile, useDeletePhoto } from "@/hooks/use-danceme";
+import { useCurrentUser, useUpdateProfile, useDeletePhoto, UserWithPhotos } from "@/hooks/use-danceme";
 import { BottomNav } from "@/components/BottomNav";
 import { useAuth } from "@/hooks/use-auth";
 import { useUpload } from "@/hooks/use-upload";
@@ -19,6 +19,7 @@ import { Link } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { FileText, Mail } from "lucide-react";
 import { queryClient } from "@/lib/queryClient";
+import { ProfileDetailSheet } from "@/components/ProfileDetailSheet";
 
 export default function ProfilePage() {
   const { data: user, isLoading } = useCurrentUser();
@@ -122,6 +123,7 @@ export default function ProfilePage() {
   };
 
   const [isSettingProfilePic, setIsSettingProfilePic] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
   
   const setAsProfilePicture = async (photoUrl: string) => {
     setIsSettingProfilePic(true);
@@ -178,6 +180,18 @@ export default function ProfilePage() {
               data-testid="input-file-upload"
             />
           </div>
+        </div>
+        <div className="absolute -bottom-12 right-6">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => setShowPreview(true)}
+            className="shadow-lg rounded-full bg-background"
+            data-testid="button-preview-profile"
+          >
+            <Eye className="w-4 h-4 mr-2" />
+            {t.profile.previewProfile || "Ver perfil"}
+          </Button>
         </div>
         <div className="absolute top-4 right-4 flex gap-2">
            <LanguageSelector />
@@ -610,6 +624,35 @@ export default function ProfilePage() {
           </div>
         </section>
       </div>
+
+      {/* Profile Preview Sheet */}
+      <ProfileDetailSheet 
+        user={user ? {
+          id: user.id,
+          firstName: user.displayName || user.firstName || "User",
+          profileImageUrl: user.profileImageUrl || user.photos?.[0]?.url || null,
+          photos: user.photos || [],
+          profile: {
+            bio: user.bio || user.profile?.bio || null,
+            age: user.age || user.profile?.age || null,
+            gender: user.gender || user.profile?.gender || null,
+            zodiacSign: user.profile?.zodiacSign || null,
+            birthplace: user.profile?.birthplace || null,
+            occupation: user.profile?.occupation || null,
+            height: user.profile?.height || null,
+            education: user.profile?.education || null,
+            smoking: user.profile?.smoking || null,
+            drinking: user.profile?.drinking || null,
+            exercise: user.profile?.exercise || null,
+            children: user.profile?.children || null,
+            pets: user.profile?.pets || null,
+            religion: user.profile?.religion || null,
+            politics: user.profile?.politics || null,
+          }
+        } as UserWithPhotos : null}
+        open={showPreview}
+        onOpenChange={setShowPreview}
+      />
 
       <BottomNav />
     </div>

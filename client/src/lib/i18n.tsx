@@ -103,6 +103,7 @@ export const translations = {
       profilePhotoSetDescription: "Tu foto de perfil ha sido actualizada",
       tapToSetProfile: "Toca una foto para establecerla como foto de perfil",
       setAsProfile: "Establecer como foto de perfil",
+      previewProfile: "Ver perfil",
     },
     premium: {
       title: "Hazte Premium",
@@ -414,6 +415,7 @@ export const translations = {
       profilePhotoSetDescription: "Your profile photo has been updated",
       tapToSetProfile: "Tap a photo to set as profile picture",
       setAsProfile: "Set as profile picture",
+      previewProfile: "View profile",
     },
     premium: {
       title: "Go Premium",
@@ -725,6 +727,7 @@ export const translations = {
       profilePhotoSetDescription: "Votre photo de profil a été mise à jour",
       tapToSetProfile: "Appuyez sur une photo pour la définir comme photo de profil",
       setAsProfile: "Définir comme photo de profil",
+      previewProfile: "Voir le profil",
     },
     premium: {
       title: "Passez Premium",
