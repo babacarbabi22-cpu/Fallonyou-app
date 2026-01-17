@@ -51,6 +51,10 @@ export default function SwipePage() {
     queryKey: ['/api/super-likes/status'],
   });
 
+  const { data: likesReceived } = useQuery({
+    queryKey: ['/api/premium/liked-by'],
+  });
+
   const updatePreferences = useMutation({
     mutationFn: async (prefs: any) => {
       const res = await apiRequest('PATCH', '/api/preferences', prefs);
@@ -205,6 +209,28 @@ export default function SwipePage() {
           </div>
         </div>
       </div>
+
+      {/* Who Liked You Banner */}
+      {(likesReceived as any)?.count > 0 && (
+        <div className="px-4 mb-3">
+          <div className="bg-gradient-to-r from-pink-500 to-orange-400 rounded-xl p-3 shadow-lg">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+                  <Heart className="w-5 h-5 text-white fill-white" />
+                </div>
+                <div>
+                  <p className="text-white font-bold">
+                    {(likesReceived as any).count} {(likesReceived as any).count === 1 ? 'person likes you!' : 'people like you!'}
+                  </p>
+                  <p className="text-white/80 text-sm">Swipe right to match</p>
+                </div>
+              </div>
+              <Sparkles className="w-6 h-6 text-white animate-pulse" />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Card Stack */}
       <div className="relative w-full max-w-md mx-auto h-[65vh] px-4 mt-2">

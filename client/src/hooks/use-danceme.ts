@@ -32,7 +32,40 @@ export function useUpdateProfile() {
       if (!res.ok) throw new Error("Failed to update profile");
       return res.json();
     },
-    onSuccess: () => {
+    onMutate: async (newData) => {
+      // Cancel outgoing queries for optimistic update
+      await queryClient.cancelQueries({ queryKey: [api.auth.me.path] });
+      
+      // Get current data
+      const previousData = queryClient.getQueryData([api.auth.me.path]);
+      
+      // Optimistically update the cache immediately
+      queryClient.setQueryData([api.auth.me.path], (old: any) => {
+        if (!old) return old;
+        return {
+          ...old,
+          firstName: newData.displayName || old.firstName,
+          displayName: newData.displayName || old.displayName,
+          profile: {
+            ...old.profile,
+            bio: newData.bio ?? old.profile?.bio,
+            age: newData.age ?? old.profile?.age,
+            gender: newData.gender ?? old.profile?.gender,
+            preference: newData.preference ?? old.profile?.preference,
+          }
+        };
+      });
+      
+      return { previousData };
+    },
+    onError: (_err, _newData, context) => {
+      // Rollback on error
+      if (context?.previousData) {
+        queryClient.setQueryData([api.auth.me.path], context.previousData);
+      }
+    },
+    onSettled: () => {
+      // Refetch to ensure consistency
       queryClient.invalidateQueries({ queryKey: [api.auth.me.path] });
     },
   });

@@ -207,18 +207,13 @@ export default function ProfilePage() {
       </div>
 
       <div className="mt-16 px-6 space-y-8">
-        {/* Profile Completion Indicator */}
+        {/* Profile Completion Indicator - Simplified to 5 essential fields */}
         {(() => {
           const fields = [
             formState.displayName,
-            formState.bio,
             formState.age > 18,
+            formState.bio,
             formState.gender,
-            formState.zodiacSign,
-            formState.occupation,
-            formState.birthplace,
-            formState.relationshipType,
-            formState.interests.length > 0,
             (user?.photos?.length || 0) > 0,
           ];
           const completed = fields.filter(Boolean).length;
