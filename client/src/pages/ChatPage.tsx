@@ -1,19 +1,31 @@
 import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useRoute, Link } from "wouter";
+import { useRoute, Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
-import { ArrowLeft, Send, MoreVertical, Shield, Flag, Ban, CheckCheck, Check } from "lucide-react";
+import { ArrowLeft, Send, MoreVertical, Shield, Flag, Ban, CheckCheck, Check, XCircle } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "@/lib/i18n";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 
 interface Message {
   id: number;
@@ -36,12 +48,19 @@ interface MatchUser {
   photos?: Array<{ url: string }>;
 }
 
+type ActionType = "report" | "block" | "end" | null;
+
 export default function ChatPage() {
   const [, params] = useRoute("/chat/:matchId");
   const matchId = parseInt(params?.matchId || "0");
   const [message, setMessage] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+  const t = useTranslation();
+  const [, navigate] = useLocation();
+  
+  const [actionDialog, setActionDialog] = useState<ActionType>(null);
+  const [selectedReason, setSelectedReason] = useState("");
 
   const { data: currentUser } = useQuery<{ id: string }>({
     queryKey: ['/api/user'],
@@ -80,23 +99,41 @@ export default function ChatPage() {
   });
 
   const blockMutation = useMutation({
-    mutationFn: async () => {
-      await apiRequest('POST', `/api/users/${matchData?.otherUser?.id}/block`, {});
+    mutationFn: async (reason: string) => {
+      await apiRequest('POST', `/api/users/${matchData?.otherUser?.id}/block`, { reason });
     },
     onSuccess: () => {
-      toast({ title: "User blocked", description: "You won't see this user anymore" });
+      toast({ title: t.chat.userBlocked, description: t.chat.thankYou });
+      setActionDialog(null);
+      setSelectedReason("");
+      navigate("/matches");
     }
   });
 
   const reportMutation = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (reason: string) => {
       await apiRequest('POST', `/api/users/${matchData?.otherUser?.id}/report`, { 
-        reason: "Inappropriate behavior",
+        reason,
         details: "Reported from chat" 
       });
     },
     onSuccess: () => {
-      toast({ title: "Report submitted", description: "Thank you for helping keep our community safe" });
+      toast({ title: t.chat.reportSent, description: t.chat.thankYou });
+      setActionDialog(null);
+      setSelectedReason("");
+    }
+  });
+
+  const endConversationMutation = useMutation({
+    mutationFn: async (reason: string) => {
+      await apiRequest('POST', `/api/matches/${matchId}/end`, { reason });
+    },
+    onSuccess: () => {
+      toast({ title: t.chat.conversationEnded, description: t.chat.thankYou });
+      setActionDialog(null);
+      setSelectedReason("");
+      queryClient.invalidateQueries({ queryKey: ['/api/matches'] });
+      navigate("/matches");
     }
   });
 
@@ -145,20 +182,28 @@ export default function ChatPage() {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem 
-                onClick={() => reportMutation.mutate()}
+                onClick={() => { setSelectedReason(""); setActionDialog("end"); }}
+                data-testid="menu-item-end"
+              >
+                <XCircle className="w-4 h-4 mr-2" />
+                {t.chat.endConversation}
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem 
+                onClick={() => { setSelectedReason(""); setActionDialog("report"); }}
                 className="text-orange-600"
                 data-testid="menu-item-report"
               >
                 <Flag className="w-4 h-4 mr-2" />
-                Report User
+                {t.chat.report}
               </DropdownMenuItem>
               <DropdownMenuItem 
-                onClick={() => blockMutation.mutate()}
+                onClick={() => { setSelectedReason(""); setActionDialog("block"); }}
                 className="text-red-600"
                 data-testid="menu-item-block"
               >
                 <Ban className="w-4 h-4 mr-2" />
-                Block User
+                {t.chat.block}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -236,6 +281,140 @@ export default function ChatPage() {
           </Button>
         </form>
       </footer>
+
+      <Dialog open={actionDialog === "report"} onOpenChange={(open) => !open && setActionDialog(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t.chat.reportReasons.title}</DialogTitle>
+            <DialogDescription>{t.chat.selectReason}</DialogDescription>
+          </DialogHeader>
+          <RadioGroup value={selectedReason} onValueChange={setSelectedReason} className="space-y-3">
+            <div className="flex items-center space-x-3 p-3 rounded-lg border hover-elevate cursor-pointer" onClick={() => setSelectedReason("inappropriate")}>
+              <RadioGroupItem value="inappropriate" id="report-inappropriate" />
+              <Label htmlFor="report-inappropriate" className="cursor-pointer flex-1">{t.chat.reportReasons.inappropriate}</Label>
+            </div>
+            <div className="flex items-center space-x-3 p-3 rounded-lg border hover-elevate cursor-pointer" onClick={() => setSelectedReason("harassment")}>
+              <RadioGroupItem value="harassment" id="report-harassment" />
+              <Label htmlFor="report-harassment" className="cursor-pointer flex-1">{t.chat.reportReasons.harassment}</Label>
+            </div>
+            <div className="flex items-center space-x-3 p-3 rounded-lg border hover-elevate cursor-pointer" onClick={() => setSelectedReason("spam")}>
+              <RadioGroupItem value="spam" id="report-spam" />
+              <Label htmlFor="report-spam" className="cursor-pointer flex-1">{t.chat.reportReasons.spam}</Label>
+            </div>
+            <div className="flex items-center space-x-3 p-3 rounded-lg border hover-elevate cursor-pointer" onClick={() => setSelectedReason("fakeProfile")}>
+              <RadioGroupItem value="fakeProfile" id="report-fake" />
+              <Label htmlFor="report-fake" className="cursor-pointer flex-1">{t.chat.reportReasons.fakeProfile}</Label>
+            </div>
+            <div className="flex items-center space-x-3 p-3 rounded-lg border hover-elevate cursor-pointer" onClick={() => setSelectedReason("underage")}>
+              <RadioGroupItem value="underage" id="report-underage" />
+              <Label htmlFor="report-underage" className="cursor-pointer flex-1">{t.chat.reportReasons.underage}</Label>
+            </div>
+            <div className="flex items-center space-x-3 p-3 rounded-lg border hover-elevate cursor-pointer" onClick={() => setSelectedReason("other")}>
+              <RadioGroupItem value="other" id="report-other" />
+              <Label htmlFor="report-other" className="cursor-pointer flex-1">{t.chat.reportReasons.other}</Label>
+            </div>
+          </RadioGroup>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => { setActionDialog(null); setSelectedReason(""); }} data-testid="button-cancel-report">
+              {t.chat.cancel}
+            </Button>
+            <Button 
+              onClick={() => reportMutation.mutate(selectedReason)} 
+              disabled={!selectedReason || reportMutation.isPending}
+              data-testid="button-confirm-report"
+            >
+              {t.chat.confirm}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={actionDialog === "block"} onOpenChange={(open) => !open && setActionDialog(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t.chat.blockReasons.title}</DialogTitle>
+            <DialogDescription>{t.chat.selectReason}</DialogDescription>
+          </DialogHeader>
+          <RadioGroup value={selectedReason} onValueChange={setSelectedReason} className="space-y-3">
+            <div className="flex items-center space-x-3 p-3 rounded-lg border hover-elevate cursor-pointer" onClick={() => setSelectedReason("noInterest")}>
+              <RadioGroupItem value="noInterest" id="block-nointerest" />
+              <Label htmlFor="block-nointerest" className="cursor-pointer flex-1">{t.chat.blockReasons.noInterest}</Label>
+            </div>
+            <div className="flex items-center space-x-3 p-3 rounded-lg border hover-elevate cursor-pointer" onClick={() => setSelectedReason("uncomfortable")}>
+              <RadioGroupItem value="uncomfortable" id="block-uncomfortable" />
+              <Label htmlFor="block-uncomfortable" className="cursor-pointer flex-1">{t.chat.blockReasons.uncomfortable}</Label>
+            </div>
+            <div className="flex items-center space-x-3 p-3 rounded-lg border hover-elevate cursor-pointer" onClick={() => setSelectedReason("inappropriate")}>
+              <RadioGroupItem value="inappropriate" id="block-inappropriate" />
+              <Label htmlFor="block-inappropriate" className="cursor-pointer flex-1">{t.chat.blockReasons.inappropriate}</Label>
+            </div>
+            <div className="flex items-center space-x-3 p-3 rounded-lg border hover-elevate cursor-pointer" onClick={() => setSelectedReason("spam")}>
+              <RadioGroupItem value="spam" id="block-spam" />
+              <Label htmlFor="block-spam" className="cursor-pointer flex-1">{t.chat.blockReasons.spam}</Label>
+            </div>
+            <div className="flex items-center space-x-3 p-3 rounded-lg border hover-elevate cursor-pointer" onClick={() => setSelectedReason("other")}>
+              <RadioGroupItem value="other" id="block-other" />
+              <Label htmlFor="block-other" className="cursor-pointer flex-1">{t.chat.blockReasons.other}</Label>
+            </div>
+          </RadioGroup>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => { setActionDialog(null); setSelectedReason(""); }} data-testid="button-cancel-block">
+              {t.chat.cancel}
+            </Button>
+            <Button 
+              variant="destructive"
+              onClick={() => blockMutation.mutate(selectedReason)} 
+              disabled={!selectedReason || blockMutation.isPending}
+              data-testid="button-confirm-block"
+            >
+              {t.chat.confirm}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={actionDialog === "end"} onOpenChange={(open) => !open && setActionDialog(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t.chat.endReasons.title}</DialogTitle>
+            <DialogDescription>{t.chat.selectReason}</DialogDescription>
+          </DialogHeader>
+          <RadioGroup value={selectedReason} onValueChange={setSelectedReason} className="space-y-3">
+            <div className="flex items-center space-x-3 p-3 rounded-lg border hover-elevate cursor-pointer" onClick={() => setSelectedReason("alreadyMet")}>
+              <RadioGroupItem value="alreadyMet" id="end-met" />
+              <Label htmlFor="end-met" className="cursor-pointer flex-1">{t.chat.endReasons.alreadyMet}</Label>
+            </div>
+            <div className="flex items-center space-x-3 p-3 rounded-lg border hover-elevate cursor-pointer" onClick={() => setSelectedReason("noConnection")}>
+              <RadioGroupItem value="noConnection" id="end-noconnection" />
+              <Label htmlFor="end-noconnection" className="cursor-pointer flex-1">{t.chat.endReasons.noConnection}</Label>
+            </div>
+            <div className="flex items-center space-x-3 p-3 rounded-lg border hover-elevate cursor-pointer" onClick={() => setSelectedReason("foundSomeone")}>
+              <RadioGroupItem value="foundSomeone" id="end-found" />
+              <Label htmlFor="end-found" className="cursor-pointer flex-1">{t.chat.endReasons.foundSomeone}</Label>
+            </div>
+            <div className="flex items-center space-x-3 p-3 rounded-lg border hover-elevate cursor-pointer" onClick={() => setSelectedReason("notReady")}>
+              <RadioGroupItem value="notReady" id="end-notready" />
+              <Label htmlFor="end-notready" className="cursor-pointer flex-1">{t.chat.endReasons.notReady}</Label>
+            </div>
+            <div className="flex items-center space-x-3 p-3 rounded-lg border hover-elevate cursor-pointer" onClick={() => setSelectedReason("other")}>
+              <RadioGroupItem value="other" id="end-other" />
+              <Label htmlFor="end-other" className="cursor-pointer flex-1">{t.chat.endReasons.other}</Label>
+            </div>
+          </RadioGroup>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => { setActionDialog(null); setSelectedReason(""); }} data-testid="button-cancel-end">
+              {t.chat.cancel}
+            </Button>
+            <Button 
+              onClick={() => endConversationMutation.mutate(selectedReason)} 
+              disabled={!selectedReason || endConversationMutation.isPending}
+              data-testid="button-confirm-end"
+            >
+              {t.chat.confirm}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

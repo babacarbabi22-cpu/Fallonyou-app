@@ -424,6 +424,21 @@ export async function registerRoutes(
     res.status(201).json(message);
   });
 
+  app.post('/api/matches/:matchId/end', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const matchId = parseInt(req.params.matchId);
+    
+    const match = await storage.getMatchById(matchId);
+    if (!match) return res.sendStatus(404);
+    if (match.user1Id !== req.user!.id && match.user2Id !== req.user!.id) {
+      return res.sendStatus(403);
+    }
+    
+    const { reason } = req.body;
+    await storage.endMatch(matchId, reason || 'User ended conversation');
+    res.json({ success: true });
+  });
+
   app.get('/api/messages/unread-count', async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     const count = await storage.getUnreadMessageCount(req.user!.id);

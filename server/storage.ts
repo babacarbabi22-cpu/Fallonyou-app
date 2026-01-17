@@ -21,6 +21,7 @@ export interface IStorage {
 
   createMatch(user1Id: string, user2Id: string): Promise<Match | undefined>;
   getMatches(userId: string): Promise<Match[]>;
+  endMatch(matchId: number, reason: string): Promise<void>;
   getPotentialMatches(userId: string): Promise<User[]>;
   
   createRating(rating: typeof ratings.$inferInsert): Promise<Rating>;
@@ -103,6 +104,12 @@ export class DatabaseStorage implements IStorage {
         or(eq(matches.user1Id, userId), eq(matches.user2Id, userId))
       )
     );
+  }
+
+  async endMatch(matchId: number, reason: string): Promise<void> {
+    await db.update(matches)
+      .set({ status: 'ended' })
+      .where(eq(matches.id, matchId));
   }
 
   async getPotentialMatches(userId: string): Promise<User[]> {
