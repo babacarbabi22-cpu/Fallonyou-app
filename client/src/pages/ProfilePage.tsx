@@ -159,7 +159,7 @@ export default function ProfilePage() {
   return (
     <div className="min-h-screen bg-background pb-24">
       {/* Header Image / Cover with decorative elements */}
-      <div className="relative h-48 bg-gradient-to-br from-primary via-purple-500 to-pink-500 overflow-hidden">
+      <div className="relative h-48 bg-gradient-to-br from-primary via-purple-500 to-pink-500">
         {/* Decorative background with name and hearts */}
         <div className="absolute inset-0 flex items-center justify-center opacity-20">
           <div className="flex flex-wrap gap-4 items-center justify-center">
