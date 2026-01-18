@@ -2,6 +2,7 @@ import { useSwipeFeed, useSwipeRight, useCurrentUser, UserWithPhotos } from "@/h
 import { SwipeCard } from "@/components/SwipeCard";
 import { BottomNav } from "@/components/BottomNav";
 import { ProfileDetailSheet } from "@/components/ProfileDetailSheet";
+import { MatchHeartCascade } from "@/components/HeartCascade";
 import { AnimatePresence, motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
@@ -320,7 +321,8 @@ export default function SwipePage() {
         </p>
       )}
 
-      {/* Match Overlay Animation */}
+      {/* Match Overlay Animation with Heart Cascade */}
+      <MatchHeartCascade isActive={matchAnimation} duration={3000} />
       <AnimatePresence>
         {matchAnimation && (
           <motion.div 
@@ -330,9 +332,29 @@ export default function SwipePage() {
             className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
           >
             <div className="text-center">
-              <h2 className="text-6xl font-display font-black text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary drop-shadow-2xl animate-pulse">
+              <motion.div
+                initial={{ scale: 0, rotate: -180 }}
+                animate={{ scale: 1, rotate: 0 }}
+                transition={{ type: "spring", stiffness: 260, damping: 20 }}
+              >
+                <Heart className="w-24 h-24 text-pink-500 fill-pink-500 mx-auto mb-4 drop-shadow-2xl" />
+              </motion.div>
+              <motion.h2 
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.2 }}
+                className="text-5xl md:text-6xl font-display font-black text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-purple-500 to-primary drop-shadow-2xl"
+              >
                 IT'S A MATCH!
-              </h2>
+              </motion.h2>
+              <motion.p
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.4 }}
+                className="text-white/80 text-lg mt-4"
+              >
+                Start a conversation now!
+              </motion.p>
             </div>
           </motion.div>
         )}

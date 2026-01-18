@@ -158,19 +158,41 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-background pb-24">
-      {/* Header Image / Cover */}
-      <div className="relative h-48 bg-gradient-to-br from-primary to-secondary">
+      {/* Header Image / Cover with decorative elements */}
+      <div className="relative h-48 bg-gradient-to-br from-primary via-purple-500 to-pink-500 overflow-hidden">
+        {/* Decorative background with name and hearts */}
+        <div className="absolute inset-0 flex items-center justify-center opacity-20">
+          <div className="flex flex-wrap gap-4 items-center justify-center">
+            <Heart className="w-12 h-12 text-white fill-white" />
+            <span className="text-4xl font-display font-black text-white uppercase tracking-widest">
+              {formState.displayName || user.firstName || "You"}
+            </span>
+            <Heart className="w-12 h-12 text-white fill-white" />
+          </div>
+        </div>
+        {/* Floating hearts decoration */}
+        <div className="absolute inset-0 pointer-events-none">
+          <Heart className="absolute top-4 left-8 w-6 h-6 text-white/30 fill-white/30 animate-pulse" />
+          <Heart className="absolute top-8 right-12 w-4 h-4 text-white/20 fill-white/20" />
+          <Heart className="absolute bottom-16 left-1/4 w-5 h-5 text-white/25 fill-white/25 animate-pulse" style={{ animationDelay: '0.5s' }} />
+          <Heart className="absolute top-12 left-1/3 w-3 h-3 text-white/20 fill-white/20" />
+          <Heart className="absolute bottom-20 right-1/4 w-4 h-4 text-white/30 fill-white/30 animate-pulse" style={{ animationDelay: '1s' }} />
+          <Heart className="absolute top-6 right-1/3 w-5 h-5 text-white/15 fill-white/15" />
+        </div>
+        
         <div className="absolute -bottom-12 left-6">
           <div className="relative w-24 h-24">
+            {/* Decorative ring behind photo */}
+            <div className="absolute -inset-2 bg-gradient-to-br from-pink-400 via-purple-400 to-primary rounded-full opacity-60 animate-pulse" />
             <img 
               src={user.profileImageUrl || user.photos?.[0]?.url || "https://images.unsplash.com/photo-1511367461989-f85a21fda167?w=200&auto=format&fit=crop&q=60"} 
-              className="w-full h-full rounded-full object-cover border-4 border-background shadow-lg"
+              className="relative w-full h-full rounded-full object-cover border-4 border-background shadow-lg"
               alt="Profile"
             />
             <button 
               onClick={() => fileInputRef.current?.click()}
               disabled={isUploading}
-              className="absolute bottom-0 right-0 p-2 bg-primary text-white rounded-full shadow-lg hover:scale-110 transition-transform"
+              className="absolute bottom-0 right-0 p-2 bg-primary text-white rounded-full shadow-lg hover:scale-110 transition-transform z-10"
               data-testid="button-upload-photo"
             >
               {isUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Camera className="w-4 h-4" />}
