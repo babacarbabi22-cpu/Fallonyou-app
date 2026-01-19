@@ -15,6 +15,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
+// Preload images for faster display
+function preloadImages(urls: string[]) {
+  urls.forEach(url => {
+    const img = new Image();
+    img.src = url;
+  });
+}
+
 export default function SwipePage() {
   const { data: currentUser, isLoading: isAuthLoading } = useCurrentUser();
   const { data: users, isLoading: isUsersLoading, refetch } = useSwipeFeed();
@@ -26,6 +34,16 @@ export default function SwipePage() {
   const [showFilters, setShowFilters] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserWithPhotos | null>(null);
   const [showProfileDetail, setShowProfileDetail] = useState(false);
+  
+  // Preload all user photos when feed is loaded
+  useEffect(() => {
+    if (users && users.length > 0) {
+      const photoUrls = users.flatMap(user => 
+        [user.photos?.[0]?.url, user.profileImageUrl].filter(Boolean) as string[]
+      );
+      preloadImages(photoUrls);
+    }
+  }, [users]);
   const [localPrefs, setLocalPrefs] = useState({
     minAge: 18,
     maxAge: 50,

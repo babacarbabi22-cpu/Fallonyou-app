@@ -1,8 +1,21 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, useMotionValue, useTransform, PanInfo } from "framer-motion";
 import { UserWithPhotos } from "@/hooks/use-danceme";
 import { X, Heart, MapPin, Briefcase, Ruler, GraduationCap, Star, User } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
+
+// Global image cache for faster loading
+const imageCache = new Map<string, boolean>();
+
+function preloadImage(url: string): Promise<boolean> {
+  if (imageCache.has(url)) return Promise.resolve(imageCache.get(url)!);
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => { imageCache.set(url, true); resolve(true); };
+    img.onerror = () => { imageCache.set(url, false); resolve(false); };
+    img.src = url;
+  });
+}
 
 interface SwipeCardProps {
   user: UserWithPhotos;
@@ -14,9 +27,20 @@ export function SwipeCard({ user, onSwipe, onTap }: SwipeCardProps) {
   const { t } = useI18n();
   const [exitX, setExitX] = useState<number>(0);
   const [dragDistance, setDragDistance] = useState(0);
-  const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
   const x = useMotionValue(0);
+  
+  // Get photo URL immediately
+  const primaryPhoto = user.photos?.[0]?.url || user.profileImageUrl || null;
+  
+  // Preload image on mount for caching
+  useEffect(() => {
+    if (primaryPhoto && !imageCache.has(primaryPhoto)) {
+      preloadImage(primaryPhoto).then((success) => {
+        if (!success) setImageError(true);
+      });
+    }
+  }, [primaryPhoto]);
   const rotate = useTransform(x, [-200, 200], [-15, 15]);
   const opacity = useTransform(x, [-200, -150, 0, 150, 200], [0.5, 1, 1, 1, 0.5]);
   
@@ -47,8 +71,6 @@ export function SwipeCard({ user, onSwipe, onTap }: SwipeCardProps) {
     }
   };
 
-  // Get photo URL - prioritize the first photo, then profile image
-  const primaryPhoto = user.photos?.[0]?.url || user.profileImageUrl || null;
   const displayName = user.firstName || "User";
   const profile = user.profile;
 
@@ -97,20 +119,20 @@ export function SwipeCard({ user, onSwipe, onTap }: SwipeCardProps) {
       data-testid="swipe-card"
     >
       <div className="relative w-full h-[75vh] rounded-3xl overflow-hidden shadow-2xl bg-gradient-to-br from-primary/30 via-secondary/20 to-primary/10 border border-white/10">
-        {/* Photo */}
+        {/* Photo - optimized for fast loading */}
         {primaryPhoto && !imageError ? (
           <img 
             src={primaryPhoto} 
             alt={displayName} 
-            className={`w-full h-full object-cover transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
-            onLoad={() => setImageLoaded(true)}
-            onError={() => setImageError(true)}
+            loading="eager"
+            decoding="async"
+            className="w-full h-full object-cover"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/20 via-secondary/10 to-primary/5">
             <div className="text-center">
               <User className="w-32 h-32 text-white/40 mx-auto" />
-              <p className="text-white/60 mt-4 text-lg">{t.profile.noPhotos || "No photo available"}</p>
+              <p className="text-white/60 mt-4 text-lg">No photo available</p>
             </div>
           </div>
         )}
