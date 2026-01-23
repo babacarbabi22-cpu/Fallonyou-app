@@ -27,7 +27,7 @@ workflows:
           cd android
           chmod +x gradlew
           ./gradlew clean
-          ./gradlew assembleRelease --stacktrace
+          ./gradlew bundleRelease --stacktrace
     artifacts:
       - android/app/build/outputs/**/*.apk
       - android/app/build/outputs/**/*.aab
