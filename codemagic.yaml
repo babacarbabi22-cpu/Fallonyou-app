@@ -25,7 +25,9 @@ workflows:
       - name: Build Android release
         script: |
           cd android
-          ./gradlew assembleRelease -x lintVitalAnalyzeRelease -x lintVitalReportRelease
+          chmod +x gradlew
+          ./gradlew clean
+          ./gradlew assembleRelease --stacktrace
     artifacts:
       - android/app/build/outputs/**/*.apk
       - android/app/build/outputs/**/*.aab
