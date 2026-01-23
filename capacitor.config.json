@@ -1,7 +1,7 @@
 {
   "appId": "com.fallonyou.app",
   "appName": "FallonYou",
-  "webDir": "dist/public",
+  "webDir": "public",
   "bundledWebRuntime": false,
   "server": {
     "androidScheme": "https"
