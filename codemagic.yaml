@@ -13,7 +13,9 @@ workflows:
       - name: Build web assets
         script: |
           npm run build
-          cp -r dist/public/* public/ || true
+          mkdir -p public
+          cp -r dist/public/* public/
+          ls -la public/
       - name: Sync Capacitor
         script: |
           npx cap sync android
