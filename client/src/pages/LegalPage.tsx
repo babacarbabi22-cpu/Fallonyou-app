@@ -61,11 +61,23 @@ export default function LegalPage() {
                     <li>{t.legal.noImpersonation}</li>
                     <li>{t.legal.noSpam}</li>
                   </ul>
-                  <h3 className="font-semibold text-foreground mt-4">2. {t.legal.safety}</h3>
+                  <h3 className="font-semibold text-foreground mt-4">2. {t.legal.contentGuidelines}</h3>
+                  <ul className="list-disc pl-5 space-y-1">
+                    <li>{t.legal.noNudity}</li>
+                    <li>{t.legal.noViolence}</li>
+                    <li>{t.legal.noHateSpeech}</li>
+                  </ul>
+                  <h3 className="font-semibold text-foreground mt-4">3. {t.legal.safety}</h3>
                   <ul className="list-disc pl-5 space-y-1">
                     <li>{t.legal.noFinancialInfo}</li>
                     <li>{t.legal.reportSuspicious}</li>
                     <li>{t.legal.publicMeetings}</li>
+                  </ul>
+                  <h3 className="font-semibold text-foreground mt-4">4. {t.legal.subscriptionTerms}</h3>
+                  <ul className="list-disc pl-5 space-y-1">
+                    <li>{t.legal.autoRenewal}</li>
+                    <li>{t.legal.cancelAnytime}</li>
+                    <li>{t.legal.refundPolicy}</li>
                   </ul>
                 </div>
               </CardContent>
@@ -81,6 +93,14 @@ export default function LegalPage() {
                 </p>
               </CardHeader>
               <CardContent className="space-y-4">
+                <div className="p-4 bg-primary/10 rounded-lg border border-primary/20">
+                  <p className="font-semibold text-primary">
+                    {t.legal.gdprCompliance}
+                  </p>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {t.legal.gdprDesc}
+                  </p>
+                </div>
                 <p className="text-muted-foreground leading-relaxed">
                   {t.legal.privacyContent}
                 </p>
