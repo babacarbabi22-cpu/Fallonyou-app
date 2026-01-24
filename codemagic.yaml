@@ -6,6 +6,10 @@ workflows:
     environment:
       java: 21
       node: 20
+      groups:
+        - keystore_credentials
+      vars:
+        CM_KEYSTORE_PATH: /tmp/keystore.jks
     scripts:
       - name: Install npm dependencies
         script: |
@@ -22,12 +26,19 @@ workflows:
       - name: Set Android SDK
         script: |
           echo "sdk.dir=$ANDROID_SDK_ROOT" > android/local.properties
+      - name: Setup keystore
+        script: |
+          echo $CM_KEYSTORE | base64 --decode > $CM_KEYSTORE_PATH
       - name: Build Android release
         script: |
           cd android
           chmod +x gradlew
           ./gradlew clean
-          ./gradlew bundleRelease --stacktrace
+          ./gradlew bundleRelease \
+            -Pandroid.injected.signing.store.file=$CM_KEYSTORE_PATH \
+            -Pandroid.injected.signing.store.password=$CM_KEYSTORE_PASSWORD \
+            -Pandroid.injected.signing.key.alias=$CM_KEY_ALIAS \
+            -Pandroid.injected.signing.key.password=$CM_KEY_PASSWORD
     artifacts:
       - android/app/build/outputs/**/*.apk
       - android/app/build/outputs/**/*.aab
