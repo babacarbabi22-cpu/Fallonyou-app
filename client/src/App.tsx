@@ -122,6 +122,9 @@ function Router() {
         {() => <ProtectedRoute component={OnboardingPage} skipOnboarding />}
       </Route>
       <Route path="/legal" component={LegalPage} />
+      <Route path="/privacy">
+        {() => <Redirect to="/legal" />}
+      </Route>
       <Route path="/safety">
         {() => <ProtectedRoute component={SafetyPage} />}
       </Route>
