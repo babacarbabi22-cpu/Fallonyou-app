@@ -17,6 +17,7 @@ import OnboardingPage from "@/pages/OnboardingPage";
 import LegalPage from "@/pages/LegalPage";
 import SafetyPage from "@/pages/SafetyPage";
 import AdminPage from "@/pages/AdminPage";
+import DeleteAccountPage from "@/pages/DeleteAccountPage";
 import { useCurrentUser } from "@/hooks/use-danceme";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
@@ -131,6 +132,7 @@ function Router() {
       <Route path="/admin">
         {() => <ProtectedRoute component={AdminPage} />}
       </Route>
+      <Route path="/delete-account" component={DeleteAccountPage} />
       <Route component={NotFound} />
     </Switch>
   );

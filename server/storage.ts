@@ -423,6 +423,45 @@ export class DatabaseStorage implements IStorage {
       .set({ status: 'resolved' })
       .where(eq(reports.id, reportId));
   }
+
+  // Delete account functions
+  async deleteUserPhotos(userId: string): Promise<void> {
+    await db.delete(photos).where(eq(photos.userId, userId));
+  }
+
+  async deleteProfile(userId: string): Promise<void> {
+    await db.delete(profiles).where(eq(profiles.userId, userId));
+  }
+
+  async deleteUserMatches(userId: string): Promise<void> {
+    await db.delete(matches).where(
+      or(eq(matches.user1Id, userId), eq(matches.user2Id, userId))
+    );
+  }
+
+  async deleteUserMessages(userId: string): Promise<void> {
+    await db.delete(messages).where(
+      or(eq(messages.senderId, userId), eq(messages.receiverId, userId))
+    );
+  }
+
+  async deleteUser(userId: string): Promise<void> {
+    // Delete related data first
+    await db.delete(superLikes).where(
+      or(eq(superLikes.fromUserId, userId), eq(superLikes.toUserId, userId))
+    );
+    await db.delete(blockedUsers).where(
+      or(eq(blockedUsers.userId, userId), eq(blockedUsers.blockedUserId, userId))
+    );
+    await db.delete(reports).where(
+      or(eq(reports.reporterId, userId), eq(reports.reportedId, userId))
+    );
+    await db.delete(preferences).where(eq(preferences.userId, userId));
+    await db.delete(promptResponses).where(eq(promptResponses.userId, userId));
+    
+    // Finally delete the user
+    await db.delete(users).where(eq(users.id, userId));
+  }
 }
 
 export const storage = new DatabaseStorage();

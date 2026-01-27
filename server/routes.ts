@@ -725,5 +725,38 @@ export async function registerRoutes(
     res.json({ isAdmin: user?.isAdmin === 'true' });
   });
 
+  // Delete user account
+  app.delete('/api/user/delete-account', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const userId = req.user!.id;
+    
+    try {
+      // Delete user's photos
+      await storage.deleteUserPhotos(userId);
+      
+      // Delete user's profile
+      await storage.deleteProfile(userId);
+      
+      // Delete user's matches
+      await storage.deleteUserMatches(userId);
+      
+      // Delete user's messages
+      await storage.deleteUserMessages(userId);
+      
+      // Delete user account
+      await storage.deleteUser(userId);
+      
+      // Logout the user
+      req.logout((err) => {
+        if (err) console.error('Logout error:', err);
+      });
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error deleting account:', error);
+      res.status(500).json({ error: 'Failed to delete account' });
+    }
+  });
+
   return httpServer;
 }
