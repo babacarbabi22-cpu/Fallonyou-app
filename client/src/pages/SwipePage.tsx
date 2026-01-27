@@ -152,7 +152,7 @@ export default function SwipePage() {
     <div className="min-h-screen bg-background text-foreground overflow-hidden pb-20">
       {/* Header */}
       <div className="px-6 py-4 flex items-center justify-between">
-        <h1 className="text-3xl font-display font-black"><span className="text-pink-500">Fall</span><span className="text-orange-400">on</span><span className="text-fuchsia-500">You</span></h1>
+        <h1 className="text-3xl font-display font-black"><span className="text-violet-500">Fall</span><span className="text-purple-400">on</span><span className="text-violet-600">You</span></h1>
         <div className="flex items-center gap-2">
           <Sheet open={showFilters} onOpenChange={setShowFilters}>
             <SheetTrigger asChild>
@@ -232,7 +232,7 @@ export default function SwipePage() {
       {/* Who Liked You Banner */}
       {(likesReceived as any)?.count > 0 && (
         <div className="px-4 mb-3">
-          <div className="bg-gradient-to-r from-pink-500 to-orange-400 rounded-xl p-3 shadow-lg">
+          <div className="bg-gradient-to-r from-violet-500 to-purple-400 rounded-xl p-3 shadow-lg">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
