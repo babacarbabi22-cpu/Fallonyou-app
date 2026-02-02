@@ -13,6 +13,7 @@ import { api } from "@shared/routes";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "@/lib/i18n";
 import { LanguageSelector } from "@/components/LanguageSelector";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { VerificationStatus } from "@/components/VerificationBadge";
 import { NotificationToggle } from "@/components/NotificationToggle";
 import { Link } from "wouter";
@@ -220,6 +221,7 @@ export default function ProfilePage() {
           </Button>
         </div>
         <div className="absolute top-4 right-4 flex gap-2">
+           <ThemeToggle />
            <LanguageSelector />
            <Button variant="destructive" size="sm" onClick={() => logout()} className="shadow-lg rounded-full" data-testid="button-logout">
              <LogOut className="w-4 h-4 mr-2" />
