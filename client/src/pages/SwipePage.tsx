@@ -152,7 +152,7 @@ export default function SwipePage() {
     <div className="min-h-screen bg-background text-foreground overflow-hidden pb-20">
       {/* Header */}
       <div className="px-6 py-4 flex items-center justify-between">
-        <h1 className="text-3xl font-display font-black"><span className="text-violet-500">Fall</span><span className="text-purple-400">on</span><span className="text-violet-600">You</span></h1>
+        <h1 className="text-3xl font-display font-black"><span className="bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 bg-clip-text text-transparent">Fallon</span><span className="text-foreground">You</span></h1>
         <div className="flex items-center gap-2">
           <Sheet open={showFilters} onOpenChange={setShowFilters}>
             <SheetTrigger asChild>
@@ -361,7 +361,7 @@ export default function SwipePage() {
                 animate={{ scale: 1, rotate: 0 }}
                 transition={{ type: "spring", stiffness: 260, damping: 20 }}
               >
-                <Heart className="w-24 h-24 text-pink-500 fill-pink-500 mx-auto mb-4 drop-shadow-2xl" />
+                <Heart className="w-24 h-24 text-amber-500 fill-amber-500 mx-auto mb-4 drop-shadow-2xl" />
               </motion.div>
               <motion.h2 
                 initial={{ y: 20, opacity: 0 }}
