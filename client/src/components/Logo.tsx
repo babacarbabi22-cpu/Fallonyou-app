@@ -34,7 +34,7 @@ export function Logo({ size = "lg", showIcon = true, className = "" }: LogoProps
         </div>
       )}
       <span className={`font-display font-black tracking-tight ${sizeClasses[size]}`}>
-        <span className="bg-gradient-to-r from-primary via-pink-500 to-secondary bg-clip-text text-transparent drop-shadow-sm">
+        <span className="bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 bg-clip-text text-transparent drop-shadow-sm">
           Fallon
         </span>
         <span className="text-foreground">You</span>
@@ -48,7 +48,7 @@ export function LogoAnimated({ className = "" }: { className?: string }) {
     <div className={`text-center ${className}`}>
       <div className="inline-flex flex-col items-center">
         <div className="relative mb-4">
-          <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary via-pink-500 to-secondary flex items-center justify-center shadow-2xl shadow-primary/40">
+          <div className="w-20 h-20 rounded-full bg-gradient-to-br from-amber-500 via-yellow-500 to-amber-600 flex items-center justify-center shadow-2xl shadow-amber-500/40">
             <Heart className="w-10 h-10 text-white fill-white" />
           </div>
           <div className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-secondary flex items-center justify-center shadow-lg animate-bounce">
@@ -56,7 +56,7 @@ export function LogoAnimated({ className = "" }: { className?: string }) {
           </div>
         </div>
         <h1 className="text-6xl font-display font-black tracking-tight leading-none">
-          <span className="bg-gradient-to-r from-primary via-pink-500 to-secondary bg-clip-text text-transparent">
+          <span className="bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 bg-clip-text text-transparent">
             Fallon
           </span>
           <span className="text-foreground">You</span>

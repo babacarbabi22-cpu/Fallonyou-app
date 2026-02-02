@@ -37,7 +37,7 @@ export function BottomNav() {
               )}>
                 <Icon className={clsx("w-6 h-6", isActive && "fill-current")} />
                 {badge && (
-                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-pink-500 text-white text-xs font-bold rounded-full flex items-center justify-center animate-pulse">
+                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-amber-500 text-white text-xs font-bold rounded-full flex items-center justify-center animate-pulse">
                     {badge > 9 ? '9+' : badge}
                   </span>
                 )}

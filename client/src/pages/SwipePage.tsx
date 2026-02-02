@@ -232,7 +232,7 @@ export default function SwipePage() {
       {/* Who Liked You Banner */}
       {(likesReceived as any)?.count > 0 && (
         <div className="px-4 mb-3">
-          <div className="bg-gradient-to-r from-violet-500 to-purple-400 rounded-xl p-3 shadow-lg relative overflow-hidden">
+          <div className="bg-gradient-to-r from-amber-500 to-yellow-500 rounded-xl p-3 shadow-lg relative overflow-hidden">
             {/* Decorative small hearts */}
             <Heart className="absolute top-1 right-12 w-3 h-3 text-white/30 fill-white/30" />
             <Heart className="absolute top-3 right-20 w-2 h-2 text-white/20 fill-white/20" />
@@ -367,7 +367,7 @@ export default function SwipePage() {
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.2 }}
-                className="text-5xl md:text-6xl font-display font-black text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-purple-500 to-primary drop-shadow-2xl"
+                className="text-5xl md:text-6xl font-display font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 drop-shadow-2xl"
               >
                 IT'S A MATCH!
               </motion.h2>

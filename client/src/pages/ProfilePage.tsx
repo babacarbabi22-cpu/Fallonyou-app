@@ -159,7 +159,7 @@ export default function ProfilePage() {
   return (
     <div className="min-h-screen bg-background pb-24">
       {/* Header Image / Cover with decorative elements */}
-      <div className="relative h-48 bg-gradient-to-br from-primary via-purple-500 to-pink-500">
+      <div className="relative h-48 bg-gradient-to-br from-amber-500 via-amber-400 to-yellow-500">
         {/* Decorative background with name and hearts */}
         <div className="absolute inset-0 flex items-center justify-center opacity-20">
           <div className="flex flex-wrap gap-4 items-center justify-center">
@@ -183,7 +183,7 @@ export default function ProfilePage() {
         <div className="absolute -bottom-12 left-6">
           <div className="relative w-24 h-24">
             {/* Decorative ring behind photo */}
-            <div className="absolute -inset-2 bg-gradient-to-br from-pink-400 via-purple-400 to-primary rounded-full opacity-60 animate-pulse" />
+            <div className="absolute -inset-2 bg-gradient-to-br from-amber-400 via-yellow-400 to-amber-500 rounded-full opacity-60 animate-pulse" />
             <img 
               src={user.profileImageUrl || user.photos?.[0]?.url || "https://images.unsplash.com/photo-1511367461989-f85a21fda167?w=200&auto=format&fit=crop&q=60"} 
               className="relative w-full h-full rounded-full object-cover border-4 border-background shadow-lg"

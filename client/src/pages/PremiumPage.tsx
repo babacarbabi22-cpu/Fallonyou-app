@@ -180,7 +180,7 @@ export default function PremiumPage() {
   return (
     <div className="min-h-screen bg-background pb-24">
       <div className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-amber-400/20 via-orange-500/20 to-pink-500/20" />
+        <div className="absolute inset-0 bg-gradient-to-br from-amber-400/20 via-orange-500/20 to-yellow-500/20" />
         <div className="relative px-6 py-12 text-center">
           <motion.div
             initial={{ scale: 0 }}
@@ -248,7 +248,7 @@ export default function PremiumPage() {
         ) : (
           <>
             {!premiumStatus?.trialEndsAt && (
-              <Card className="border-primary/50 bg-gradient-to-br from-primary/5 to-purple-500/5">
+              <Card className="border-amber-500/50 bg-gradient-to-br from-amber-500/5 to-yellow-500/5">
                 <CardHeader className="text-center">
                   <Gift className="w-12 h-12 mx-auto text-primary mb-2" />
                   <CardTitle>Try Premium Free for 7 Days</CardTitle>
@@ -258,7 +258,7 @@ export default function PremiumPage() {
                 </CardHeader>
                 <CardFooter>
                   <Button
-                    className="w-full bg-gradient-to-r from-primary to-purple-600"
+                    className="w-full bg-gradient-to-r from-amber-500 to-amber-600"
                     onClick={() => trialMutation.mutate()}
                     disabled={trialMutation.isPending}
                     data-testid="button-start-trial"
@@ -464,7 +464,7 @@ export default function PremiumPage() {
                 ))}
               </div>
             ) : (
-              <Card className="bg-gradient-to-br from-pink-50 to-rose-50 dark:from-pink-950/20 dark:to-rose-950/20">
+              <Card className="bg-gradient-to-br from-amber-50 to-yellow-50 dark:from-amber-950/20 dark:to-yellow-950/20">
                 <CardContent className="py-8 text-center">
                   <div className="grid grid-cols-3 gap-2 mb-4">
                     {[1, 2, 3].map((i) => (
@@ -476,7 +476,7 @@ export default function PremiumPage() {
                   </p>
                   <Button
                     onClick={() => document.querySelector('[data-testid="button-start-trial"]')?.scrollIntoView({ behavior: 'smooth' })}
-                    className="bg-gradient-to-r from-pink-500 to-rose-500"
+                    className="bg-gradient-to-r from-amber-500 to-orange-500"
                     data-testid="button-unlock-likes"
                   >
                     <Eye className="w-4 h-4 mr-2" />

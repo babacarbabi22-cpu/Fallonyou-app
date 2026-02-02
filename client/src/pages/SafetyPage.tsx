@@ -38,7 +38,7 @@ const sections: SafetySection[] = [
     titleKey: "consentTitle",
     descKey: "consentDesc",
     contentKey: "consentContent",
-    color: "text-pink-500 bg-pink-500/10",
+    color: "text-amber-500 bg-amber-500/10",
   },
   {
     id: "inclusion",
@@ -46,7 +46,7 @@ const sections: SafetySection[] = [
     titleKey: "inclusionTitle",
     descKey: "inclusionDesc",
     contentKey: "inclusionContent",
-    color: "text-purple-500 bg-purple-500/10",
+    color: "text-yellow-600 bg-yellow-500/10",
   },
 ];
 
@@ -108,8 +108,8 @@ export default function SafetyPage() {
           </Card>
           <Card className="hover-elevate cursor-pointer" onClick={() => toggleSection("consent")} data-testid="quick-consent">
             <CardContent className="p-4 flex flex-col items-center text-center gap-2">
-              <div className="bg-pink-500/10 p-2 rounded-full">
-                <Heart className="w-5 h-5 text-pink-500" />
+              <div className="bg-amber-500/10 p-2 rounded-full">
+                <Heart className="w-5 h-5 text-amber-500" />
               </div>
               <span className="text-xs font-medium">{t.safety.quickConsent}</span>
             </CardContent>
