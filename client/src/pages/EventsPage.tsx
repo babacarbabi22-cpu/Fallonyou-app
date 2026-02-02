@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Calendar, MapPin, Users, Plus, Clock, Loader2 } from "lucide-react";
+import { BottomNav } from "@/components/BottomNav";
 import { format } from "date-fns";
 
 const eventCategories = [
@@ -291,6 +292,7 @@ export default function EventsPage() {
           ))
         )}
       </div>
+      <BottomNav />
     </div>
   );
 }
