@@ -7,7 +7,7 @@ import { LanguageSelector } from "@/components/LanguageSelector";
 import { useTranslation } from "@/lib/i18n";
 import { Link, useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
-import fallonYouLogo from "@assets/IMG_1825_1770051945280.jpeg";
+import { Logo } from "@/components/Logo";
 
 const fallingHearts = [
   { delay: 0, duration: 8, left: 5, size: 16, color: "text-amber-400" },
@@ -137,11 +137,9 @@ export default function AuthPage() {
 
       <div className="relative z-10 w-full max-w-md px-6 text-center">
         <div className="mb-6">
-          <img 
-            src={fallonYouLogo} 
-            alt="FallonYou Logo" 
-            className="w-56 h-auto mx-auto object-contain drop-shadow-xl"
-          />
+          <div className="flex justify-center mb-3">
+            <Logo size="xl" />
+          </div>
           <p className="text-sm text-muted-foreground font-medium italic max-w-xs mx-auto mt-2">
             "{t.app.tagline}"
           </p>
