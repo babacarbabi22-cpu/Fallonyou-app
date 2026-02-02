@@ -6,7 +6,7 @@ import { MatchHeartCascade } from "@/components/HeartCascade";
 import { AnimatePresence, motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Loader2, Sparkles, SlidersHorizontal, Star, X, Heart } from "lucide-react";
+import { Loader2, Sparkles, SlidersHorizontal, Star, X, Heart, ThumbsUp, Plane } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Slider } from "@/components/ui/slider";
@@ -326,14 +326,14 @@ export default function SwipePage() {
           <Button
             variant="outline"
             size="icon"
-            className="w-14 h-14 rounded-full border-2 border-green-200 text-green-500 hover:bg-green-50"
+            className="w-14 h-14 rounded-full border-2 border-amber-300 text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-950"
             onClick={() => {
               const topUser = activeUsers[activeUsers.length - 1];
               if (topUser) handleSwipe(topUser.id, 'right');
             }}
             data-testid="button-like"
           >
-            <Heart className="w-7 h-7" />
+            <ThumbsUp className="w-7 h-7" />
           </Button>
         </div>
       )}
@@ -361,7 +361,7 @@ export default function SwipePage() {
                 animate={{ scale: 1, rotate: 0 }}
                 transition={{ type: "spring", stiffness: 260, damping: 20 }}
               >
-                <Heart className="w-24 h-24 text-amber-500 fill-amber-500 mx-auto mb-4 drop-shadow-2xl" />
+                <Plane className="w-24 h-24 text-amber-500 fill-amber-500 mx-auto mb-4 drop-shadow-2xl -rotate-45" />
               </motion.div>
               <motion.h2 
                 initial={{ y: 20, opacity: 0 }}

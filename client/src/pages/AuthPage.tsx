@@ -2,29 +2,21 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Heart, Mail, Lock, User, Eye, EyeOff, Loader2 } from "lucide-react";
+import { Plane, Mail, Lock, User, Eye, EyeOff, Loader2 } from "lucide-react";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { useTranslation } from "@/lib/i18n";
 import { Link, useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { Logo } from "@/components/Logo";
 
-const fallingHearts = [
-  { delay: 0, duration: 8, left: 5, size: 16, color: "text-amber-400" },
-  { delay: 1, duration: 10, left: 15, size: 12, color: "text-yellow-300" },
-  { delay: 2, duration: 7, left: 25, size: 18, color: "text-amber-500" },
-  { delay: 0.5, duration: 9, left: 35, size: 14, color: "text-white" },
-  { delay: 3, duration: 11, left: 45, size: 10, color: "text-amber-400" },
-  { delay: 1.5, duration: 8, left: 55, size: 16, color: "text-yellow-400" },
-  { delay: 2.5, duration: 10, left: 65, size: 12, color: "text-white" },
-  { delay: 0.8, duration: 9, left: 75, size: 18, color: "text-amber-300" },
-  { delay: 4, duration: 7, left: 85, size: 14, color: "text-amber-500" },
-  { delay: 3.5, duration: 12, left: 95, size: 10, color: "text-yellow-300" },
-  { delay: 1.2, duration: 8, left: 10, size: 15, color: "text-white" },
-  { delay: 2.8, duration: 9, left: 30, size: 11, color: "text-amber-400" },
-  { delay: 0.3, duration: 10, left: 50, size: 17, color: "text-yellow-400" },
-  { delay: 4.2, duration: 8, left: 70, size: 13, color: "text-amber-300" },
-  { delay: 1.8, duration: 11, left: 90, size: 15, color: "text-white" },
+const fallingPlanes = [
+  { delay: 0, duration: 12, left: 5, size: 16, color: "text-amber-400", rotation: -45 },
+  { delay: 2, duration: 15, left: 20, size: 12, color: "text-yellow-300", rotation: -30 },
+  { delay: 4, duration: 10, left: 35, size: 18, color: "text-amber-500", rotation: -60 },
+  { delay: 1, duration: 14, left: 50, size: 14, color: "text-white", rotation: -45 },
+  { delay: 3, duration: 16, left: 65, size: 10, color: "text-amber-400", rotation: -35 },
+  { delay: 5, duration: 11, left: 80, size: 16, color: "text-yellow-400", rotation: -55 },
+  { delay: 2.5, duration: 13, left: 95, size: 12, color: "text-white", rotation: -40 },
 ];
 
 export default function AuthPage() {
@@ -100,17 +92,18 @@ export default function AuthPage() {
       </div>
 
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {fallingHearts.map((heart, i) => (
-          <Heart
+        {fallingPlanes.map((plane, i) => (
+          <Plane
             key={i}
-            className={`absolute ${heart.color} fill-current opacity-40`}
+            className={`absolute ${plane.color} fill-current opacity-30`}
             style={{
-              width: `${heart.size}px`,
-              height: `${heart.size}px`,
-              left: `${heart.left}%`,
+              width: `${plane.size}px`,
+              height: `${plane.size}px`,
+              left: `${plane.left}%`,
               top: '-20px',
-              animation: `fall ${heart.duration}s linear infinite`,
-              animationDelay: `${heart.delay}s`,
+              animation: `fall ${plane.duration}s linear infinite`,
+              animationDelay: `${plane.delay}s`,
+              transform: `rotate(${plane.rotation}deg)`,
             }}
           />
         ))}

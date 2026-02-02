@@ -1,8 +1,8 @@
-import { Heart } from "lucide-react";
+import { Plane } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState } from "react";
 
-interface FallingHeart {
+interface FallingPlane {
   id: number;
   x: number;
   delay: number;
@@ -18,7 +18,7 @@ interface MatchHeartCascadeProps {
 }
 
 export function MatchHeartCascade({ isActive, duration = 3000 }: MatchHeartCascadeProps) {
-  const [hearts, setHearts] = useState<FallingHeart[]>([]);
+  const [planes, setPlanes] = useState<FallingPlane[]>([]);
 
   useEffect(() => {
     if (isActive) {
@@ -31,60 +31,60 @@ export function MatchHeartCascade({ isActive, duration = 3000 }: MatchHeartCasca
         "text-amber-600",
       ];
 
-      const newHearts: FallingHeart[] = [];
-      for (let i = 0; i < 60; i++) {
-        newHearts.push({
+      const newPlanes: FallingPlane[] = [];
+      for (let i = 0; i < 40; i++) {
+        newPlanes.push({
           id: i,
           x: Math.random() * 100,
           delay: Math.random() * 1.2,
           duration: 2 + Math.random() * 2,
           size: 16 + Math.random() * 32,
           color: colors[Math.floor(Math.random() * colors.length)],
-          rotation: Math.random() * 360,
+          rotation: -45 + Math.random() * 30,
         });
       }
-      setHearts(newHearts);
+      setPlanes(newPlanes);
 
       const timer = setTimeout(() => {
-        setHearts([]);
+        setPlanes([]);
       }, duration);
 
       return () => clearTimeout(timer);
     } else {
-      setHearts([]);
+      setPlanes([]);
     }
   }, [isActive, duration]);
 
   return (
     <AnimatePresence>
-      {hearts.map((heart) => (
+      {planes.map((plane) => (
         <motion.div
-          key={heart.id}
+          key={plane.id}
           initial={{ 
             y: -100, 
-            x: `${heart.x}vw`,
+            x: `${plane.x}vw`,
             opacity: 1,
-            rotate: heart.rotation,
+            rotate: plane.rotation,
             scale: 0
           }}
           animate={{ 
             y: "110vh",
             opacity: [1, 1, 0.8, 0],
-            rotate: heart.rotation + 180,
+            rotate: plane.rotation + 20,
             scale: 1
           }}
           exit={{ opacity: 0 }}
           transition={{
-            duration: heart.duration,
-            delay: heart.delay,
+            duration: plane.duration,
+            delay: plane.delay,
             ease: "easeIn"
           }}
           className="fixed pointer-events-none z-[60]"
           style={{ left: 0, top: 0 }}
         >
-          <Heart 
-            className={`${heart.color} fill-current drop-shadow-lg`}
-            style={{ width: heart.size, height: heart.size }}
+          <Plane 
+            className={`${plane.color} fill-current drop-shadow-lg`}
+            style={{ width: plane.size, height: plane.size }}
           />
         </motion.div>
       ))}
@@ -92,38 +92,31 @@ export function MatchHeartCascade({ isActive, duration = 3000 }: MatchHeartCasca
   );
 }
 
-const backgroundHearts = [
-  { delay: 0, duration: 8, left: 5, size: 16, color: "text-amber-500" },
-  { delay: 1, duration: 10, left: 15, size: 12, color: "text-yellow-500" },
-  { delay: 2, duration: 7, left: 25, size: 18, color: "text-amber-400" },
-  { delay: 0.5, duration: 9, left: 35, size: 14, color: "text-orange-400" },
-  { delay: 3, duration: 11, left: 45, size: 10, color: "text-amber-500" },
-  { delay: 1.5, duration: 8, left: 55, size: 16, color: "text-yellow-500" },
-  { delay: 2.5, duration: 10, left: 65, size: 12, color: "text-amber-400" },
-  { delay: 0.8, duration: 9, left: 75, size: 18, color: "text-orange-400" },
-  { delay: 4, duration: 7, left: 85, size: 14, color: "text-amber-500" },
-  { delay: 3.5, duration: 12, left: 95, size: 10, color: "text-yellow-500" },
-  { delay: 1.2, duration: 8, left: 10, size: 15, color: "text-orange-400" },
-  { delay: 2.8, duration: 9, left: 30, size: 11, color: "text-amber-500" },
-  { delay: 0.3, duration: 11, left: 50, size: 13, color: "text-yellow-500" },
-  { delay: 4.2, duration: 8, left: 70, size: 17, color: "text-amber-400" },
-  { delay: 1.8, duration: 10, left: 90, size: 9, color: "text-orange-400" },
+const backgroundPlanes = [
+  { delay: 0, duration: 12, left: 5, size: 16, color: "text-amber-500", rotation: -45 },
+  { delay: 2, duration: 15, left: 20, size: 12, color: "text-yellow-500", rotation: -30 },
+  { delay: 4, duration: 10, left: 35, size: 18, color: "text-amber-400", rotation: -60 },
+  { delay: 1, duration: 14, left: 50, size: 14, color: "text-orange-400", rotation: -45 },
+  { delay: 3, duration: 16, left: 65, size: 10, color: "text-amber-500", rotation: -35 },
+  { delay: 5, duration: 11, left: 80, size: 16, color: "text-yellow-500", rotation: -55 },
+  { delay: 2.5, duration: 13, left: 95, size: 12, color: "text-amber-400", rotation: -40 },
 ];
 
 export function HeartCascade() {
   return (
     <div className="fixed inset-0 overflow-hidden pointer-events-none" style={{ zIndex: -1 }}>
-      {backgroundHearts.map((heart, i) => (
-        <Heart
+      {backgroundPlanes.map((plane, i) => (
+        <Plane
           key={i}
-          className={`absolute ${heart.color} fill-current opacity-20 animate-heartfall`}
+          className={`absolute ${plane.color} fill-current opacity-15 animate-heartfall`}
           style={{
-            width: `${heart.size}px`,
-            height: `${heart.size}px`,
-            left: `${heart.left}%`,
+            width: `${plane.size}px`,
+            height: `${plane.size}px`,
+            left: `${plane.left}%`,
             top: '-20px',
-            animationDuration: `${heart.duration}s`,
-            animationDelay: `${heart.delay}s`,
+            animationDuration: `${plane.duration}s`,
+            animationDelay: `${plane.delay}s`,
+            transform: `rotate(${plane.rotation}deg)`,
           }}
         />
       ))}

@@ -480,19 +480,19 @@ export default function OnboardingPage() {
             <Card>
               <CardContent className="p-6 space-y-6">
                 <div className="text-center">
-                  <div className="w-20 h-20 rounded-full bg-green-500/10 flex items-center justify-center mx-auto mb-4">
-                    <Sparkles className="w-10 h-10 text-green-500" />
+                  <div className="w-20 h-20 rounded-full bg-amber-500/10 flex items-center justify-center mx-auto mb-4">
+                    <Sparkles className="w-10 h-10 text-amber-500" />
                   </div>
                   <h2 className="text-2xl font-bold mb-2">{t.onboarding.step4Title}</h2>
                   <p className="text-muted-foreground">{t.onboarding.step4Desc}</p>
                 </div>
 
                 <div className="flex justify-center gap-2">
-                  <Check className="w-5 h-5 text-green-500" />
+                  <Check className="w-5 h-5 text-amber-500" />
                   <span className="text-sm">{t.onboarding.step1Title}</span>
                 </div>
                 <div className="flex justify-center gap-2">
-                  <Check className="w-5 h-5 text-green-500" />
+                  <Check className="w-5 h-5 text-amber-500" />
                   <span className="text-sm">{t.onboarding.step2Title}</span>
                 </div>
 
