@@ -7,7 +7,7 @@ import { LanguageSelector } from "@/components/LanguageSelector";
 import { useTranslation } from "@/lib/i18n";
 import { Link, useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
-import fallonYouLogo from "@assets/IMG_1362_1768162016332.jpeg";
+import fallonYouLogo from "@assets/IMG_1825_1770051945280.jpeg";
 
 const fallingHearts = [
   { delay: 0, duration: 8, left: 5, size: 16, color: "text-blue-500" },
