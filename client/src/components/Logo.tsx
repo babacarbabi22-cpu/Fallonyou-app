@@ -1,4 +1,4 @@
-import { Heart } from "lucide-react";
+import { Plane } from "lucide-react";
 
 interface LogoProps {
   size?: "sm" | "md" | "lg" | "xl";
@@ -25,11 +25,8 @@ export function Logo({ size = "lg", showIcon = true, className = "" }: LogoProps
     <div className={`flex items-center gap-2 ${className}`}>
       {showIcon && (
         <div className="relative">
-          <Heart 
-            className={`${iconSizes[size]} text-primary fill-primary drop-shadow-[0_2px_8px_rgba(225,29,98,0.5)]`} 
-          />
-          <Heart 
-            className={`${iconSizes[size]} text-primary/50 fill-primary/30 absolute top-0 left-0 animate-ping`} 
+          <Plane 
+            className={`${iconSizes[size]} text-amber-500 fill-amber-500 drop-shadow-[0_2px_8px_rgba(245,158,11,0.5)] -rotate-45`} 
           />
         </div>
       )}
@@ -49,7 +46,7 @@ export function LogoAnimated({ className = "" }: { className?: string }) {
       <div className="inline-flex flex-col items-center">
         <div className="relative mb-4">
           <div className="w-20 h-20 rounded-full bg-gradient-to-br from-amber-500 via-yellow-500 to-amber-600 flex items-center justify-center shadow-2xl shadow-amber-500/40">
-            <Heart className="w-10 h-10 text-white fill-white" />
+            <Plane className="w-10 h-10 text-white fill-white -rotate-45" />
           </div>
           <div className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-secondary flex items-center justify-center shadow-lg animate-bounce">
             <span className="text-white text-xs font-bold">+</span>
