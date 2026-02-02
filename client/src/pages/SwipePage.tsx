@@ -6,7 +6,7 @@ import { MatchHeartCascade } from "@/components/HeartCascade";
 import { AnimatePresence, motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Loader2, Sparkles, SlidersHorizontal, Star, X, Heart, ThumbsUp, Plane } from "lucide-react";
+import { Loader2, Sparkles, SlidersHorizontal, Star, X, Heart, Plane } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Slider } from "@/components/ui/slider";
@@ -333,7 +333,7 @@ export default function SwipePage() {
             }}
             data-testid="button-like"
           >
-            <ThumbsUp className="w-7 h-7" />
+            <Star className="w-7 h-7 fill-current" />
           </Button>
         </div>
       )}
