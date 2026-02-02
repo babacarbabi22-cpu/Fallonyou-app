@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Heart, MessageCircle, User as UserIcon, Crown, Sparkles, Calendar } from "lucide-react";
+import { Heart, MessageCircle, User as UserIcon, Crown, Calendar, Star } from "lucide-react";
 import { clsx } from "clsx";
 import { useTranslation } from "@/lib/i18n";
 import { useQuery } from "@tanstack/react-query";
@@ -15,9 +15,9 @@ export function BottomNav() {
   const likesCount = likesData?.count || 0;
 
   const navItems = [
-    { href: "/", icon: Heart, label: t.nav.discover, badge: likesCount > 0 ? likesCount : null },
+    { href: "/", icon: Calendar, label: t.nav.events || "Activities" },
+    { href: "/discover", icon: Star, label: t.nav.discover, badge: likesCount > 0 ? likesCount : null },
     { href: "/matches", icon: MessageCircle, label: t.nav.matches },
-    { href: "/events", icon: Calendar, label: t.nav.events || "Events" },
     { href: "/premium", icon: Crown, label: t.nav.premium },
     { href: "/profile", icon: UserIcon, label: t.nav.profile },
   ];

@@ -106,6 +106,9 @@ function Router() {
     <Switch>
       <Route path="/auth" component={AuthPage} />
       <Route path="/">
+        {() => <ProtectedRoute component={EventsPage} />}
+      </Route>
+      <Route path="/discover">
         {() => <ProtectedRoute component={SwipePage} />}
       </Route>
       <Route path="/matches">
@@ -129,9 +132,6 @@ function Router() {
       </Route>
       <Route path="/safety">
         {() => <ProtectedRoute component={SafetyPage} />}
-      </Route>
-      <Route path="/events">
-        {() => <ProtectedRoute component={EventsPage} />}
       </Route>
       <Route path="/admin">
         {() => <ProtectedRoute component={AdminPage} />}
