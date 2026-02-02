@@ -8,9 +8,9 @@
   --font-sans: 'DM Sans', sans-serif;
   --font-display: 'Outfit', sans-serif;
 
-  /* Elegant Golden/Beige Palette - Travel & Connection */
-  --background: 40 30% 97%;
-  --foreground: 30 10% 15%;
+  /* Elegant Black & Gold Palette - Luxury Travel */
+  --background: 0 0% 5%;
+  --foreground: 40 30% 90%;
 
   /* Golden/Amber Primary - Warm & Luxurious */
   --primary: 38 92% 50%;
@@ -20,14 +20,14 @@
   --secondary: 35 25% 45%;
   --secondary-foreground: 0 0% 100%;
 
-  --card: 40 20% 99%;
-  --card-foreground: 30 10% 15%;
+  --card: 0 0% 10%;
+  --card-foreground: 40 30% 90%;
 
-  --popover: 40 20% 99%;
-  --popover-foreground: 30 10% 15%;
+  --popover: 0 0% 10%;
+  --popover-foreground: 40 30% 90%;
 
-  --muted: 35 15% 92%;
-  --muted-foreground: 30 10% 45%;
+  --muted: 0 0% 15%;
+  --muted-foreground: 40 20% 60%;
 
   --accent: 38 40% 94%;
   --accent-foreground: 38 80% 40%;
@@ -35,8 +35,8 @@
   --destructive: 0 70% 55%;
   --destructive-foreground: 0 0% 98%;
 
-  --border: 35 15% 88%;
-  --input: 35 15% 90%;
+  --border: 40 30% 20%;
+  --input: 0 0% 15%;
   --ring: 38 92% 50%;
 
   --radius: 0.75rem;
@@ -70,7 +70,7 @@
     text-shadow: 0 2px 10px rgba(0,0,0,0.5);
   }
   .glass-panel {
-    @apply bg-white/80 backdrop-blur-md border border-white/20 shadow-xl;
+    @apply bg-black/80 backdrop-blur-md border border-amber-500/20 shadow-xl;
   }
   .hide-scrollbar::-webkit-scrollbar {
     display: none;

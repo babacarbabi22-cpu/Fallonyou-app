@@ -161,23 +161,23 @@ export default function ProfilePage() {
       {/* Header Image / Cover with decorative elements */}
       <div className="relative h-48 bg-gradient-to-br from-amber-500 via-amber-400 to-yellow-500">
         {/* Decorative background with name and hearts */}
-        <div className="absolute inset-0 flex items-center justify-center opacity-20">
+        <div className="absolute inset-0 flex items-center justify-center opacity-40">
           <div className="flex flex-wrap gap-4 items-center justify-center">
-            <Heart className="w-12 h-12 text-white fill-white" />
-            <span className="text-4xl font-display font-black text-white uppercase tracking-widest">
+            <Heart className="w-12 h-12 text-amber-300 fill-amber-300" />
+            <span className="text-4xl font-display font-black text-amber-200 uppercase tracking-widest">
               {formState.displayName || user.firstName || "You"}
             </span>
-            <Heart className="w-12 h-12 text-white fill-white" />
+            <Heart className="w-12 h-12 text-amber-300 fill-amber-300" />
           </div>
         </div>
         {/* Floating hearts decoration */}
         <div className="absolute inset-0 pointer-events-none">
-          <Heart className="absolute top-4 left-8 w-6 h-6 text-white/30 fill-white/30 animate-pulse" />
-          <Heart className="absolute top-8 right-12 w-4 h-4 text-white/20 fill-white/20" />
-          <Heart className="absolute bottom-16 left-1/4 w-5 h-5 text-white/25 fill-white/25 animate-pulse" style={{ animationDelay: '0.5s' }} />
-          <Heart className="absolute top-12 left-1/3 w-3 h-3 text-white/20 fill-white/20" />
-          <Heart className="absolute bottom-20 right-1/4 w-4 h-4 text-white/30 fill-white/30 animate-pulse" style={{ animationDelay: '1s' }} />
-          <Heart className="absolute top-6 right-1/3 w-5 h-5 text-white/15 fill-white/15" />
+          <Heart className="absolute top-4 left-8 w-6 h-6 text-amber-300/50 fill-amber-300/50 animate-pulse" />
+          <Heart className="absolute top-8 right-12 w-4 h-4 text-amber-200/40 fill-amber-200/40" />
+          <Heart className="absolute bottom-16 left-1/4 w-5 h-5 text-amber-300/45 fill-amber-300/45 animate-pulse" style={{ animationDelay: '0.5s' }} />
+          <Heart className="absolute top-12 left-1/3 w-3 h-3 text-amber-200/40 fill-amber-200/40" />
+          <Heart className="absolute bottom-20 right-1/4 w-4 h-4 text-amber-300/50 fill-amber-300/50 animate-pulse" style={{ animationDelay: '1s' }} />
+          <Heart className="absolute top-6 right-1/3 w-5 h-5 text-amber-200/35 fill-amber-200/35" />
         </div>
         
         <div className="absolute -bottom-12 left-6">
