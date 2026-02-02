@@ -173,28 +173,29 @@ export default function ProfilePage() {
             <Heart className="w-10 h-10 text-amber-300 fill-amber-300" />
           </div>
         </div>
-        {/* Floating mixed icons: clouds, stars, planes, hearts */}
+        {/* Floating icons: hearts, stars, and one plane */}
         <div className="absolute inset-0 pointer-events-none">
-          <Cloud className="absolute top-3 left-6 w-7 h-7 text-amber-200/40 fill-amber-200/20" />
-          <Star className="absolute top-6 left-20 w-4 h-4 text-amber-300/50 fill-amber-300/50 animate-pulse" />
-          <Plane className="absolute top-4 left-1/3 w-5 h-5 text-amber-300/45 fill-amber-300/45 -rotate-45" />
-          <Heart className="absolute top-8 right-20 w-4 h-4 text-amber-300/50 fill-amber-300/50 animate-pulse" />
-          <Cloud className="absolute top-5 right-8 w-6 h-6 text-amber-200/35 fill-amber-200/15" />
+          <Heart className="absolute top-3 left-6 w-5 h-5 text-amber-300/50 fill-amber-300/50 animate-pulse" />
+          <Star className="absolute top-6 left-20 w-4 h-4 text-amber-300/50 fill-amber-300/50" />
+          <Plane className="absolute top-4 right-1/4 w-6 h-6 text-amber-300/45 fill-amber-300/45 -rotate-45" />
+          <Heart className="absolute top-8 right-20 w-4 h-4 text-amber-300/50 fill-amber-300/50 animate-pulse" style={{ animationDelay: '0.3s' }} />
+          <Star className="absolute top-5 right-8 w-3 h-3 text-amber-200/45 fill-amber-200/45" />
           <Star className="absolute bottom-20 left-10 w-3 h-3 text-amber-300/45 fill-amber-300/45" />
           <Heart className="absolute bottom-16 left-1/4 w-5 h-5 text-amber-300/50 fill-amber-300/50 animate-pulse" style={{ animationDelay: '0.5s' }} />
-          <Plane className="absolute bottom-18 right-1/3 w-4 h-4 text-amber-200/40 fill-amber-200/40 rotate-45" />
-          <Star className="absolute bottom-20 right-10 w-4 h-4 text-amber-300/50 fill-amber-300/50 animate-pulse" style={{ animationDelay: '1s' }} />
-          <Cloud className="absolute bottom-14 right-20 w-5 h-5 text-amber-200/30 fill-amber-200/10" />
+          <Star className="absolute bottom-18 right-1/3 w-4 h-4 text-amber-200/40 fill-amber-200/40" />
+          <Heart className="absolute bottom-20 right-10 w-4 h-4 text-amber-300/50 fill-amber-300/50 animate-pulse" style={{ animationDelay: '1s' }} />
+          <Star className="absolute bottom-14 right-20 w-3 h-3 text-amber-200/35 fill-amber-200/35" />
         </div>
         
         <div className="absolute -bottom-12 left-6">
           <div className="relative w-24 h-24">
             {/* Decorative ring behind photo */}
-            {/* Hearts and stars behind profile photo */}
+            {/* Hearts, stars, and plane behind profile photo */}
             <Heart className="absolute -top-2 -left-2 w-5 h-5 text-amber-400 fill-amber-400 opacity-70 animate-pulse" />
             <Heart className="absolute -bottom-1 -right-2 w-4 h-4 text-amber-400 fill-amber-400 opacity-60 animate-pulse" style={{ animationDelay: '0.5s' }} />
             <Star className="absolute -top-1 right-0 w-3 h-3 text-amber-300 fill-amber-300 opacity-70" />
             <Star className="absolute bottom-0 -left-1 w-3 h-3 text-amber-300 fill-amber-300 opacity-60" />
+            <Plane className="absolute -top-3 right-2 w-4 h-4 text-amber-400 fill-amber-400 opacity-65 -rotate-45" />
             <div className="absolute -inset-2 bg-gradient-to-br from-amber-400 via-yellow-400 to-amber-500 rounded-full opacity-60 animate-pulse" />
             <img 
               src={user.profileImageUrl || user.photos?.[0]?.url || "https://images.unsplash.com/photo-1511367461989-f85a21fda167?w=200&auto=format&fit=crop&q=60"} 

@@ -2,21 +2,21 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plane, Mail, Lock, User, Eye, EyeOff, Loader2 } from "lucide-react";
+import { Heart, Star, Cloud, Mail, Lock, User, Eye, EyeOff, Loader2 } from "lucide-react";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { useTranslation } from "@/lib/i18n";
 import { Link, useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { Logo } from "@/components/Logo";
 
-const fallingPlanes = [
-  { delay: 0, duration: 12, left: 5, size: 16, color: "text-amber-400", rotation: -45 },
-  { delay: 2, duration: 15, left: 20, size: 12, color: "text-yellow-300", rotation: -30 },
-  { delay: 4, duration: 10, left: 35, size: 18, color: "text-amber-500", rotation: -60 },
-  { delay: 1, duration: 14, left: 50, size: 14, color: "text-white", rotation: -45 },
-  { delay: 3, duration: 16, left: 65, size: 10, color: "text-amber-400", rotation: -35 },
-  { delay: 5, duration: 11, left: 80, size: 16, color: "text-yellow-400", rotation: -55 },
-  { delay: 2.5, duration: 13, left: 95, size: 12, color: "text-white", rotation: -40 },
+const fallingIcons = [
+  { delay: 0, duration: 12, left: 5, size: 16, color: "text-amber-400", type: 'heart' },
+  { delay: 2, duration: 15, left: 20, size: 14, color: "text-yellow-300", type: 'star' },
+  { delay: 4, duration: 10, left: 35, size: 18, color: "text-amber-500", type: 'cloud' },
+  { delay: 1, duration: 14, left: 50, size: 12, color: "text-white", type: 'heart' },
+  { delay: 3, duration: 16, left: 65, size: 14, color: "text-amber-400", type: 'star' },
+  { delay: 5, duration: 11, left: 80, size: 16, color: "text-yellow-400", type: 'cloud' },
+  { delay: 2.5, duration: 13, left: 95, size: 10, color: "text-white", type: 'heart' },
 ];
 
 export default function AuthPage() {
@@ -92,21 +92,23 @@ export default function AuthPage() {
       </div>
 
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {fallingPlanes.map((plane, i) => (
-          <Plane
-            key={i}
-            className={`absolute ${plane.color} fill-current opacity-30`}
-            style={{
-              width: `${plane.size}px`,
-              height: `${plane.size}px`,
-              left: `${plane.left}%`,
-              top: '-20px',
-              animation: `fall ${plane.duration}s linear infinite`,
-              animationDelay: `${plane.delay}s`,
-              transform: `rotate(${plane.rotation}deg)`,
-            }}
-          />
-        ))}
+        {fallingIcons.map((icon, i) => {
+          const IconComponent = icon.type === 'heart' ? Heart : icon.type === 'star' ? Star : Cloud;
+          return (
+            <IconComponent
+              key={i}
+              className={`absolute ${icon.color} fill-current opacity-30`}
+              style={{
+                width: `${icon.size}px`,
+                height: `${icon.size}px`,
+                left: `${icon.left}%`,
+                top: '-20px',
+                animation: `fall ${icon.duration}s linear infinite`,
+                animationDelay: `${icon.delay}s`,
+              }}
+            />
+          );
+        })}
       </div>
 
       <style>{`
