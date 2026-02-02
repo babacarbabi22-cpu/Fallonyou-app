@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Loader2, Camera, LogOut, Trash2, Globe, Shield, User, Star, Sparkles, Plane, GraduationCap, MapPin, Baby, Dog, Dumbbell, Wine, Cigarette, Eye, EyeOff, Compass, Map } from "lucide-react";
+import { Loader2, Camera, LogOut, Trash2, Globe, Shield, User, Star, Sparkles, Plane, GraduationCap, MapPin, Baby, Dog, Dumbbell, Wine, Cigarette, Eye, EyeOff, Compass, Map, Cloud, Heart } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { api } from "@shared/routes";
 import { useToast } from "@/hooks/use-toast";
@@ -161,29 +161,40 @@ export default function ProfilePage() {
     <div className="min-h-screen bg-background pb-24">
       {/* Header Image / Cover with decorative elements */}
       <div className="relative h-48 bg-gradient-to-br from-zinc-900 via-black to-zinc-800">
-        {/* Decorative background with name and travel icons */}
+        {/* Decorative background with name and mixed icons */}
         <div className="absolute inset-0 flex items-center justify-center opacity-40">
           <div className="flex flex-wrap gap-4 items-center justify-center">
-            <Plane className="w-12 h-12 text-amber-300 fill-amber-300 -rotate-45" />
+            <Heart className="w-10 h-10 text-amber-300 fill-amber-300" />
+            <Plane className="w-10 h-10 text-amber-300 fill-amber-300 -rotate-45" />
             <span className="text-4xl font-display font-black text-amber-200 uppercase tracking-widest">
               {formState.displayName || user.firstName || "You"}
             </span>
-            <Plane className="w-12 h-12 text-amber-300 fill-amber-300 rotate-45" />
+            <Plane className="w-10 h-10 text-amber-300 fill-amber-300 rotate-45" />
+            <Heart className="w-10 h-10 text-amber-300 fill-amber-300" />
           </div>
         </div>
-        {/* Floating travel icons decoration */}
+        {/* Floating mixed icons: clouds, stars, planes, hearts */}
         <div className="absolute inset-0 pointer-events-none">
-          <Plane className="absolute top-4 left-8 w-6 h-6 text-amber-300/50 fill-amber-300/50 animate-pulse -rotate-45" />
-          <Compass className="absolute top-8 right-12 w-4 h-4 text-amber-200/40" />
-          <Map className="absolute bottom-16 left-1/4 w-5 h-5 text-amber-300/45 animate-pulse" style={{ animationDelay: '0.5s' }} />
-          <Plane className="absolute top-12 left-1/3 w-3 h-3 text-amber-200/40 fill-amber-200/40 -rotate-30" />
-          <MapPin className="absolute bottom-20 right-1/4 w-4 h-4 text-amber-300/50 animate-pulse" style={{ animationDelay: '1s' }} />
-          <Compass className="absolute top-6 right-1/3 w-5 h-5 text-amber-200/35" />
+          <Cloud className="absolute top-3 left-6 w-7 h-7 text-amber-200/40 fill-amber-200/20" />
+          <Star className="absolute top-6 left-20 w-4 h-4 text-amber-300/50 fill-amber-300/50 animate-pulse" />
+          <Plane className="absolute top-4 left-1/3 w-5 h-5 text-amber-300/45 fill-amber-300/45 -rotate-45" />
+          <Heart className="absolute top-8 right-20 w-4 h-4 text-amber-300/50 fill-amber-300/50 animate-pulse" />
+          <Cloud className="absolute top-5 right-8 w-6 h-6 text-amber-200/35 fill-amber-200/15" />
+          <Star className="absolute bottom-20 left-10 w-3 h-3 text-amber-300/45 fill-amber-300/45" />
+          <Heart className="absolute bottom-16 left-1/4 w-5 h-5 text-amber-300/50 fill-amber-300/50 animate-pulse" style={{ animationDelay: '0.5s' }} />
+          <Plane className="absolute bottom-18 right-1/3 w-4 h-4 text-amber-200/40 fill-amber-200/40 rotate-45" />
+          <Star className="absolute bottom-20 right-10 w-4 h-4 text-amber-300/50 fill-amber-300/50 animate-pulse" style={{ animationDelay: '1s' }} />
+          <Cloud className="absolute bottom-14 right-20 w-5 h-5 text-amber-200/30 fill-amber-200/10" />
         </div>
         
         <div className="absolute -bottom-12 left-6">
           <div className="relative w-24 h-24">
             {/* Decorative ring behind photo */}
+            {/* Hearts and stars behind profile photo */}
+            <Heart className="absolute -top-2 -left-2 w-5 h-5 text-amber-400 fill-amber-400 opacity-70 animate-pulse" />
+            <Heart className="absolute -bottom-1 -right-2 w-4 h-4 text-amber-400 fill-amber-400 opacity-60 animate-pulse" style={{ animationDelay: '0.5s' }} />
+            <Star className="absolute -top-1 right-0 w-3 h-3 text-amber-300 fill-amber-300 opacity-70" />
+            <Star className="absolute bottom-0 -left-1 w-3 h-3 text-amber-300 fill-amber-300 opacity-60" />
             <div className="absolute -inset-2 bg-gradient-to-br from-amber-400 via-yellow-400 to-amber-500 rounded-full opacity-60 animate-pulse" />
             <img 
               src={user.profileImageUrl || user.photos?.[0]?.url || "https://images.unsplash.com/photo-1511367461989-f85a21fda167?w=200&auto=format&fit=crop&q=60"} 

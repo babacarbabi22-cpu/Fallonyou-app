@@ -50,7 +50,8 @@
   --primary: 38 92% 50%;
   --primary-foreground: 0 0% 100%;
 
-  --secondary: 35 25% 45%;
+  /* Black/white badges instead of olive */
+  --secondary: 0 0% 20%;
   --secondary-foreground: 0 0% 100%;
 
   --card: 0 0% 100%;
