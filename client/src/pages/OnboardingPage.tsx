@@ -12,18 +12,25 @@ import { Camera, Upload, Check, ArrowRight, User, Heart, Shield, Sparkles, Loade
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
-type OnboardingStep = "profile" | "interests" | "preferences" | "verification" | "complete";
+type OnboardingStep = "journey" | "profile" | "preferences" | "verification" | "complete";
 
 const connectionTypeOptions = [
-  { id: "dating", label: "Dating", icon: Heart },
-  { id: "friends", label: "Friends", icon: Users },
-  { id: "activities", label: "Activities", icon: MapPin },
+  { id: "friends", label: "Amigo/a", labelEn: "Friend", icon: Users, description: "Conocer gente nueva" },
+  { id: "travel_buddy", label: "Compañero de viaje", labelEn: "Travel Buddy", icon: Plane, description: "Explorar juntos" },
+  { id: "something_more", label: "Algo más", labelEn: "Something More", icon: Heart, description: "Conexión especial" },
 ];
 
-const travelInterestOptions = [
-  "beach", "mountain", "city", "food", "nightlife", 
-  "culture", "adventure", "relaxation", "photography", "sports"
+const activityOptions = [
+  { id: "explore_city", label: "Explorar la ciudad", labelEn: "Explore the city", icon: "🏛️" },
+  { id: "food_drinks", label: "Comer y beber", labelEn: "Food & drinks", icon: "🍽️" },
+  { id: "nightlife", label: "Vida nocturna", labelEn: "Nightlife", icon: "🎉" },
+  { id: "outdoor", label: "Actividades al aire libre", labelEn: "Outdoor activities", icon: "🏔️" },
+  { id: "beach", label: "Playa y relax", labelEn: "Beach & relax", icon: "🏖️" },
+  { id: "culture", label: "Cultura y museos", labelEn: "Culture & museums", icon: "🎨" },
+  { id: "sports", label: "Deportes", labelEn: "Sports", icon: "⚽" },
+  { id: "shopping", label: "Compras", labelEn: "Shopping", icon: "🛍️" },
 ];
+
 
 export default function OnboardingPage() {
   const t = useTranslation();
@@ -33,7 +40,7 @@ export default function OnboardingPage() {
   const { uploadFile, isUploading } = useUpload();
   const fileInputRef = useRef<HTMLInputElement>(null);
   
-  const [step, setStep] = useState<OnboardingStep>("profile");
+  const [step, setStep] = useState<OnboardingStep>("journey");
   const [profileData, setProfileData] = useState({
     displayName: user?.displayName || "",
     bio: "",
@@ -48,10 +55,11 @@ export default function OnboardingPage() {
   });
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [connectionTypes, setConnectionTypes] = useState<string[]>([]);
-  const [travelInterests, setTravelInterests] = useState<string[]>([]);
+  const [selectedActivities, setSelectedActivities] = useState<string[]>([]);
   const [currentCity, setCurrentCity] = useState("");
+  const [destination, setDestination] = useState("");
 
-  const steps: OnboardingStep[] = ["profile", "interests", "preferences", "verification", "complete"];
+  const steps: OnboardingStep[] = ["journey", "profile", "preferences", "verification", "complete"];
   const currentStepIndex = steps.indexOf(step);
   const progress = ((currentStepIndex + 1) / steps.length) * 100;
 
@@ -82,7 +90,7 @@ export default function OnboardingPage() {
       },
       {
         onSuccess: () => {
-          setStep("interests");
+          setStep("preferences");
         },
         onError: (error) => {
           console.error("Failed to update profile:", error);
@@ -129,11 +137,35 @@ export default function OnboardingPage() {
   }, [step]);
 
   const stepIcons = {
+    journey: Plane,
     profile: User,
-    interests: Plane,
     preferences: Heart,
     verification: Shield,
     complete: Sparkles,
+  };
+
+  const toggleActivity = (activityId: string) => {
+    setSelectedActivities(prev => 
+      prev.includes(activityId) 
+        ? prev.filter(a => a !== activityId)
+        : [...prev, activityId]
+    );
+  };
+
+  const handleJourneySubmit = async () => {
+    try {
+      await apiRequest("PATCH", "/api/profile", {
+        connectionTypes,
+        travelInterests: selectedActivities,
+        currentCity: currentCity || undefined,
+        destination: destination || undefined,
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/profile"] });
+      setStep("profile");
+    } catch (error) {
+      console.error("Failed to update journey:", error);
+      setStep("profile");
+    }
   };
 
   const toggleConnectionType = (type: string) => {
@@ -144,29 +176,7 @@ export default function OnboardingPage() {
     );
   };
 
-  const toggleTravelInterest = (interest: string) => {
-    setTravelInterests(prev => 
-      prev.includes(interest)
-        ? prev.filter(i => i !== interest)
-        : [...prev, interest]
-    );
-  };
-
-  const handleInterestsSubmit = async () => {
-    try {
-      await apiRequest("PATCH", "/api/profile", {
-        connectionTypes,
-        travelInterests,
-        currentCity: currentCity || undefined,
-      });
-      queryClient.invalidateQueries({ queryKey: ["/api/profile"] });
-      setStep("preferences");
-    } catch (error) {
-      console.error("Failed to update interests:", error);
-      setStep("preferences");
-    }
-  };
-
+  
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Progress header */}
@@ -198,8 +208,101 @@ export default function OnboardingPage() {
       </div>
 
       {/* Step content */}
-      <div className="flex-1 flex items-center justify-center p-6">
+      <div className="flex-1 flex items-center justify-center p-6 overflow-y-auto">
         <div className="w-full max-w-md">
+          {step === "journey" && (
+            <Card>
+              <CardContent className="p-6 space-y-6">
+                <div className="text-center">
+                  <div className="w-16 h-16 rounded-full bg-amber-500/10 flex items-center justify-center mx-auto mb-4">
+                    <Plane className="w-8 h-8 text-amber-500 -rotate-45" />
+                  </div>
+                  <h2 className="text-2xl font-bold mb-2">¡Bienvenido a FallonYou!</h2>
+                  <p className="text-muted-foreground">Cuéntanos sobre tu aventura</p>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium mb-3 block">¿Qué tipo de conexión buscas?</label>
+                  <div className="grid grid-cols-1 gap-2">
+                    {connectionTypeOptions.map((option) => {
+                      const Icon = option.icon;
+                      const isSelected = connectionTypes.includes(option.id);
+                      return (
+                        <Button
+                          key={option.id}
+                          variant={isSelected ? "default" : "outline"}
+                          onClick={() => toggleConnectionType(option.id)}
+                          className={`flex items-center justify-start h-auto py-4 gap-4 ${isSelected ? "bg-amber-500 hover:bg-amber-600 border-amber-500" : ""}`}
+                          data-testid={`button-connection-${option.id}`}
+                        >
+                          <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isSelected ? "bg-white/20" : "bg-muted"}`}>
+                            <Icon className="w-5 h-5" />
+                          </div>
+                          <div className="text-left">
+                            <p className="font-medium">{option.label}</p>
+                            <p className={`text-xs ${isSelected ? "text-white/80" : "text-muted-foreground"}`}>{option.description}</p>
+                          </div>
+                        </Button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium mb-3 block">¿Qué actividad te gustaría realizar?</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {activityOptions.map((activity) => {
+                      const isSelected = selectedActivities.includes(activity.id);
+                      return (
+                        <Button
+                          key={activity.id}
+                          variant={isSelected ? "default" : "outline"}
+                          onClick={() => toggleActivity(activity.id)}
+                          className={`flex items-center justify-start h-auto py-3 gap-2 text-sm ${isSelected ? "bg-amber-500 hover:bg-amber-600 border-amber-500" : ""}`}
+                          data-testid={`button-activity-${activity.id}`}
+                        >
+                          <span className="text-lg">{activity.icon}</span>
+                          <span className="text-left text-xs">{activity.label}</span>
+                        </Button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">¿Dónde estás ahora?</label>
+                    <Input
+                      value={currentCity}
+                      onChange={(e) => setCurrentCity(e.target.value)}
+                      placeholder="Ej: Barcelona, España"
+                      data-testid="input-current-city"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">¿A dónde vas? (opcional)</label>
+                    <Input
+                      value={destination}
+                      onChange={(e) => setDestination(e.target.value)}
+                      placeholder="Ej: París, Francia"
+                      data-testid="input-destination"
+                    />
+                  </div>
+                </div>
+
+                <Button
+                  onClick={handleJourneySubmit}
+                  disabled={connectionTypes.length === 0}
+                  className="w-full bg-amber-500 hover:bg-amber-600"
+                  data-testid="button-next-journey"
+                >
+                  Continuar
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+
           {step === "profile" && (
             <Card>
               <CardContent className="p-6 space-y-6">
@@ -291,83 +394,6 @@ export default function OnboardingPage() {
                   data-testid="button-next-step"
                 >
                   {t.onboarding.next}
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
-              </CardContent>
-            </Card>
-          )}
-
-          {step === "interests" && (
-            <Card>
-              <CardContent className="p-6 space-y-6">
-                <div className="text-center">
-                  <div className="w-16 h-16 rounded-full bg-amber-500/10 flex items-center justify-center mx-auto mb-4">
-                    <Plane className="w-8 h-8 text-amber-500" />
-                  </div>
-                  <h2 className="text-2xl font-bold mb-2">What are you looking for?</h2>
-                  <p className="text-muted-foreground">Select what you'd like to find on FallonYou</p>
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium mb-3 block">I'm looking for:</label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {connectionTypeOptions.map((option) => {
-                      const Icon = option.icon;
-                      const isSelected = connectionTypes.includes(option.id);
-                      return (
-                        <Button
-                          key={option.id}
-                          variant={isSelected ? "default" : "outline"}
-                          onClick={() => toggleConnectionType(option.id)}
-                          className={`flex flex-col h-auto py-4 gap-2 ${isSelected ? "bg-amber-500 hover:bg-amber-600" : ""}`}
-                          data-testid={`button-connection-${option.id}`}
-                        >
-                          <Icon className="w-6 h-6" />
-                          <span className="text-xs">{option.label}</span>
-                        </Button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium mb-3 block">Travel interests:</label>
-                  <div className="flex flex-wrap gap-2">
-                    {travelInterestOptions.map((interest) => {
-                      const isSelected = travelInterests.includes(interest);
-                      return (
-                        <Button
-                          key={interest}
-                          variant={isSelected ? "default" : "outline"}
-                          size="sm"
-                          onClick={() => toggleTravelInterest(interest)}
-                          className={`capitalize ${isSelected ? "bg-amber-500 hover:bg-amber-600" : ""}`}
-                          data-testid={`button-interest-${interest}`}
-                        >
-                          {interest}
-                        </Button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium mb-2 block">Current city (optional):</label>
-                  <Input
-                    value={currentCity}
-                    onChange={(e) => setCurrentCity(e.target.value)}
-                    placeholder="e.g. Barcelona, Spain"
-                    data-testid="input-current-city"
-                  />
-                </div>
-
-                <Button
-                  onClick={handleInterestsSubmit}
-                  disabled={connectionTypes.length === 0}
-                  className="w-full bg-amber-500 hover:bg-amber-600"
-                  data-testid="button-next-interests"
-                >
-                  Continue
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               </CardContent>

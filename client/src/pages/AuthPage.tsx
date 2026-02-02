@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Heart, Star, Cloud, Mail, Lock, User, Eye, EyeOff, Loader2 } from "lucide-react";
+import { Heart, Star, Mail, Lock, User, Eye, EyeOff, Loader2 } from "lucide-react";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { useTranslation } from "@/lib/i18n";
 import { Link, useLocation } from "wouter";
@@ -12,10 +12,10 @@ import { Logo } from "@/components/Logo";
 const fallingIcons = [
   { delay: 0, duration: 12, left: 5, size: 16, color: "text-amber-400", type: 'heart' },
   { delay: 2, duration: 15, left: 20, size: 14, color: "text-yellow-300", type: 'star' },
-  { delay: 4, duration: 10, left: 35, size: 18, color: "text-amber-500", type: 'cloud' },
-  { delay: 1, duration: 14, left: 50, size: 12, color: "text-white", type: 'heart' },
-  { delay: 3, duration: 16, left: 65, size: 14, color: "text-amber-400", type: 'star' },
-  { delay: 5, duration: 11, left: 80, size: 16, color: "text-yellow-400", type: 'cloud' },
+  { delay: 4, duration: 10, left: 35, size: 18, color: "text-amber-500", type: 'heart' },
+  { delay: 1, duration: 14, left: 50, size: 12, color: "text-white", type: 'star' },
+  { delay: 3, duration: 16, left: 65, size: 14, color: "text-amber-400", type: 'heart' },
+  { delay: 5, duration: 11, left: 80, size: 16, color: "text-yellow-400", type: 'star' },
   { delay: 2.5, duration: 13, left: 95, size: 10, color: "text-white", type: 'heart' },
 ];
 
@@ -93,7 +93,7 @@ export default function AuthPage() {
 
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {fallingIcons.map((icon, i) => {
-          const IconComponent = icon.type === 'heart' ? Heart : icon.type === 'star' ? Star : Cloud;
+          const IconComponent = icon.type === 'heart' ? Heart : Star;
           return (
             <IconComponent
               key={i}
