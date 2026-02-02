@@ -27,6 +27,7 @@ export const translations = {
     nav: {
       discover: "Descubrir",
       matches: "Matches",
+      events: "Actividades",
       premium: "Premium",
       profile: "Perfil",
     },
@@ -475,6 +476,7 @@ export const translations = {
     nav: {
       discover: "Discover",
       matches: "Matches",
+      events: "Activities",
       premium: "Premium",
       profile: "Profile",
     },
@@ -923,6 +925,7 @@ export const translations = {
     nav: {
       discover: "Découvrir",
       matches: "Matches",
+      events: "Activités",
       premium: "Premium",
       profile: "Profil",
     },

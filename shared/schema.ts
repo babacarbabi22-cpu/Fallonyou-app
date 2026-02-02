@@ -1,5 +1,5 @@
 
-import { pgTable, text, serial, integer, boolean, timestamp, varchar } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, varchar, real } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -30,6 +30,16 @@ export const profiles = pgTable("profiles", {
   interests: text("interests").array(),
   relationshipType: text("relationship_type"),
   lastActive: timestamp("last_active").defaultNow(),
+  // New travel/social features
+  connectionTypes: text("connection_types").array().default([]),
+  travelInterests: text("travel_interests").array().default([]),
+  travelerMode: boolean("traveler_mode").default(false),
+  currentCity: text("current_city"),
+  homeCity: text("home_city"),
+  travelerVerified: boolean("traveler_verified").default(false),
+  latitude: real("latitude"),
+  longitude: real("longitude"),
+  lastLocationAt: timestamp("last_location_at"),
 });
 
 export const photos = pgTable("photos", {
@@ -119,6 +129,33 @@ export const reports = pgTable("reports", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Events/Activities
+export const events = pgTable("events", {
+  id: serial("id").primaryKey(),
+  creatorId: varchar("creator_id").notNull().references(() => users.id),
+  title: text("title").notNull(),
+  description: text("description"),
+  category: text("category").notNull(),
+  city: text("city").notNull(),
+  location: text("location"),
+  latitude: real("latitude"),
+  longitude: real("longitude"),
+  startsAt: timestamp("starts_at").notNull(),
+  endsAt: timestamp("ends_at"),
+  capacity: integer("capacity"),
+  imageUrl: text("image_url"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Event participants
+export const eventParticipants = pgTable("event_participants", {
+  id: serial("id").primaryKey(),
+  eventId: integer("event_id").notNull().references(() => events.id),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  status: text("status").notNull().default("going"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const usersRelations = relations(users, ({ one, many }) => ({
   profile: one(profiles, {
     fields: [users.id],
@@ -178,6 +215,28 @@ export const insertSuperLikeSchema = createInsertSchema(superLikes).omit({ id: t
 export const insertPreferencesSchema = createInsertSchema(preferences).omit({ id: true, createdAt: true });
 export const insertBlockedUserSchema = createInsertSchema(blockedUsers).omit({ id: true, createdAt: true });
 export const insertReportSchema = createInsertSchema(reports).omit({ id: true, createdAt: true, status: true });
+export const insertEventSchema = createInsertSchema(events).omit({ id: true, createdAt: true });
+export const insertEventParticipantSchema = createInsertSchema(eventParticipants).omit({ id: true, createdAt: true });
+
+// Events relations
+export const eventsRelations = relations(events, ({ one, many }) => ({
+  creator: one(users, {
+    fields: [events.creatorId],
+    references: [users.id],
+  }),
+  participants: many(eventParticipants),
+}));
+
+export const eventParticipantsRelations = relations(eventParticipants, ({ one }) => ({
+  event: one(events, {
+    fields: [eventParticipants.eventId],
+    references: [events.id],
+  }),
+  user: one(users, {
+    fields: [eventParticipants.userId],
+    references: [users.id],
+  }),
+}));
 
 export type User = typeof users.$inferSelect;
 export type Profile = typeof profiles.$inferSelect;
@@ -196,3 +255,7 @@ export type InsertPreferences = z.infer<typeof insertPreferencesSchema>;
 export type BlockedUser = typeof blockedUsers.$inferSelect;
 export type Report = typeof reports.$inferSelect;
 export type InsertReport = z.infer<typeof insertReportSchema>;
+export type Event = typeof events.$inferSelect;
+export type InsertEvent = z.infer<typeof insertEventSchema>;
+export type EventParticipant = typeof eventParticipants.$inferSelect;
+export type InsertEventParticipant = z.infer<typeof insertEventParticipantSchema>;

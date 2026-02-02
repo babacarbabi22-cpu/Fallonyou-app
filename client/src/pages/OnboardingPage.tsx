@@ -8,11 +8,22 @@ import { useTranslation } from "@/lib/i18n";
 import { useUpdateProfile, useCurrentUser } from "@/hooks/use-danceme";
 import { useUpload } from "@/hooks/use-upload";
 import { useLocation } from "wouter";
-import { Camera, Upload, Check, ArrowRight, User, Heart, Shield, Sparkles, Loader2 } from "lucide-react";
+import { Camera, Upload, Check, ArrowRight, User, Heart, Shield, Sparkles, Loader2, Plane, Users, MapPin } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
-type OnboardingStep = "profile" | "preferences" | "verification" | "complete";
+type OnboardingStep = "profile" | "interests" | "preferences" | "verification" | "complete";
+
+const connectionTypeOptions = [
+  { id: "dating", label: "Dating", icon: Heart },
+  { id: "friends", label: "Friends", icon: Users },
+  { id: "activities", label: "Activities", icon: MapPin },
+];
+
+const travelInterestOptions = [
+  "beach", "mountain", "city", "food", "nightlife", 
+  "culture", "adventure", "relaxation", "photography", "sports"
+];
 
 export default function OnboardingPage() {
   const t = useTranslation();
@@ -36,8 +47,11 @@ export default function OnboardingPage() {
     maxDistance: 50,
   });
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [connectionTypes, setConnectionTypes] = useState<string[]>([]);
+  const [travelInterests, setTravelInterests] = useState<string[]>([]);
+  const [currentCity, setCurrentCity] = useState("");
 
-  const steps: OnboardingStep[] = ["profile", "preferences", "verification", "complete"];
+  const steps: OnboardingStep[] = ["profile", "interests", "preferences", "verification", "complete"];
   const currentStepIndex = steps.indexOf(step);
   const progress = ((currentStepIndex + 1) / steps.length) * 100;
 
@@ -68,7 +82,7 @@ export default function OnboardingPage() {
       },
       {
         onSuccess: () => {
-          setStep("preferences");
+          setStep("interests");
         },
         onError: (error) => {
           console.error("Failed to update profile:", error);
@@ -116,9 +130,41 @@ export default function OnboardingPage() {
 
   const stepIcons = {
     profile: User,
+    interests: Plane,
     preferences: Heart,
     verification: Shield,
     complete: Sparkles,
+  };
+
+  const toggleConnectionType = (type: string) => {
+    setConnectionTypes(prev => 
+      prev.includes(type) 
+        ? prev.filter(t => t !== type)
+        : [...prev, type]
+    );
+  };
+
+  const toggleTravelInterest = (interest: string) => {
+    setTravelInterests(prev => 
+      prev.includes(interest)
+        ? prev.filter(i => i !== interest)
+        : [...prev, interest]
+    );
+  };
+
+  const handleInterestsSubmit = async () => {
+    try {
+      await apiRequest("PATCH", "/api/profile", {
+        connectionTypes,
+        travelInterests,
+        currentCity: currentCity || undefined,
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/profile"] });
+      setStep("preferences");
+    } catch (error) {
+      console.error("Failed to update interests:", error);
+      setStep("preferences");
+    }
   };
 
   return (
@@ -245,6 +291,83 @@ export default function OnboardingPage() {
                   data-testid="button-next-step"
                 >
                   {t.onboarding.next}
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+
+          {step === "interests" && (
+            <Card>
+              <CardContent className="p-6 space-y-6">
+                <div className="text-center">
+                  <div className="w-16 h-16 rounded-full bg-amber-500/10 flex items-center justify-center mx-auto mb-4">
+                    <Plane className="w-8 h-8 text-amber-500" />
+                  </div>
+                  <h2 className="text-2xl font-bold mb-2">What are you looking for?</h2>
+                  <p className="text-muted-foreground">Select what you'd like to find on FallonYou</p>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium mb-3 block">I'm looking for:</label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {connectionTypeOptions.map((option) => {
+                      const Icon = option.icon;
+                      const isSelected = connectionTypes.includes(option.id);
+                      return (
+                        <Button
+                          key={option.id}
+                          variant={isSelected ? "default" : "outline"}
+                          onClick={() => toggleConnectionType(option.id)}
+                          className={`flex flex-col h-auto py-4 gap-2 ${isSelected ? "bg-amber-500 hover:bg-amber-600" : ""}`}
+                          data-testid={`button-connection-${option.id}`}
+                        >
+                          <Icon className="w-6 h-6" />
+                          <span className="text-xs">{option.label}</span>
+                        </Button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium mb-3 block">Travel interests:</label>
+                  <div className="flex flex-wrap gap-2">
+                    {travelInterestOptions.map((interest) => {
+                      const isSelected = travelInterests.includes(interest);
+                      return (
+                        <Button
+                          key={interest}
+                          variant={isSelected ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => toggleTravelInterest(interest)}
+                          className={`capitalize ${isSelected ? "bg-amber-500 hover:bg-amber-600" : ""}`}
+                          data-testid={`button-interest-${interest}`}
+                        >
+                          {interest}
+                        </Button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Current city (optional):</label>
+                  <Input
+                    value={currentCity}
+                    onChange={(e) => setCurrentCity(e.target.value)}
+                    placeholder="e.g. Barcelona, Spain"
+                    data-testid="input-current-city"
+                  />
+                </div>
+
+                <Button
+                  onClick={handleInterestsSubmit}
+                  disabled={connectionTypes.length === 0}
+                  className="w-full bg-amber-500 hover:bg-amber-600"
+                  data-testid="button-next-interests"
+                >
+                  Continue
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               </CardContent>

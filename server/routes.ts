@@ -4,8 +4,8 @@ import type { Server } from "http";
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
 import { db } from "./db";
-import { users } from "@shared/schema";
-import { eq } from "drizzle-orm";
+import { users, events, eventParticipants } from "@shared/schema";
+import { eq, and, desc } from "drizzle-orm";
 import { api } from "@shared/routes";
 import { z } from "zod";
 import multer from "multer";
@@ -52,7 +52,8 @@ export async function registerRoutes(
     const { 
       displayName, bio, age, gender, preference,
       zodiacSign, smoking, drinking, children, education,
-      occupation, birthplace, height, religion, politics, pets, exercise, incognito
+      occupation, birthplace, height, religion, politics, pets, exercise, incognito,
+      connectionTypes, travelInterests, travelerMode, currentCity, homeCity, latitude, longitude
     } = req.body;
     
     // Update user's display name if provided
@@ -81,6 +82,14 @@ export async function registerRoutes(
     if (pets !== undefined) profileData.pets = pets;
     if (exercise !== undefined) profileData.exercise = exercise;
     if (incognito !== undefined) profileData.incognito = incognito;
+    if (connectionTypes !== undefined) profileData.connectionTypes = connectionTypes;
+    if (travelInterests !== undefined) profileData.travelInterests = travelInterests;
+    if (travelerMode !== undefined) profileData.travelerMode = travelerMode;
+    if (currentCity !== undefined) profileData.currentCity = currentCity;
+    if (homeCity !== undefined) profileData.homeCity = homeCity;
+    if (latitude !== undefined) profileData.latitude = latitude;
+    if (longitude !== undefined) profileData.longitude = longitude;
+    if (latitude !== undefined || longitude !== undefined) profileData.lastLocationAt = new Date();
     
     const updated = await storage.upsertProfile(req.user!.id, profileData);
     res.json({ ...updated, displayName });
@@ -756,6 +765,142 @@ export async function registerRoutes(
       console.error('Error deleting account:', error);
       res.status(500).json({ error: 'Failed to delete account' });
     }
+  });
+
+  // ========== EVENTS API ==========
+  
+  // Get all events
+  app.get('/api/events', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const { city, category } = req.query;
+    
+    let allEvents = await db.select().from(events).orderBy(desc(events.startsAt));
+    
+    if (city && typeof city === 'string') {
+      allEvents = allEvents.filter(e => e.city.toLowerCase().includes(city.toLowerCase()));
+    }
+    if (category && typeof category === 'string') {
+      allEvents = allEvents.filter(e => e.category === category);
+    }
+    
+    // Enrich with participant count and creator info
+    const enrichedEvents = await Promise.all(allEvents.map(async (event) => {
+      const participants = await db.select().from(eventParticipants).where(eq(eventParticipants.eventId, event.id));
+      const creator = await storage.getUser(event.creatorId);
+      return {
+        ...event,
+        participantCount: participants.length,
+        creator: creator ? { id: creator.id, firstName: creator.firstName, profileImageUrl: creator.profileImageUrl } : null,
+      };
+    }));
+    
+    res.json(enrichedEvents);
+  });
+
+  // Create event
+  app.post('/api/events', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    const { title, description, category, city, location, startsAt, endsAt, capacity, latitude, longitude, imageUrl } = req.body;
+    
+    if (!title || !category || !city || !startsAt) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+    
+    const [newEvent] = await db.insert(events).values({
+      creatorId: req.user!.id,
+      title,
+      description,
+      category,
+      city,
+      location,
+      startsAt: new Date(startsAt),
+      endsAt: endsAt ? new Date(endsAt) : null,
+      capacity,
+      latitude,
+      longitude,
+      imageUrl,
+    }).returning();
+    
+    // Automatically join as participant
+    await db.insert(eventParticipants).values({
+      eventId: newEvent.id,
+      userId: req.user!.id,
+      status: 'going',
+    });
+    
+    res.json(newEvent);
+  });
+
+  // Get single event
+  app.get('/api/events/:id', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const eventId = parseInt(req.params.id);
+    
+    const [event] = await db.select().from(events).where(eq(events.id, eventId));
+    if (!event) return res.status(404).json({ error: 'Event not found' });
+    
+    const participants = await db.select().from(eventParticipants).where(eq(eventParticipants.eventId, eventId));
+    const participantUsers = await Promise.all(participants.map(async (p) => {
+      const user = await storage.getUser(p.userId);
+      return user ? { id: user.id, firstName: user.firstName, profileImageUrl: user.profileImageUrl, status: p.status } : null;
+    }));
+    
+    const creator = await storage.getUser(event.creatorId);
+    
+    res.json({
+      ...event,
+      participants: participantUsers.filter(Boolean),
+      creator: creator ? { id: creator.id, firstName: creator.firstName, profileImageUrl: creator.profileImageUrl } : null,
+    });
+  });
+
+  // Join event
+  app.post('/api/events/:id/join', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const eventId = parseInt(req.params.id);
+    
+    // Check if already joined
+    const [existing] = await db.select().from(eventParticipants)
+      .where(and(eq(eventParticipants.eventId, eventId), eq(eventParticipants.userId, req.user!.id)));
+    
+    if (existing) {
+      return res.status(400).json({ error: 'Already joined' });
+    }
+    
+    await db.insert(eventParticipants).values({
+      eventId,
+      userId: req.user!.id,
+      status: 'going',
+    });
+    
+    res.json({ success: true });
+  });
+
+  // Leave event
+  app.delete('/api/events/:id/leave', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const eventId = parseInt(req.params.id);
+    
+    await db.delete(eventParticipants)
+      .where(and(eq(eventParticipants.eventId, eventId), eq(eventParticipants.userId, req.user!.id)));
+    
+    res.json({ success: true });
+  });
+
+  // Delete event (only creator)
+  app.delete('/api/events/:id', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const eventId = parseInt(req.params.id);
+    
+    const [event] = await db.select().from(events).where(eq(events.id, eventId));
+    if (!event) return res.status(404).json({ error: 'Event not found' });
+    if (event.creatorId !== req.user!.id) return res.status(403).json({ error: 'Not authorized' });
+    
+    await db.delete(eventParticipants).where(eq(eventParticipants.eventId, eventId));
+    await db.delete(events).where(eq(events.id, eventId));
+    
+    res.json({ success: true });
   });
 
   return httpServer;
