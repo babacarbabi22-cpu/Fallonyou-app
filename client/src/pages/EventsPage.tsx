@@ -191,7 +191,7 @@ export default function EventsPage() {
                 </div>
                 <Button
                   onClick={() => createEventMutation.mutate(newEvent)}
-                  disabled={!newEvent.title || !newEvent.city || !newEvent.startsAt || createEventMutation.isPending}
+                  disabled={!newEvent.title.trim() || !newEvent.city.trim() || !newEvent.startsAt || createEventMutation.isPending}
                   className="w-full bg-amber-500 hover:bg-amber-600"
                   data-testid="button-submit-event"
                 >
