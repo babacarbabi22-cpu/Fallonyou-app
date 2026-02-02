@@ -151,8 +151,8 @@ export default function AuthPage() {
           <div className="flex gap-2 mb-6">
             <Button
               type="button"
-              variant={isLogin ? "default" : "ghost"}
-              className="flex-1 rounded-xl"
+              variant="ghost"
+              className={`flex-1 rounded-xl ${isLogin ? "bg-amber-500 text-white hover:bg-amber-600" : ""}`}
               onClick={() => setIsLogin(true)}
               data-testid="button-login-tab"
             >
@@ -160,8 +160,8 @@ export default function AuthPage() {
             </Button>
             <Button
               type="button"
-              variant={!isLogin ? "default" : "ghost"}
-              className="flex-1 rounded-xl"
+              variant="ghost"
+              className={`flex-1 rounded-xl ${!isLogin ? "bg-amber-500 text-white hover:bg-amber-600" : ""}`}
               onClick={() => setIsLogin(false)}
               data-testid="button-register-tab"
             >
@@ -251,7 +251,7 @@ export default function AuthPage() {
             <Button 
               type="submit"
               disabled={!ageConfirmed || isLoading}
-              className="w-full h-12 text-base rounded-xl font-bold bg-gradient-to-r from-blue-500 via-blue-400 to-pink-500 text-white shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-pink-500/40 hover:-translate-y-0.5 transition-all duration-300 disabled:opacity-50 disabled:shadow-none disabled:translate-y-0"
+              className="w-full h-12 text-base rounded-xl font-bold bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-400 text-white shadow-lg shadow-amber-500/30 hover:shadow-xl hover:shadow-yellow-500/40 hover:-translate-y-0.5 transition-all duration-300 disabled:opacity-50 disabled:shadow-none disabled:translate-y-0"
               data-testid="button-submit"
             >
               {isLoading ? (
