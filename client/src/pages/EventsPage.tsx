@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Calendar, MapPin, Users, Plus, Clock, Loader2 } from "lucide-react";
 import { BottomNav } from "@/components/BottomNav";
+import { WelcomeTour } from "@/components/WelcomeTour";
 import { format } from "date-fns";
 
 const eventCategories = [
@@ -42,6 +43,7 @@ interface Event {
 }
 
 export default function EventsPage() {
+  const [showWelcomeTour, setShowWelcomeTour] = useState(false);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [newEvent, setNewEvent] = useState({
@@ -53,6 +55,18 @@ export default function EventsPage() {
     startsAt: "",
     capacity: "",
   });
+
+  useEffect(() => {
+    const hasSeenTour = localStorage.getItem("fallonyou_tour_completed");
+    if (!hasSeenTour) {
+      setShowWelcomeTour(true);
+    }
+  }, []);
+
+  const handleTourComplete = () => {
+    localStorage.setItem("fallonyou_tour_completed", "true");
+    setShowWelcomeTour(false);
+  };
 
   const { data: events, isLoading } = useQuery<Event[]>({
     queryKey: ["/api/events", selectedCategory],
@@ -101,7 +115,9 @@ export default function EventsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <>
+      {showWelcomeTour && <WelcomeTour onComplete={handleTourComplete} />}
+      <div className="min-h-screen bg-background pb-20">
       <div className="p-4 border-b sticky top-0 bg-background/95 backdrop-blur z-10">
         <div className="flex items-center justify-between mb-4">
           <h1 className="text-2xl font-bold">Activities</h1>
@@ -294,5 +310,6 @@ export default function EventsPage() {
       </div>
       <BottomNav />
     </div>
+    </>
   );
 }
