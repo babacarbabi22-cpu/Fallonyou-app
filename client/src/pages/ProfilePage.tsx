@@ -282,6 +282,18 @@ export default function ProfilePage() {
           return null;
         })()}
 
+        {/* Save Changes Button - At top */}
+        <section>
+          <Button 
+            onClick={handleSave} 
+            disabled={isUpdating}
+            className="w-full h-12 rounded-xl bg-primary text-primary-foreground font-bold shadow-lg shadow-primary/25 hover:shadow-xl hover:-translate-y-0.5 transition-all"
+            data-testid="button-save-profile-top"
+          >
+            {isUpdating ? t.common.loading : t.profile.save}
+          </Button>
+        </section>
+
         {/* Info Section */}
         <section>
           <h2 className="text-2xl font-display font-bold mb-4">{t.profile.editProfile}</h2>
@@ -340,14 +352,7 @@ export default function ProfilePage() {
                </div>
             </div>
 
-            <Button 
-              onClick={handleSave} 
-              disabled={isUpdating}
-              className="w-full h-12 rounded-xl bg-primary text-primary-foreground font-bold shadow-lg shadow-primary/25 hover:shadow-xl hover:-translate-y-0.5 transition-all mt-4"
-            >
-              {isUpdating ? t.common.loading : t.profile.save}
-            </Button>
-          </div>
+            </div>
         </section>
 
         {/* Incognito Mode */}
@@ -664,7 +669,59 @@ export default function ProfilePage() {
           </div>
         </section>
 
-        {/* Verification & Notifications Section */}
+        {/* Photos Section */}
+        <section>
+          <h2 className="text-xl font-display font-bold mb-4">{t.profile.photos}</h2>
+          <p className="text-sm text-muted-foreground mb-3">{t.profile.tapToSetProfile || "Tap a photo to set as profile picture"}</p>
+          <div className="grid grid-cols-3 gap-3">
+             {user.photos?.map((photo) => {
+               const isProfilePic = user.profileImageUrl === photo.url;
+               return (
+                 <div key={photo.id} className="relative aspect-square rounded-xl overflow-hidden group">
+                   <img src={photo.url} className="w-full h-full object-cover" alt="User photo" />
+                   {isProfilePic && (
+                     <div className="absolute top-2 left-2 bg-primary text-white p-1 rounded-full">
+                       <Star className="w-3 h-3 fill-current" />
+                     </div>
+                   )}
+                   <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                     <Button 
+                       size="icon"
+                       onClick={() => setAsProfilePicture(photo.url)}
+                       disabled={isSettingProfilePic || isProfilePic}
+                       className="rounded-full"
+                       title={t.profile.setAsProfile || "Set as profile picture"}
+                       data-testid={`button-set-profile-${photo.id}`}
+                     >
+                       <User className="w-4 h-4" />
+                     </Button>
+                     <Button 
+                       size="icon"
+                       variant="destructive"
+                       onClick={() => deletePhoto(photo.id)}
+                       className="rounded-full"
+                       title={t.profile.deletePhoto || "Delete photo"}
+                       data-testid={`button-delete-photo-${photo.id}`}
+                     >
+                       <Trash2 className="w-4 h-4" />
+                     </Button>
+                   </div>
+                 </div>
+               );
+             })}
+             {/* Add button placeholder */}
+             <button 
+               onClick={() => fileInputRef.current?.click()}
+               className="aspect-square rounded-xl border-2 border-dashed border-gray-300 flex flex-col items-center justify-center text-gray-400 hover:border-primary hover:text-primary transition-colors bg-gray-50"
+               data-testid="button-add-photo"
+             >
+               <Camera className="w-6 h-6 mb-1" />
+               <span className="text-xs font-bold">{t.profile.addPhoto}</span>
+             </button>
+          </div>
+        </section>
+
+        {/* Settings Section - At bottom */}
         <section className="space-y-4">
           <h2 className="text-xl font-display font-bold mb-4">{t.settings.title}</h2>
           <VerificationStatus />
@@ -736,58 +793,6 @@ export default function ProfilePage() {
               </Card>
             </Link>
           )}
-        </section>
-
-        {/* Photos Section */}
-        <section>
-          <h2 className="text-xl font-display font-bold mb-4">{t.profile.photos}</h2>
-          <p className="text-sm text-muted-foreground mb-3">{t.profile.tapToSetProfile || "Tap a photo to set as profile picture"}</p>
-          <div className="grid grid-cols-3 gap-3">
-             {user.photos?.map((photo) => {
-               const isProfilePic = user.profileImageUrl === photo.url;
-               return (
-                 <div key={photo.id} className="relative aspect-square rounded-xl overflow-hidden group">
-                   <img src={photo.url} className="w-full h-full object-cover" alt="User photo" />
-                   {isProfilePic && (
-                     <div className="absolute top-2 left-2 bg-primary text-white p-1 rounded-full">
-                       <Star className="w-3 h-3 fill-current" />
-                     </div>
-                   )}
-                   <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                     <Button 
-                       size="icon"
-                       onClick={() => setAsProfilePicture(photo.url)}
-                       disabled={isSettingProfilePic || isProfilePic}
-                       className="rounded-full"
-                       title={t.profile.setAsProfile || "Set as profile picture"}
-                       data-testid={`button-set-profile-${photo.id}`}
-                     >
-                       <User className="w-4 h-4" />
-                     </Button>
-                     <Button 
-                       size="icon"
-                       variant="destructive"
-                       onClick={() => deletePhoto(photo.id)}
-                       className="rounded-full"
-                       title={t.profile.deletePhoto || "Delete photo"}
-                       data-testid={`button-delete-photo-${photo.id}`}
-                     >
-                       <Trash2 className="w-4 h-4" />
-                     </Button>
-                   </div>
-                 </div>
-               );
-             })}
-             {/* Add button placeholder */}
-             <button 
-               onClick={() => fileInputRef.current?.click()}
-               className="aspect-square rounded-xl border-2 border-dashed border-gray-300 flex flex-col items-center justify-center text-gray-400 hover:border-primary hover:text-primary transition-colors bg-gray-50"
-               data-testid="button-add-photo"
-             >
-               <Camera className="w-6 h-6 mb-1" />
-               <span className="text-xs font-bold">{t.profile.addPhoto}</span>
-             </button>
-          </div>
         </section>
       </div>
 
