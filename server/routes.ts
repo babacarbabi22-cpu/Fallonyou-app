@@ -14,6 +14,7 @@ import express from "express";
 import { registerObjectStorageRoutes } from "./replit_integrations/object_storage";
 import { stripeService } from "./stripeService";
 import { getStripePublishableKey } from "./stripeClient";
+import { saveSubscription, removeSubscription, sendPushNotification, getVapidPublicKey } from "./pushService";
 
 let paypalModule: any = null;
 async function loadPayPal() {
@@ -160,9 +161,27 @@ export async function registerRoutes(
     
     const match = await storage.createMatch(req.user!.id, targetUserId);
     
+    const senderProfile = await storage.getProfile(req.user!.id);
+    const senderName = senderProfile?.displayName || 'Someone';
+
     if (match && match.status === 'matched') {
+       sendPushNotification(targetUserId, {
+         title: 'New Match! ✈️',
+         body: `You and ${senderName} are a match! Start chatting now.`,
+         url: '/matches',
+       }).catch(() => {});
+       sendPushNotification(req.user!.id, {
+         title: 'New Match! ✈️',
+         body: `You and someone special are a match!`,
+         url: '/matches',
+       }).catch(() => {});
        res.json({ match, isMatch: true });
     } else {
+       sendPushNotification(targetUserId, {
+         title: 'Someone likes you! 💛',
+         body: `${senderName} is interested in connecting with you.`,
+         url: '/discover',
+       }).catch(() => {});
        res.json({ match, isMatch: false, remainingLikes: likeStatus.remainingLikes - 1 });
     }
   });
@@ -430,6 +449,16 @@ export async function registerRoutes(
       senderId: req.user!.id,
       content: content.trim()
     });
+
+    const recipientId = match.user1Id === req.user!.id ? match.user2Id : match.user1Id;
+    const senderProfile = await storage.getProfile(req.user!.id);
+    const senderName = senderProfile?.displayName || 'Someone';
+    sendPushNotification(recipientId, {
+      title: `${senderName} ✉️`,
+      body: content.trim().substring(0, 100),
+      url: `/matches`,
+    }).catch(() => {});
+
     res.status(201).json(message);
   });
 
@@ -499,6 +528,23 @@ export async function registerRoutes(
     }
     
     const match = await storage.createMatch(req.user!.id, toUserId);
+
+    const senderProfile = await storage.getProfile(req.user!.id);
+    const senderName = senderProfile?.displayName || 'Someone';
+    if (match?.status === 'matched') {
+      sendPushNotification(toUserId, {
+        title: 'New Match! ✈️',
+        body: `You and ${senderName} are a match! Start chatting now.`,
+        url: '/matches',
+      }).catch(() => {});
+    } else {
+      sendPushNotification(toUserId, {
+        title: 'Super Like! ⭐',
+        body: `${senderName} sent you a super like!`,
+        url: '/discover',
+      }).catch(() => {});
+    }
+
     res.json({ superLike, match, isMatch: match?.status === 'matched' });
   });
 
@@ -900,6 +946,30 @@ export async function registerRoutes(
     await db.delete(eventParticipants).where(eq(eventParticipants.eventId, eventId));
     await db.delete(events).where(eq(events.id, eventId));
     
+    res.json({ success: true });
+  });
+
+  // ============ PUSH NOTIFICATIONS ============
+  app.get('/api/push/vapid-key', (req, res) => {
+    res.json({ publicKey: getVapidPublicKey() });
+  });
+
+  app.post('/api/push/subscribe', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const { subscription } = req.body;
+    if (!subscription?.endpoint || !subscription?.keys?.p256dh || !subscription?.keys?.auth) {
+      return res.status(400).json({ error: 'Invalid subscription' });
+    }
+    await saveSubscription(req.user!.id, subscription);
+    res.json({ success: true });
+  });
+
+  app.post('/api/push/unsubscribe', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const { endpoint } = req.body;
+    if (endpoint) {
+      await removeSubscription(endpoint);
+    }
     res.json({ success: true });
   });
 
