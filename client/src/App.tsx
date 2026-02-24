@@ -136,6 +136,9 @@ function Router() {
       <Route path="/admin">
         {() => <ProtectedRoute component={AdminPage} />}
       </Route>
+      <Route path="/events">
+        {() => <ProtectedRoute component={EventsPage} />}
+      </Route>
       <Route path="/delete-account" component={DeleteAccountPage} />
       <Route component={NotFound} />
     </Switch>
