@@ -8,9 +8,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Calendar, MapPin, Users, Plus, Clock, Loader2 } from "lucide-react";
+import { Calendar, MapPin, Users, Plus, Clock, Loader2, Trash2 } from "lucide-react";
 import { BottomNav } from "@/components/BottomNav";
 import { WelcomeTour } from "@/components/WelcomeTour";
+import { useCurrentUser } from "@/hooks/use-danceme";
 import { format } from "date-fns";
 
 const eventCategories = [
@@ -43,6 +44,7 @@ interface Event {
 }
 
 export default function EventsPage() {
+  const { data: currentUser } = useCurrentUser();
   const [showWelcomeTour, setShowWelcomeTour] = useState(false);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -104,6 +106,23 @@ export default function EventsPage() {
       queryClient.invalidateQueries({ queryKey: ["/api/events"] });
     },
   });
+
+  const deleteEventMutation = useMutation({
+    mutationFn: async (eventId: number) => {
+      await apiRequest("DELETE", `/api/events/${eventId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/events"] });
+    },
+  });
+
+  const isPastEvent = (startsAt: string) => {
+    return new Date(startsAt) < new Date();
+  };
+
+  const isCreator = (event: Event) => {
+    return currentUser && event.creator && event.creator.id === currentUser.id;
+  };
 
   const filteredEvents = selectedCategory
     ? events?.filter((e) => e.category === selectedCategory)
@@ -288,16 +307,37 @@ export default function EventsPage() {
                       )}
                     </div>
                   </div>
-                  <div>
-                    <Button
-                      size="sm"
-                      onClick={() => joinEventMutation.mutate(event.id)}
-                      disabled={joinEventMutation.isPending}
-                      className="bg-amber-500 hover:bg-amber-600"
-                      data-testid={`button-join-event-${event.id}`}
-                    >
-                      Join
-                    </Button>
+                  <div className="flex flex-col gap-2 items-end">
+                    {isPastEvent(event.startsAt) && isCreator(event) ? (
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => deleteEventMutation.mutate(event.id)}
+                        disabled={deleteEventMutation.isPending}
+                        data-testid={`button-delete-event-${event.id}`}
+                      >
+                        {deleteEventMutation.isPending ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Trash2 className="w-4 h-4" />
+                        )}
+                      </Button>
+                    ) : (
+                      <Button
+                        size="sm"
+                        onClick={() => joinEventMutation.mutate(event.id)}
+                        disabled={joinEventMutation.isPending}
+                        className="bg-amber-500 hover:bg-amber-600"
+                        data-testid={`button-join-event-${event.id}`}
+                      >
+                        Join
+                      </Button>
+                    )}
+                    {isPastEvent(event.startsAt) && (
+                      <Badge variant="secondary" className="text-xs opacity-70">
+                        Ended
+                      </Badge>
+                    )}
                   </div>
                 </div>
                 {event.description && (
