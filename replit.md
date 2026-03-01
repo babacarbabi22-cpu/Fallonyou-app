@@ -86,6 +86,16 @@ The app uses a presigned URL approach for file uploads:
 - `REPL_ID` - Replit environment identifier
 - `ISSUER_URL` - OpenID Connect issuer (defaults to Replit)
 
+### Security
+- **Helmet**: Sets security HTTP headers (CSP, HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, etc.)
+- **Rate Limiting**: Global API limit (200 req/15min) + stricter auth limit (15 req/15min for login/register)
+- **Password Hashing**: bcryptjs with 10 salt rounds
+- **Session Security**: httpOnly cookies, secure flag in production, sameSite: lax, PostgreSQL-backed sessions
+- **SQL Injection Prevention**: Drizzle ORM with parameterized queries
+- **XSS Protection**: React's built-in escaping + Content Security Policy headers
+- **Stripe Webhook Verification**: Signature validation on all webhook events
+- **Access Control**: Authentication middleware + ownership checks on all mutation endpoints
+
 ### Key NPM Packages
 - `drizzle-orm` / `drizzle-kit` - Database ORM and migrations
 - `@tanstack/react-query` - Data fetching and caching
@@ -94,3 +104,5 @@ The app uses a presigned URL approach for file uploads:
 - `passport` / `openid-client` - Authentication
 - `stripe` / `stripe-replit-sync` - Payment processing
 - `@uppy/core` / `@uppy/aws-s3` - File upload handling
+- `helmet` - Security HTTP headers
+- `express-rate-limit` - API rate limiting
