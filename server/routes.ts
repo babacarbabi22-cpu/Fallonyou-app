@@ -934,6 +934,29 @@ export async function registerRoutes(
     res.json({ success: true });
   });
 
+  app.patch('/api/events/:id', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const eventId = parseInt(req.params.id);
+
+    const [event] = await db.select().from(events).where(eq(events.id, eventId));
+    if (!event) return res.status(404).json({ error: 'Event not found' });
+    if (event.creatorId !== req.user!.id) return res.status(403).json({ error: 'Not authorized' });
+
+    const { title, description, category, city, location, startsAt, capacity } = req.body;
+
+    const updateData: Record<string, any> = {};
+    if (title !== undefined) updateData.title = title;
+    if (description !== undefined) updateData.description = description;
+    if (category !== undefined) updateData.category = category;
+    if (city !== undefined) updateData.city = city;
+    if (location !== undefined) updateData.location = location;
+    if (startsAt !== undefined) updateData.startsAt = new Date(startsAt);
+    if (capacity !== undefined) updateData.capacity = capacity;
+
+    const [updated] = await db.update(events).set(updateData).where(eq(events.id, eventId)).returning();
+    res.json(updated);
+  });
+
   // Delete event (only creator)
   app.delete('/api/events/:id', async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);

@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Calendar, MapPin, Users, Plus, Clock, Loader2, Trash2 } from "lucide-react";
+import { Calendar, MapPin, Users, Plus, Clock, Loader2, Trash2, Pencil } from "lucide-react";
 import { BottomNav } from "@/components/BottomNav";
 import { WelcomeTour } from "@/components/WelcomeTour";
 import { useCurrentUser } from "@/hooks/use-danceme";
@@ -43,20 +43,134 @@ interface Event {
   } | null;
 }
 
+type EventFormData = {
+  title: string;
+  description: string;
+  category: string;
+  city: string;
+  location: string;
+  startsAt: string;
+  capacity: string;
+};
+
+function EventForm({
+  formData,
+  setFormData,
+  onSubmit,
+  isPending,
+  submitLabel,
+}: {
+  formData: EventFormData;
+  setFormData: (data: EventFormData) => void;
+  onSubmit: () => void;
+  isPending: boolean;
+  submitLabel: string;
+}) {
+  return (
+    <div className="space-y-4">
+      <div>
+        <label className="text-sm font-medium">Title</label>
+        <Input
+          value={formData.title}
+          onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+          placeholder="What's the plan?"
+          data-testid="input-event-title"
+        />
+      </div>
+      <div>
+        <label className="text-sm font-medium">Category</label>
+        <div className="flex flex-wrap gap-2 mt-2">
+          {eventCategories.map((cat) => (
+            <Button
+              key={cat.id}
+              variant={formData.category === cat.id ? "default" : "outline"}
+              size="sm"
+              onClick={() => setFormData({ ...formData, category: cat.id })}
+              className={formData.category === cat.id ? "bg-amber-500 hover:bg-amber-600" : ""}
+            >
+              {cat.icon} {cat.label}
+            </Button>
+          ))}
+        </div>
+      </div>
+      <div>
+        <label className="text-sm font-medium">City</label>
+        <Input
+          value={formData.city}
+          onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+          placeholder="Barcelona, Spain"
+          data-testid="input-event-city"
+        />
+      </div>
+      <div>
+        <label className="text-sm font-medium">Location (optional)</label>
+        <Input
+          value={formData.location}
+          onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+          placeholder="Restaurant name, address..."
+          data-testid="input-event-location"
+        />
+      </div>
+      <div>
+        <label className="text-sm font-medium">When</label>
+        <Input
+          type="datetime-local"
+          value={formData.startsAt}
+          onChange={(e) => setFormData({ ...formData, startsAt: e.target.value })}
+          data-testid="input-event-date"
+        />
+      </div>
+      <div>
+        <label className="text-sm font-medium">Max participants (optional)</label>
+        <Input
+          type="number"
+          value={formData.capacity}
+          onChange={(e) => setFormData({ ...formData, capacity: e.target.value })}
+          placeholder="No limit"
+          min={2}
+          data-testid="input-event-capacity"
+        />
+      </div>
+      <div>
+        <label className="text-sm font-medium">Description (optional)</label>
+        <Textarea
+          value={formData.description}
+          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+          placeholder="Tell people more about this activity..."
+          rows={3}
+          data-testid="input-event-description"
+        />
+      </div>
+      <Button
+        onClick={onSubmit}
+        disabled={!formData.title.trim() || !formData.city.trim() || !formData.startsAt || isPending}
+        className="w-full bg-amber-500 hover:bg-amber-600"
+        data-testid="button-submit-event"
+      >
+        {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : submitLabel}
+      </Button>
+    </div>
+  );
+}
+
+const emptyForm: EventFormData = {
+  title: "",
+  description: "",
+  category: "other",
+  city: "",
+  location: "",
+  startsAt: "",
+  capacity: "",
+};
+
 export default function EventsPage() {
   const { data: currentUser } = useCurrentUser();
   const [showWelcomeTour, setShowWelcomeTour] = useState(false);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [newEvent, setNewEvent] = useState({
-    title: "",
-    description: "",
-    category: "other",
-    city: "",
-    location: "",
-    startsAt: "",
-    capacity: "",
-  });
+  const [newEvent, setNewEvent] = useState<EventFormData>({ ...emptyForm });
+  const [editForm, setEditForm] = useState<EventFormData>({ ...emptyForm });
 
   useEffect(() => {
     const hasSeenTour = localStorage.getItem("fallonyou_tour_completed");
@@ -75,7 +189,7 @@ export default function EventsPage() {
   });
 
   const createEventMutation = useMutation({
-    mutationFn: async (eventData: typeof newEvent) => {
+    mutationFn: async (eventData: EventFormData) => {
       const res = await apiRequest("POST", "/api/events", {
         ...eventData,
         capacity: eventData.capacity ? parseInt(eventData.capacity) : null,
@@ -85,15 +199,21 @@ export default function EventsPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/events"] });
       setIsCreateOpen(false);
-      setNewEvent({
-        title: "",
-        description: "",
-        category: "other",
-        city: "",
-        location: "",
-        startsAt: "",
-        capacity: "",
+      setNewEvent({ ...emptyForm });
+    },
+  });
+
+  const editEventMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: number; data: EventFormData }) => {
+      const res = await apiRequest("PATCH", `/api/events/${id}`, {
+        ...data,
+        capacity: data.capacity ? parseInt(data.capacity) : null,
       });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/events"] });
+      setEditingEvent(null);
     },
   });
 
@@ -124,6 +244,20 @@ export default function EventsPage() {
     return currentUser && event.creator && event.creator.id === currentUser.id;
   };
 
+  const openEditDialog = (event: Event) => {
+    const startsAtLocal = format(new Date(event.startsAt), "yyyy-MM-dd'T'HH:mm");
+    setEditForm({
+      title: event.title,
+      description: event.description || "",
+      category: event.category,
+      city: event.city,
+      location: event.location || "",
+      startsAt: startsAtLocal,
+      capacity: event.capacity ? String(event.capacity) : "",
+    });
+    setEditingEvent(event);
+  };
+
   const filteredEvents = selectedCategory
     ? events?.filter((e) => e.category === selectedCategory)
     : events;
@@ -147,93 +281,17 @@ export default function EventsPage() {
                 Create
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-md">
+            <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Create Activity</DialogTitle>
               </DialogHeader>
-              <div className="space-y-4">
-                <div>
-                  <label className="text-sm font-medium">Title</label>
-                  <Input
-                    value={newEvent.title}
-                    onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })}
-                    placeholder="What's the plan?"
-                    data-testid="input-event-title"
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium">Category</label>
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {eventCategories.map((cat) => (
-                      <Button
-                        key={cat.id}
-                        variant={newEvent.category === cat.id ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => setNewEvent({ ...newEvent, category: cat.id })}
-                        className={newEvent.category === cat.id ? "bg-amber-500 hover:bg-amber-600" : ""}
-                      >
-                        {cat.icon} {cat.label}
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <label className="text-sm font-medium">City</label>
-                  <Input
-                    value={newEvent.city}
-                    onChange={(e) => setNewEvent({ ...newEvent, city: e.target.value })}
-                    placeholder="Barcelona, Spain"
-                    data-testid="input-event-city"
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium">Location (optional)</label>
-                  <Input
-                    value={newEvent.location}
-                    onChange={(e) => setNewEvent({ ...newEvent, location: e.target.value })}
-                    placeholder="Restaurant name, address..."
-                    data-testid="input-event-location"
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium">When</label>
-                  <Input
-                    type="datetime-local"
-                    value={newEvent.startsAt}
-                    onChange={(e) => setNewEvent({ ...newEvent, startsAt: e.target.value })}
-                    data-testid="input-event-date"
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium">Max participants (optional)</label>
-                  <Input
-                    type="number"
-                    value={newEvent.capacity}
-                    onChange={(e) => setNewEvent({ ...newEvent, capacity: e.target.value })}
-                    placeholder="No limit"
-                    min={2}
-                    data-testid="input-event-capacity"
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium">Description (optional)</label>
-                  <Textarea
-                    value={newEvent.description}
-                    onChange={(e) => setNewEvent({ ...newEvent, description: e.target.value })}
-                    placeholder="Tell people more about this activity..."
-                    rows={3}
-                    data-testid="input-event-description"
-                  />
-                </div>
-                <Button
-                  onClick={() => createEventMutation.mutate(newEvent)}
-                  disabled={!newEvent.title.trim() || !newEvent.city.trim() || !newEvent.startsAt || createEventMutation.isPending}
-                  className="w-full bg-amber-500 hover:bg-amber-600"
-                  data-testid="button-submit-event"
-                >
-                  {createEventMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Create Activity"}
-                </Button>
-              </div>
+              <EventForm
+                formData={newEvent}
+                setFormData={setNewEvent}
+                onSubmit={() => createEventMutation.mutate(newEvent)}
+                isPending={createEventMutation.isPending}
+                submitLabel="Create Activity"
+              />
             </DialogContent>
           </Dialog>
         </div>
@@ -308,7 +366,27 @@ export default function EventsPage() {
                     </div>
                   </div>
                   <div className="flex flex-col gap-2 items-end">
-                    {isPastEvent(event.startsAt) && isCreator(event) ? (
+                    {isCreator(event) && !isPastEvent(event.startsAt) ? (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => openEditDialog(event)}
+                        data-testid={`button-edit-event-${event.id}`}
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </Button>
+                    ) : !isPastEvent(event.startsAt) ? (
+                      <Button
+                        size="sm"
+                        onClick={() => joinEventMutation.mutate(event.id)}
+                        disabled={joinEventMutation.isPending}
+                        className="bg-amber-500 hover:bg-amber-600"
+                        data-testid={`button-join-event-${event.id}`}
+                      >
+                        Join
+                      </Button>
+                    ) : null}
+                    {isPastEvent(event.startsAt) && isCreator(event) && (
                       <Button
                         size="sm"
                         variant="destructive"
@@ -321,16 +399,6 @@ export default function EventsPage() {
                         ) : (
                           <Trash2 className="w-4 h-4" />
                         )}
-                      </Button>
-                    ) : (
-                      <Button
-                        size="sm"
-                        onClick={() => joinEventMutation.mutate(event.id)}
-                        disabled={joinEventMutation.isPending}
-                        className="bg-amber-500 hover:bg-amber-600"
-                        data-testid={`button-join-event-${event.id}`}
-                      >
-                        Join
                       </Button>
                     )}
                     {isPastEvent(event.startsAt) && (
@@ -348,6 +416,22 @@ export default function EventsPage() {
           ))
         )}
       </div>
+
+      <Dialog open={!!editingEvent} onOpenChange={(open) => !open && setEditingEvent(null)}>
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Activity</DialogTitle>
+          </DialogHeader>
+          <EventForm
+            formData={editForm}
+            setFormData={setEditForm}
+            onSubmit={() => editingEvent && editEventMutation.mutate({ id: editingEvent.id, data: editForm })}
+            isPending={editEventMutation.isPending}
+            submitLabel="Save Changes"
+          />
+        </DialogContent>
+      </Dialog>
+
       <BottomNav />
     </div>
     </>
