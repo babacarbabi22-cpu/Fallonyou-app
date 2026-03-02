@@ -1,7 +1,7 @@
 import webpush from 'web-push';
 import { db } from './db';
 import { pushSubscriptions } from '@shared/schema';
-import { eq } from 'drizzle-orm';
+import { eq, ne } from 'drizzle-orm';
 
 const vapidPublicKey = process.env.VAPID_PUBLIC_KEY || '';
 const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY || '';
@@ -57,6 +57,42 @@ export async function sendPushNotification(userId: string, payload: {
             icon: payload.icon || '/favicon.png',
             url: payload.url || '/',
             actions: payload.actions || [],
+          })
+        );
+      } catch (error: any) {
+        if (error.statusCode === 410 || error.statusCode === 404) {
+          await removeSubscription(sub.endpoint);
+        }
+        throw error;
+      }
+    })
+  );
+
+  return results;
+}
+
+export async function sendPushToAllExcept(excludeUserId: string, payload: {
+  title: string;
+  body: string;
+  icon?: string;
+  url?: string;
+}) {
+  const subs = await db.select().from(pushSubscriptions)
+    .where(ne(pushSubscriptions.userId, excludeUserId));
+
+  const results = await Promise.allSettled(
+    subs.map(async (sub) => {
+      try {
+        await webpush.sendNotification(
+          {
+            endpoint: sub.endpoint,
+            keys: { p256dh: sub.p256dh, auth: sub.auth },
+          },
+          JSON.stringify({
+            title: payload.title,
+            body: payload.body,
+            icon: payload.icon || '/favicon.png',
+            url: payload.url || '/',
           })
         );
       } catch (error: any) {

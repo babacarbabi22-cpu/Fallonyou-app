@@ -14,7 +14,7 @@ import express from "express";
 import { registerObjectStorageRoutes } from "./replit_integrations/object_storage";
 import { stripeService } from "./stripeService";
 import { getStripePublishableKey } from "./stripeClient";
-import { saveSubscription, removeSubscription, sendPushNotification, getVapidPublicKey } from "./pushService";
+import { saveSubscription, removeSubscription, sendPushNotification, sendPushToAllExcept, getVapidPublicKey } from "./pushService";
 
 let paypalModule: any = null;
 async function loadPayPal() {
@@ -874,6 +874,14 @@ export async function registerRoutes(
       userId: req.user!.id,
       status: 'going',
     });
+
+    const creatorName = req.user!.firstName || 'Someone';
+    const categoryIcon = { dining: '🍽️', nightlife: '🎉', outdoor: '🏔️', culture: '🎭', sports: '⚽', travel: '✈️', music: '🎵', other: '📌' }[category] || '📌';
+    sendPushToAllExcept(req.user!.id, {
+      title: `${categoryIcon} New Activity in ${city}!`,
+      body: `${creatorName} created "${title}" — check it out and join!`,
+      url: '/',
+    }).catch(err => console.error('Push notification error:', err));
     
     res.json(newEvent);
   });
