@@ -6,7 +6,7 @@ export const translations = {
   es: {
     app: {
       name: "FallonYou",
-      tagline: "Encuentra tu ritmo. Conecta con personas que se mueven como tú.",
+      tagline: "Haz amigos en tus viajes, crea actividades y descubre eventos en tu ciudad.",
     },
     auth: {
       login: "Iniciar Sesión",
@@ -455,7 +455,7 @@ export const translations = {
   en: {
     app: {
       name: "FallonYou",
-      tagline: "Find your rhythm. Match with people who move like you do.",
+      tagline: "Make friends on your travels, create activities and discover events in your city.",
     },
     auth: {
       login: "Sign In",
@@ -904,7 +904,7 @@ export const translations = {
   fr: {
     app: {
       name: "FallonYou",
-      tagline: "Trouvez votre rythme. Connectez-vous avec des gens qui bougent comme vous.",
+      tagline: "Fais-toi des amis en voyage, crée des activités et découvre des événements dans ta ville.",
     },
     auth: {
       login: "Se connecter",
