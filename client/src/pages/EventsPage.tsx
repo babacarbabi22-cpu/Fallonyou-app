@@ -491,15 +491,13 @@ export default function EventsPage() {
                 {isCreator(event) && (
                   <div className="absolute top-3 right-3 flex gap-2">
                     {!isPastEvent(event.startsAt) && (
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        className="h-8 w-8 p-0 rounded-full bg-white/90 hover:bg-white"
+                      <button
+                        className="text-white drop-shadow-md hover:text-amber-300 transition-colors"
                         onClick={(e) => { e.stopPropagation(); openEditDialog(event); }}
                         data-testid={`button-edit-event-${event.id}`}
                       >
-                        <Pencil className="w-3.5 h-3.5" />
-                      </Button>
+                        <Pencil className="w-5 h-5" />
+                      </button>
                     )}
                     {isPastEvent(event.startsAt) && (
                       <Button
