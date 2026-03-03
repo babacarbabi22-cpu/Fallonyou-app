@@ -451,6 +451,17 @@ export const translations = {
       emergencyDesc: "Si estás en peligro inmediato, contacta a los servicios de emergencia de tu país.",
       emergencyButton: "Recursos de emergencia",
     },
+    invite: {
+      title: "Invita a tus amigos",
+      subtitle: "La experiencia es mejor cuando la compartes. Invita a personas que te gustaría tener cerca en tus viajes y aventuras.",
+      tip1: "Crea eventos y actividades con tu grupo",
+      tip2: "Descubre nuevos destinos juntos",
+      tip3: "Conoce gente interesante donde vayas",
+      button: "Compartir FallonYou",
+      shareText: "¡Únete a FallonYou! Haz amigos en tus viajes, crea actividades y descubre eventos increíbles.",
+      copied: "Enlace copiado",
+      dismiss: "Entendido",
+    },
   },
   en: {
     app: {
@@ -900,6 +911,17 @@ export const translations = {
       emergencyDesc: "If you are in immediate danger, contact your country's emergency services.",
       emergencyButton: "Emergency resources",
     },
+    invite: {
+      title: "Invite your friends",
+      subtitle: "The experience is better when you share it. Invite people you'd love to have around on your trips and adventures.",
+      tip1: "Create events and activities with your group",
+      tip2: "Discover new destinations together",
+      tip3: "Meet interesting people wherever you go",
+      button: "Share FallonYou",
+      shareText: "Join FallonYou! Make friends on your travels, create activities and discover amazing events.",
+      copied: "Link copied",
+      dismiss: "Got it",
+    },
   },
   fr: {
     app: {
@@ -1348,6 +1370,17 @@ export const translations = {
       emergencyTitle: "Besoin d'aide urgente?",
       emergencyDesc: "Si vous êtes en danger immédiat, contactez les services d'urgence de votre pays.",
       emergencyButton: "Ressources d'urgence",
+    },
+    invite: {
+      title: "Invite tes amis",
+      subtitle: "L'expérience est meilleure quand on la partage. Invite les personnes que tu aimerais avoir à tes côtés dans tes voyages et aventures.",
+      tip1: "Crée des événements et activités avec ton groupe",
+      tip2: "Découvre de nouvelles destinations ensemble",
+      tip3: "Rencontre des gens intéressants où que tu ailles",
+      button: "Partager FallonYou",
+      shareText: "Rejoins FallonYou ! Fais-toi des amis en voyage, crée des activités et découvre des événements incroyables.",
+      copied: "Lien copié",
+      dismiss: "Compris",
     },
   },
 };

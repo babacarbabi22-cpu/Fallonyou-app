@@ -12,6 +12,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Calendar, MapPin, Users, Plus, Clock, Loader2, Trash2, Pencil, ImagePlus, X, Search, MessageCircle } from "lucide-react";
 import { BottomNav } from "@/components/BottomNav";
 import { WelcomeTour } from "@/components/WelcomeTour";
+import { InviteFriends } from "@/components/InviteFriends";
 import { useCurrentUser } from "@/hooks/use-danceme";
 import { useUpload } from "@/hooks/use-upload";
 import { format } from "date-fns";
@@ -452,6 +453,8 @@ export default function EventsPage() {
           ))}
         </div>
       </div>
+
+      <InviteFriends />
 
       <div className="p-4 space-y-4">
         {isLoading ? (
