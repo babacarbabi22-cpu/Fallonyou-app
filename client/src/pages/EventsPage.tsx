@@ -1,17 +1,18 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Calendar, MapPin, Users, Plus, Clock, Loader2, Trash2, Pencil } from "lucide-react";
+import { Calendar, MapPin, Users, Plus, Clock, Loader2, Trash2, Pencil, ImagePlus, X } from "lucide-react";
 import { BottomNav } from "@/components/BottomNav";
 import { WelcomeTour } from "@/components/WelcomeTour";
 import { useCurrentUser } from "@/hooks/use-danceme";
+import { useUpload } from "@/hooks/use-upload";
 import { format } from "date-fns";
 
 const eventCategories = [
@@ -25,6 +26,17 @@ const eventCategories = [
   { id: "other", label: "Other", icon: "📌" },
 ];
 
+const categoryImages: Record<string, string> = {
+  dining: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=600&h=300&fit=crop",
+  nightlife: "https://images.unsplash.com/photo-1566417713940-fe7c737a9ef2?w=600&h=300&fit=crop",
+  outdoor: "https://images.unsplash.com/photo-1551632811-561732d1e306?w=600&h=300&fit=crop",
+  culture: "https://images.unsplash.com/photo-1518998053901-5348d3961a04?w=600&h=300&fit=crop",
+  sports: "https://images.unsplash.com/photo-1461896836934-bd45ba8fcf9b?w=600&h=300&fit=crop",
+  travel: "https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=600&h=300&fit=crop",
+  music: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=600&h=300&fit=crop",
+  other: "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=600&h=300&fit=crop",
+};
+
 interface Event {
   id: number;
   title: string;
@@ -35,6 +47,7 @@ interface Event {
   startsAt: string;
   endsAt: string | null;
   capacity: number | null;
+  imageUrl: string | null;
   participantCount: number;
   creator: {
     id: string;
@@ -51,6 +64,7 @@ type EventFormData = {
   location: string;
   startsAt: string;
   capacity: string;
+  imageUrl: string;
 };
 
 function EventForm({
@@ -66,8 +80,79 @@ function EventForm({
   isPending: boolean;
   submitLabel: string;
 }) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(formData.imageUrl || null);
+  const { uploadFile, isUploading } = useUpload({
+    onSuccess: (response) => {
+      const objectUrl = `/objects/${response.objectPath}`;
+      setFormData({ ...formData, imageUrl: objectUrl });
+      setImagePreview(objectUrl);
+    },
+  });
+
+  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImagePreview(URL.createObjectURL(file));
+    await uploadFile(file);
+  };
+
+  const removeImage = () => {
+    setFormData({ ...formData, imageUrl: "" });
+    setImagePreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
   return (
     <div className="space-y-4">
+      <div>
+        <label className="text-sm font-medium">Cover Photo (optional)</label>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handleImageSelect}
+          className="hidden"
+          data-testid="input-event-image"
+        />
+        {imagePreview ? (
+          <div className="relative mt-2 rounded-xl overflow-hidden">
+            <img src={imagePreview} alt="Event cover" className="w-full h-40 object-cover" />
+            <Button
+              size="sm"
+              variant="destructive"
+              className="absolute top-2 right-2 h-8 w-8 p-0 rounded-full"
+              onClick={removeImage}
+              type="button"
+            >
+              <X className="w-4 h-4" />
+            </Button>
+            {isUploading && (
+              <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                <Loader2 className="w-8 h-8 animate-spin text-white" />
+              </div>
+            )}
+          </div>
+        ) : (
+          <Button
+            variant="outline"
+            className="w-full mt-2 h-28 border-dashed flex flex-col gap-2"
+            onClick={() => fileInputRef.current?.click()}
+            type="button"
+            disabled={isUploading}
+            data-testid="button-add-event-image"
+          >
+            {isUploading ? (
+              <Loader2 className="w-6 h-6 animate-spin" />
+            ) : (
+              <>
+                <ImagePlus className="w-6 h-6 text-muted-foreground" />
+                <span className="text-sm text-muted-foreground">Add a cover photo</span>
+              </>
+            )}
+          </Button>
+        )}
+      </div>
       <div>
         <label className="text-sm font-medium">Title</label>
         <Input
@@ -143,7 +228,7 @@ function EventForm({
       </div>
       <Button
         onClick={onSubmit}
-        disabled={!formData.title.trim() || !formData.city.trim() || !formData.startsAt || isPending}
+        disabled={!formData.title.trim() || !formData.city.trim() || !formData.startsAt || isPending || isUploading}
         className="w-full bg-amber-500 hover:bg-amber-600"
         data-testid="button-submit-event"
       >
@@ -161,6 +246,7 @@ const emptyForm: EventFormData = {
   location: "",
   startsAt: "",
   capacity: "",
+  imageUrl: "",
 };
 
 export default function EventsPage() {
@@ -193,6 +279,7 @@ export default function EventsPage() {
       const res = await apiRequest("POST", "/api/events", {
         ...eventData,
         capacity: eventData.capacity ? parseInt(eventData.capacity) : null,
+        imageUrl: eventData.imageUrl || null,
       });
       return res.json();
     },
@@ -208,6 +295,7 @@ export default function EventsPage() {
       const res = await apiRequest("PATCH", `/api/events/${id}`, {
         ...data,
         capacity: data.capacity ? parseInt(data.capacity) : null,
+        imageUrl: data.imageUrl || null,
       });
       return res.json();
     },
@@ -254,8 +342,13 @@ export default function EventsPage() {
       location: event.location || "",
       startsAt: startsAtLocal,
       capacity: event.capacity ? String(event.capacity) : "",
+      imageUrl: event.imageUrl || "",
     });
     setEditingEvent(event);
+  };
+
+  const getEventImage = (event: Event) => {
+    return event.imageUrl || categoryImages[event.category] || categoryImages.other;
   };
 
   const filteredEvents = selectedCategory
@@ -332,85 +425,101 @@ export default function EventsPage() {
           </div>
         ) : (
           filteredEvents?.map((event) => (
-            <Card key={event.id} className="overflow-hidden" data-testid={`card-event-${event.id}`}>
-              <CardContent className="p-4">
-                <div className="flex gap-4">
-                  <div className="text-4xl">{getCategoryIcon(event.category)}</div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-lg truncate">{event.title}</h3>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
-                      <MapPin className="w-4 h-4" />
-                      <span className="truncate">{event.city}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
-                      <Clock className="w-4 h-4" />
-                      <span>{format(new Date(event.startsAt), "MMM d, h:mm a")}</span>
-                    </div>
-                    <div className="flex items-center gap-2 mt-2">
-                      <div className="flex items-center gap-1">
-                        <Users className="w-4 h-4 text-amber-500" />
-                        <span className="text-sm font-medium">
-                          {event.participantCount}
-                          {event.capacity && ` / ${event.capacity}`}
-                        </span>
-                      </div>
-                      {event.creator && (
-                        <div className="flex items-center gap-1">
-                          <Avatar className="w-5 h-5">
-                            <AvatarImage src={event.creator.profileImageUrl || undefined} />
-                            <AvatarFallback className="text-xs">{event.creator.firstName?.[0]}</AvatarFallback>
-                          </Avatar>
-                          <span className="text-xs text-muted-foreground">{event.creator.firstName}</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex flex-col gap-2 items-end">
-                    {isCreator(event) && !isPastEvent(event.startsAt) ? (
+            <Card key={event.id} className="overflow-hidden border-0 shadow-md" data-testid={`card-event-${event.id}`}>
+              <div className="relative">
+                <img
+                  src={getEventImage(event)}
+                  alt={event.title}
+                  className={`w-full h-44 object-cover ${isPastEvent(event.startsAt) ? "opacity-60 grayscale" : ""}`}
+                />
+                <div className="absolute top-3 left-3 flex gap-2">
+                  <Badge className="bg-black/70 text-white border-0 backdrop-blur-sm">
+                    {getCategoryIcon(event.category)} {eventCategories.find(c => c.id === event.category)?.label}
+                  </Badge>
+                  {isPastEvent(event.startsAt) && (
+                    <Badge variant="secondary" className="bg-black/70 text-white border-0 backdrop-blur-sm">
+                      Ended
+                    </Badge>
+                  )}
+                </div>
+                {isCreator(event) && (
+                  <div className="absolute top-3 right-3 flex gap-2">
+                    {!isPastEvent(event.startsAt) && (
                       <Button
                         size="sm"
-                        variant="outline"
+                        variant="secondary"
+                        className="h-8 w-8 p-0 rounded-full bg-white/90 hover:bg-white"
                         onClick={() => openEditDialog(event)}
                         data-testid={`button-edit-event-${event.id}`}
                       >
-                        <Pencil className="w-4 h-4" />
+                        <Pencil className="w-3.5 h-3.5" />
                       </Button>
-                    ) : !isPastEvent(event.startsAt) ? (
-                      <Button
-                        size="sm"
-                        onClick={() => joinEventMutation.mutate(event.id)}
-                        disabled={joinEventMutation.isPending}
-                        className="bg-amber-500 hover:bg-amber-600"
-                        data-testid={`button-join-event-${event.id}`}
-                      >
-                        Join
-                      </Button>
-                    ) : null}
-                    {isPastEvent(event.startsAt) && isCreator(event) && (
+                    )}
+                    {isPastEvent(event.startsAt) && (
                       <Button
                         size="sm"
                         variant="destructive"
+                        className="h-8 w-8 p-0 rounded-full"
                         onClick={() => deleteEventMutation.mutate(event.id)}
                         disabled={deleteEventMutation.isPending}
                         data-testid={`button-delete-event-${event.id}`}
                       >
                         {deleteEventMutation.isPending ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
                         ) : (
-                          <Trash2 className="w-4 h-4" />
+                          <Trash2 className="w-3.5 h-3.5" />
                         )}
                       </Button>
                     )}
-                    {isPastEvent(event.startsAt) && (
-                      <Badge variant="secondary" className="text-xs opacity-70">
-                        Ended
-                      </Badge>
-                    )}
+                  </div>
+                )}
+              </div>
+              <CardContent className="p-4">
+                <h3 className="font-bold text-lg leading-tight">{event.title}</h3>
+                <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
+                  <div className="flex items-center gap-1">
+                    <Calendar className="w-3.5 h-3.5" />
+                    <span>{format(new Date(event.startsAt), "EEE, MMM d · h:mm a")}</span>
                   </div>
                 </div>
+                <div className="flex items-center gap-1 mt-1 text-sm text-muted-foreground">
+                  <MapPin className="w-3.5 h-3.5" />
+                  <span>{event.location ? `${event.location}, ${event.city}` : event.city}</span>
+                </div>
                 {event.description && (
-                  <p className="text-sm text-muted-foreground mt-3 line-clamp-2">{event.description}</p>
+                  <p className="text-sm text-muted-foreground mt-2 line-clamp-2">{event.description}</p>
                 )}
+                <div className="flex items-center justify-between mt-3 pt-3 border-t">
+                  <div className="flex items-center gap-3">
+                    {event.creator && (
+                      <div className="flex items-center gap-1.5">
+                        <Avatar className="w-6 h-6">
+                          <AvatarImage src={event.creator.profileImageUrl || undefined} />
+                          <AvatarFallback className="text-xs">{event.creator.firstName?.[0]}</AvatarFallback>
+                        </Avatar>
+                        <span className="text-sm text-muted-foreground">{event.creator.firstName}</span>
+                      </div>
+                    )}
+                    <div className="flex items-center gap-1">
+                      <Users className="w-4 h-4 text-amber-500" />
+                      <span className="text-sm font-medium">
+                        {event.participantCount}
+                        {event.capacity && ` / ${event.capacity}`}
+                      </span>
+                    </div>
+                  </div>
+                  {!isPastEvent(event.startsAt) && !isCreator(event) && (
+                    <Button
+                      size="sm"
+                      onClick={() => joinEventMutation.mutate(event.id)}
+                      disabled={joinEventMutation.isPending}
+                      className="bg-amber-500 hover:bg-amber-600"
+                      data-testid={`button-join-event-${event.id}`}
+                    >
+                      Join
+                    </Button>
+                  )}
+                </div>
               </CardContent>
             </Card>
           ))

@@ -950,7 +950,7 @@ export async function registerRoutes(
     if (!event) return res.status(404).json({ error: 'Event not found' });
     if (event.creatorId !== req.user!.id) return res.status(403).json({ error: 'Not authorized' });
 
-    const { title, description, category, city, location, startsAt, capacity } = req.body;
+    const { title, description, category, city, location, startsAt, capacity, imageUrl } = req.body;
 
     const updateData: Record<string, any> = {};
     if (title !== undefined) updateData.title = title;
@@ -960,6 +960,7 @@ export async function registerRoutes(
     if (location !== undefined) updateData.location = location;
     if (startsAt !== undefined) updateData.startsAt = new Date(startsAt);
     if (capacity !== undefined) updateData.capacity = capacity;
+    if (imageUrl !== undefined) updateData.imageUrl = imageUrl;
 
     const [updated] = await db.update(events).set(updateData).where(eq(events.id, eventId)).returning();
     res.json(updated);
