@@ -4,8 +4,8 @@ import type { Server } from "http";
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
 import { db } from "./db";
-import { users, events, eventParticipants } from "@shared/schema";
-import { eq, and, desc } from "drizzle-orm";
+import { users, events, eventParticipants, eventComments } from "@shared/schema";
+import { eq, and, desc, ilike } from "drizzle-orm";
 import { api } from "@shared/routes";
 import { z } from "zod";
 import multer from "multer";
@@ -843,6 +843,33 @@ export async function registerRoutes(
     res.json(enrichedEvents);
   });
 
+  app.get('/api/events/:id', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const eventId = parseInt(req.params.id);
+    if (isNaN(eventId)) return res.status(400).json({ error: 'Invalid event ID' });
+
+    const [event] = await db.select().from(events).where(eq(events.id, eventId));
+    if (!event) return res.status(404).json({ error: 'Event not found' });
+
+    const participantRows = await db.select().from(eventParticipants).where(eq(eventParticipants.eventId, eventId));
+    const participants = await Promise.all(participantRows.map(async (p) => {
+      const user = await storage.getUser(p.userId);
+      return {
+        id: p.userId,
+        firstName: user?.firstName || null,
+        profileImageUrl: user?.profileImageUrl || null,
+        status: p.status,
+      };
+    }));
+
+    const creator = await storage.getUser(event.creatorId);
+    res.json({
+      ...event,
+      participants,
+      creator: creator ? { id: creator.id, firstName: creator.firstName, profileImageUrl: creator.profileImageUrl } : null,
+    });
+  });
+
   // Create event
   app.post('/api/events', async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
@@ -979,6 +1006,86 @@ export async function registerRoutes(
     await db.delete(events).where(eq(events.id, eventId));
     
     res.json({ success: true });
+  });
+
+  // ============ EVENT COMMENTS ============
+
+  app.get('/api/events/:id/comments', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const eventId = parseInt(req.params.id);
+    if (isNaN(eventId)) return res.status(400).json({ error: 'Invalid event ID' });
+
+    const [event] = await db.select().from(events).where(eq(events.id, eventId));
+    if (!event) return res.status(404).json({ error: 'Event not found' });
+
+    const comments = await db.select().from(eventComments)
+      .where(eq(eventComments.eventId, eventId))
+      .orderBy(desc(eventComments.createdAt));
+
+    const enriched = await Promise.all(comments.map(async (comment) => {
+      const user = await storage.getUser(comment.userId);
+      return {
+        ...comment,
+        user: user ? { id: user.id, firstName: user.firstName, profileImageUrl: user.profileImageUrl } : null,
+      };
+    }));
+
+    res.json(enriched);
+  });
+
+  app.post('/api/events/:id/comments', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const eventId = parseInt(req.params.id);
+    if (isNaN(eventId)) return res.status(400).json({ error: 'Invalid event ID' });
+
+    const [event] = await db.select().from(events).where(eq(events.id, eventId));
+    if (!event) return res.status(404).json({ error: 'Event not found' });
+
+    const { content } = req.body;
+    if (!content || typeof content !== 'string' || !content.trim()) {
+      return res.status(400).json({ error: 'Comment cannot be empty' });
+    }
+
+    if (content.length > 1000) {
+      return res.status(400).json({ error: 'Comment is too long' });
+    }
+
+    const [comment] = await db.insert(eventComments).values({
+      eventId,
+      userId: req.user!.id,
+      content: content.trim(),
+    }).returning();
+
+    const user = await storage.getUser(req.user!.id);
+    res.json({
+      ...comment,
+      user: user ? { id: user.id, firstName: user.firstName, profileImageUrl: user.profileImageUrl } : null,
+    });
+  });
+
+  app.delete('/api/events/:eventId/comments/:commentId', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const eventId = parseInt(req.params.eventId);
+    const commentId = parseInt(req.params.commentId);
+    if (isNaN(eventId) || isNaN(commentId)) return res.status(400).json({ error: 'Invalid ID' });
+
+    const [comment] = await db.select().from(eventComments)
+      .where(and(eq(eventComments.id, commentId), eq(eventComments.eventId, eventId)));
+    if (!comment) return res.status(404).json({ error: 'Comment not found' });
+    if (comment.userId !== req.user!.id) return res.status(403).json({ error: 'Not authorized' });
+
+    await db.delete(eventComments).where(eq(eventComments.id, commentId));
+    res.json({ success: true });
+  });
+
+  // ============ EVENT SEARCH ============
+
+  app.get('/api/events/search/cities', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    const allEvents = await db.select({ city: events.city }).from(events);
+    const uniqueCities = [...new Set(allEvents.map(e => e.city))].sort();
+    res.json(uniqueCities);
   });
 
   // ============ PUSH NOTIFICATIONS ============

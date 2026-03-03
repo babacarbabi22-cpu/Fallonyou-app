@@ -51,6 +51,9 @@ Key database tables:
 - `messages` - Chat messages between matched users
 - `ratings` - Match ratings/scoring
 - `preferences` - User discovery preferences
+- `events` - Events/activities with cover images
+- `eventParticipants` - Event attendees
+- `eventComments` - Comments on events
 
 ### Payment Integration
 - **Stripe**: Primary payment processor for premium subscriptions

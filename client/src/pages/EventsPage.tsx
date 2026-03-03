@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -8,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Calendar, MapPin, Users, Plus, Clock, Loader2, Trash2, Pencil, ImagePlus, X } from "lucide-react";
+import { Calendar, MapPin, Users, Plus, Clock, Loader2, Trash2, Pencil, ImagePlus, X, Search, MessageCircle } from "lucide-react";
 import { BottomNav } from "@/components/BottomNav";
 import { WelcomeTour } from "@/components/WelcomeTour";
 import { useCurrentUser } from "@/hooks/use-danceme";
@@ -251,10 +252,13 @@ const emptyForm: EventFormData = {
 
 export default function EventsPage() {
   const { data: currentUser } = useCurrentUser();
+  const [, navigate] = useLocation();
   const [showWelcomeTour, setShowWelcomeTour] = useState(false);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [citySearch, setCitySearch] = useState("");
+  const [showCitySearch, setShowCitySearch] = useState(false);
   const [newEvent, setNewEvent] = useState<EventFormData>({ ...emptyForm });
   const [editForm, setEditForm] = useState<EventFormData>({ ...emptyForm });
 
@@ -351,9 +355,11 @@ export default function EventsPage() {
     return event.imageUrl || categoryImages[event.category] || categoryImages.other;
   };
 
-  const filteredEvents = selectedCategory
-    ? events?.filter((e) => e.category === selectedCategory)
-    : events;
+  const filteredEvents = events?.filter((e) => {
+    if (selectedCategory && e.category !== selectedCategory) return false;
+    if (citySearch.trim() && !e.city.toLowerCase().includes(citySearch.toLowerCase())) return false;
+    return true;
+  });
 
   const getCategoryIcon = (category: string) => {
     const cat = eventCategories.find((c) => c.id === category);
@@ -365,8 +371,18 @@ export default function EventsPage() {
       {showWelcomeTour && <WelcomeTour onComplete={handleTourComplete} />}
       <div className="min-h-screen bg-background pb-20">
       <div className="p-4 border-b sticky top-0 bg-background/95 backdrop-blur z-10">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-3">
           <h1 className="text-2xl font-bold">Activities</h1>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowCitySearch(!showCitySearch)}
+              className={showCitySearch || citySearch ? "border-amber-500 text-amber-600" : ""}
+              data-testid="button-toggle-city-search"
+            >
+              <Search className="w-4 h-4" />
+            </Button>
           <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
             <DialogTrigger asChild>
               <Button className="bg-amber-500 hover:bg-amber-600" data-testid="button-create-event">
@@ -387,7 +403,32 @@ export default function EventsPage() {
               />
             </DialogContent>
           </Dialog>
+          </div>
         </div>
+
+        {showCitySearch && (
+          <div className="relative mb-3">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              value={citySearch}
+              onChange={(e) => setCitySearch(e.target.value)}
+              placeholder="Search by city..."
+              className="pl-9 pr-8"
+              autoFocus
+              data-testid="input-city-search"
+            />
+            {citySearch && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 p-0"
+                onClick={() => setCitySearch("")}
+              >
+                <X className="w-3.5 h-3.5" />
+              </Button>
+            )}
+          </div>
+        )}
 
         <div className="flex gap-2 overflow-x-auto pb-2">
           <Button
@@ -425,7 +466,12 @@ export default function EventsPage() {
           </div>
         ) : (
           filteredEvents?.map((event) => (
-            <Card key={event.id} className="overflow-hidden border-0 shadow-md" data-testid={`card-event-${event.id}`}>
+            <Card
+              key={event.id}
+              className="overflow-hidden border-0 shadow-md cursor-pointer transition-shadow hover:shadow-lg"
+              data-testid={`card-event-${event.id}`}
+              onClick={() => navigate(`/event/${event.id}`)}
+            >
               <div className="relative">
                 <img
                   src={getEventImage(event)}
@@ -449,7 +495,7 @@ export default function EventsPage() {
                         size="sm"
                         variant="secondary"
                         className="h-8 w-8 p-0 rounded-full bg-white/90 hover:bg-white"
-                        onClick={() => openEditDialog(event)}
+                        onClick={(e) => { e.stopPropagation(); openEditDialog(event); }}
                         data-testid={`button-edit-event-${event.id}`}
                       >
                         <Pencil className="w-3.5 h-3.5" />
@@ -460,7 +506,7 @@ export default function EventsPage() {
                         size="sm"
                         variant="destructive"
                         className="h-8 w-8 p-0 rounded-full"
-                        onClick={() => deleteEventMutation.mutate(event.id)}
+                        onClick={(e) => { e.stopPropagation(); deleteEventMutation.mutate(event.id); }}
                         disabled={deleteEventMutation.isPending}
                         data-testid={`button-delete-event-${event.id}`}
                       >
@@ -511,7 +557,7 @@ export default function EventsPage() {
                   {!isPastEvent(event.startsAt) && !isCreator(event) && (
                     <Button
                       size="sm"
-                      onClick={() => joinEventMutation.mutate(event.id)}
+                      onClick={(e) => { e.stopPropagation(); joinEventMutation.mutate(event.id); }}
                       disabled={joinEventMutation.isPending}
                       className="bg-amber-500 hover:bg-amber-600"
                       data-testid={`button-join-event-${event.id}`}

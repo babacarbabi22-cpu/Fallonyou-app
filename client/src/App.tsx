@@ -19,6 +19,7 @@ import SafetyPage from "@/pages/SafetyPage";
 import AdminPage from "@/pages/AdminPage";
 import DeleteAccountPage from "@/pages/DeleteAccountPage";
 import EventsPage from "@/pages/EventsPage";
+import EventDetailPage from "@/pages/EventDetailPage";
 import { useCurrentUser } from "@/hooks/use-danceme";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
@@ -138,6 +139,9 @@ function Router() {
       </Route>
       <Route path="/events">
         {() => <ProtectedRoute component={EventsPage} />}
+      </Route>
+      <Route path="/event/:id">
+        {() => <ProtectedRoute component={EventDetailPage} />}
       </Route>
       <Route path="/delete-account" component={DeleteAccountPage} />
       <Route component={NotFound} />

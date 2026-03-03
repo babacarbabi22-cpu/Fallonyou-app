@@ -156,6 +156,16 @@ export const eventParticipants = pgTable("event_participants", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const eventComments = pgTable("event_comments", {
+  id: serial("id").primaryKey(),
+  eventId: integer("event_id").notNull().references(() => events.id),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  content: text("content").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export type EventComment = typeof eventComments.$inferSelect;
+
 export const pushSubscriptions = pgTable("push_subscriptions", {
   id: serial("id").primaryKey(),
   userId: varchar("user_id").notNull().references(() => users.id),
