@@ -148,7 +148,14 @@ export default function EventDetailPage() {
   return (
     <div className="min-h-screen bg-background pb-24">
       <div className="relative">
-        <img src={eventImage} alt={event.title} className={`w-full h-56 object-cover ${isPast ? "opacity-60 grayscale" : ""}`} />
+        <div className={`w-full h-56 bg-gradient-to-br from-amber-100 to-amber-200 dark:from-amber-900/30 dark:to-amber-800/30 flex items-center justify-center ${isPast ? "opacity-60 grayscale" : ""}`}>
+          <img
+            src={eventImage}
+            alt={event.title}
+            className="w-full h-56 object-cover relative z-[1]"
+            onError={(e) => { e.currentTarget.style.display = "none"; }}
+          />
+        </div>
         <Button
           size="sm"
           variant="secondary"

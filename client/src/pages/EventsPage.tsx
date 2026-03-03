@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Calendar, MapPin, Users, Plus, Clock, Loader2, Trash2, Pencil, ImagePlus, X, Search, MessageCircle } from "lucide-react";
+import { Calendar, MapPin, Users, Plus, Clock, Loader2, Trash2, Pencil, ImagePlus, X, Search, MessageCircle, Image } from "lucide-react";
 import { BottomNav } from "@/components/BottomNav";
 import { WelcomeTour } from "@/components/WelcomeTour";
 import { InviteFriends } from "@/components/InviteFriends";
@@ -476,11 +476,18 @@ export default function EventsPage() {
               onClick={() => navigate(`/event/${event.id}`)}
             >
               <div className="relative">
-                <img
-                  src={getEventImage(event)}
-                  alt={event.title}
-                  className={`w-full h-44 object-cover ${isPastEvent(event.startsAt) ? "opacity-60 grayscale" : ""}`}
-                />
+                <div className={`w-full h-44 bg-gradient-to-br from-amber-100 to-amber-200 dark:from-amber-900/30 dark:to-amber-800/30 flex items-center justify-center ${isPastEvent(event.startsAt) ? "opacity-60 grayscale" : ""}`}>
+                  <span className="text-5xl absolute z-0 opacity-30">{getCategoryIcon(event.category)}</span>
+                  <img
+                    src={getEventImage(event)}
+                    alt={event.title}
+                    className="w-full h-44 object-cover relative z-[1]"
+                    onError={(e) => {
+                      const target = e.currentTarget;
+                      target.style.display = "none";
+                    }}
+                  />
+                </div>
                 <div className="absolute top-3 left-3 flex gap-2">
                   <Badge className="bg-black/70 text-white border-0 backdrop-blur-sm">
                     {getCategoryIcon(event.category)} {eventCategories.find(c => c.id === event.category)?.label}
