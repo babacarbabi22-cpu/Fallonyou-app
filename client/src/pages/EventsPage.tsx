@@ -653,15 +653,6 @@ export default function EventsPage() {
                 </div>
                 {isCreator(event) && (
                   <div className="absolute top-3 right-3 flex gap-2">
-                    {!isPastEvent(event.startsAt) && (
-                      <button
-                        className="text-white drop-shadow-md hover:text-amber-300 transition-colors"
-                        onClick={(e) => { e.stopPropagation(); openEditDialog(event); }}
-                        data-testid={`button-edit-event-${event.id}`}
-                      >
-                        <Pencil className="w-5 h-5" />
-                      </button>
-                    )}
                     {isPastEvent(event.startsAt) && (
                       <Button
                         size="sm"
@@ -715,6 +706,17 @@ export default function EventsPage() {
                       </span>
                     </div>
                   </div>
+                  {!isPastEvent(event.startsAt) && isCreator(event) && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={(e) => { e.stopPropagation(); openEditDialog(event); }}
+                      className="border-amber-500 text-amber-600 hover:bg-amber-50"
+                      data-testid={`button-edit-event-${event.id}`}
+                    >
+                      <Pencil className="w-3.5 h-3.5 mr-1" /> Edit
+                    </Button>
+                  )}
                   {!isPastEvent(event.startsAt) && (event.isParticipant || isCreator(event)) && (
                     <Badge className="bg-green-600/90 text-white border-0" data-testid={`badge-attending-${event.id}`}>
                       ✓ Attending
