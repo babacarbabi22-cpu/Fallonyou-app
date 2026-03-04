@@ -70,6 +70,73 @@ type EventFormData = {
   imageUrl: string;
 };
 
+const galleryImages: Record<string, { url: string; label: string }[]> = {
+  dining: [
+    { url: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&h=400&fit=crop", label: "Restaurant" },
+    { url: "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800&h=400&fit=crop", label: "Fine dining" },
+    { url: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&h=400&fit=crop", label: "Food platter" },
+    { url: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800&h=400&fit=crop", label: "Casual dining" },
+    { url: "https://images.unsplash.com/photo-1551218808-94e220e084d2?w=800&h=400&fit=crop", label: "Wine & dine" },
+    { url: "https://images.unsplash.com/photo-1559339352-11d035aa65de?w=800&h=400&fit=crop", label: "Brunch" },
+  ],
+  nightlife: [
+    { url: "https://images.unsplash.com/photo-1566417713940-fe7c737a9ef2?w=800&h=400&fit=crop", label: "Night city" },
+    { url: "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=800&h=400&fit=crop", label: "Party" },
+    { url: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=800&h=400&fit=crop", label: "DJ" },
+    { url: "https://images.unsplash.com/photo-1571204829887-3b8d69e4094d?w=800&h=400&fit=crop", label: "Cocktails" },
+    { url: "https://images.unsplash.com/photo-1545128485-c400e7702712?w=800&h=400&fit=crop", label: "Rooftop bar" },
+    { url: "https://images.unsplash.com/photo-1574391884720-bbc3740c59d1?w=800&h=400&fit=crop", label: "Dance floor" },
+  ],
+  outdoor: [
+    { url: "https://images.unsplash.com/photo-1551632811-561732d1e306?w=800&h=400&fit=crop", label: "Hiking" },
+    { url: "https://images.unsplash.com/photo-1533692328991-08159ff19fca?w=800&h=400&fit=crop", label: "Beach sunset" },
+    { url: "https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=800&h=400&fit=crop", label: "Mountain view" },
+    { url: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&h=400&fit=crop", label: "Peak" },
+    { url: "https://images.unsplash.com/photo-1476611338391-6f395a0ebc7b?w=800&h=400&fit=crop", label: "Park picnic" },
+    { url: "https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?w=800&h=400&fit=crop", label: "Camping" },
+  ],
+  culture: [
+    { url: "https://images.unsplash.com/photo-1518998053901-5348d3961a04?w=800&h=400&fit=crop", label: "Art gallery" },
+    { url: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&h=400&fit=crop", label: "Museum" },
+    { url: "https://images.unsplash.com/photo-1460881680858-30d872d5b530?w=800&h=400&fit=crop", label: "Theater" },
+    { url: "https://images.unsplash.com/photo-1531243269054-5ebf6f34081e?w=800&h=400&fit=crop", label: "Exhibition" },
+    { url: "https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=800&h=400&fit=crop", label: "Street art" },
+    { url: "https://images.unsplash.com/photo-1569317002804-ab77bcf1bce4?w=800&h=400&fit=crop", label: "Festival" },
+  ],
+  sports: [
+    { url: "https://images.unsplash.com/photo-1461896836934-bd45ba8fcf9b?w=800&h=400&fit=crop", label: "Beach sports" },
+    { url: "https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=800&h=400&fit=crop", label: "Football" },
+    { url: "https://images.unsplash.com/photo-1554068865-24cecd4e34b8?w=800&h=400&fit=crop", label: "Yoga" },
+    { url: "https://images.unsplash.com/photo-1530549387789-4c1017266635?w=800&h=400&fit=crop", label: "Swimming" },
+    { url: "https://images.unsplash.com/photo-1622279457486-62dcc4a431d6?w=800&h=400&fit=crop", label: "Volleyball" },
+    { url: "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=800&h=400&fit=crop", label: "Gym" },
+  ],
+  travel: [
+    { url: "https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=800&h=400&fit=crop", label: "Journey" },
+    { url: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&h=400&fit=crop", label: "Tropical beach" },
+    { url: "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=800&h=400&fit=crop", label: "Road trip" },
+    { url: "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=800&h=400&fit=crop", label: "Lake" },
+    { url: "https://images.unsplash.com/photo-1530789253388-582c481c54b0?w=800&h=400&fit=crop", label: "City travel" },
+    { url: "https://images.unsplash.com/photo-1436491865332-7a61a109db05?w=800&h=400&fit=crop", label: "Airport" },
+  ],
+  music: [
+    { url: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=800&h=400&fit=crop", label: "Concert" },
+    { url: "https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=800&h=400&fit=crop", label: "Festival" },
+    { url: "https://images.unsplash.com/photo-1511192336575-5a79af67a629?w=800&h=400&fit=crop", label: "Guitar" },
+    { url: "https://images.unsplash.com/photo-1459749411175-04bf5292ceea?w=800&h=400&fit=crop", label: "Live music" },
+    { url: "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=800&h=400&fit=crop", label: "Crowd" },
+    { url: "https://images.unsplash.com/photo-1415201364774-f6f0bb35f28f?w=800&h=400&fit=crop", label: "Vinyl" },
+  ],
+  other: [
+    { url: "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=800&h=400&fit=crop", label: "Friends" },
+    { url: "https://images.unsplash.com/photo-1517457373958-b7bdd4587205?w=800&h=400&fit=crop", label: "Celebration" },
+    { url: "https://images.unsplash.com/photo-1528605248644-14dd04022da1?w=800&h=400&fit=crop", label: "Group" },
+    { url: "https://images.unsplash.com/photo-1522543558187-768b6df7c25c?w=800&h=400&fit=crop", label: "Meetup" },
+    { url: "https://images.unsplash.com/photo-1496024840928-4c417adf211d?w=800&h=400&fit=crop", label: "Sunset" },
+    { url: "https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=800&h=400&fit=crop", label: "Relax" },
+  ],
+};
+
 function EventForm({
   formData,
   setFormData,
@@ -85,6 +152,7 @@ function EventForm({
 }) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(formData.imageUrl || null);
+  const [showGallery, setShowGallery] = useState(false);
   const { uploadFile, isUploading } = useUpload({
     onSuccess: (response) => {
       const objectUrl = response.objectPath.startsWith("/objects/")
@@ -105,8 +173,17 @@ function EventForm({
   const removeImage = () => {
     setFormData({ ...formData, imageUrl: "" });
     setImagePreview(null);
+    setShowGallery(false);
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
+
+  const selectGalleryImage = (url: string) => {
+    setFormData({ ...formData, imageUrl: url });
+    setImagePreview(url);
+    setShowGallery(false);
+  };
+
+  const currentGallery = galleryImages[formData.category] || galleryImages.other;
 
   return (
     <div className="space-y-4">
@@ -123,39 +200,100 @@ function EventForm({
         {imagePreview ? (
           <div className="relative mt-2 rounded-xl overflow-hidden">
             <img src={imagePreview} alt="Event cover" className="w-full h-40 object-cover" />
-            <Button
-              size="sm"
-              variant="destructive"
-              className="absolute top-2 right-2 h-8 w-8 p-0 rounded-full"
-              onClick={removeImage}
-              type="button"
-            >
-              <X className="w-4 h-4" />
-            </Button>
+            <div className="absolute top-2 right-2 flex gap-1">
+              <Button
+                size="sm"
+                variant="secondary"
+                className="h-8 w-8 p-0 rounded-full bg-white/90 hover:bg-white"
+                onClick={() => {
+                  setFormData({ ...formData, imageUrl: "" });
+                  setImagePreview(null);
+                  if (fileInputRef.current) fileInputRef.current.value = "";
+                  setShowGallery(true);
+                }}
+                type="button"
+                data-testid="button-change-event-image"
+              >
+                <Pencil className="w-3.5 h-3.5" />
+              </Button>
+              <Button
+                size="sm"
+                variant="destructive"
+                className="h-8 w-8 p-0 rounded-full"
+                onClick={removeImage}
+                type="button"
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
             {isUploading && (
               <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
                 <Loader2 className="w-8 h-8 animate-spin text-white" />
               </div>
             )}
           </div>
+        ) : !showGallery ? (
+          <div className="flex gap-2 mt-2">
+            <Button
+              variant="outline"
+              className="flex-1 h-20 border-dashed flex flex-col gap-1"
+              onClick={() => fileInputRef.current?.click()}
+              type="button"
+              disabled={isUploading}
+              data-testid="button-add-event-image"
+            >
+              {isUploading ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                <>
+                  <ImagePlus className="w-5 h-5 text-muted-foreground" />
+                  <span className="text-xs text-muted-foreground">Upload</span>
+                </>
+              )}
+            </Button>
+            <Button
+              variant="outline"
+              className="flex-1 h-20 border-dashed flex flex-col gap-1"
+              onClick={() => setShowGallery(true)}
+              type="button"
+              data-testid="button-open-gallery"
+            >
+              <Image className="w-5 h-5 text-muted-foreground" />
+              <span className="text-xs text-muted-foreground">Gallery</span>
+            </Button>
+          </div>
         ) : (
-          <Button
-            variant="outline"
-            className="w-full mt-2 h-28 border-dashed flex flex-col gap-2"
-            onClick={() => fileInputRef.current?.click()}
-            type="button"
-            disabled={isUploading}
-            data-testid="button-add-event-image"
-          >
-            {isUploading ? (
-              <Loader2 className="w-6 h-6 animate-spin" />
-            ) : (
-              <>
-                <ImagePlus className="w-6 h-6 text-muted-foreground" />
-                <span className="text-sm text-muted-foreground">Add a cover photo</span>
-              </>
-            )}
-          </Button>
+          <div className="mt-2">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs text-muted-foreground">Choose a cover image</span>
+              <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" onClick={() => setShowGallery(false)} type="button">
+                Cancel
+              </Button>
+            </div>
+            <div className="grid grid-cols-3 gap-1.5 max-h-48 overflow-y-auto">
+              {currentGallery.map((img, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  className="relative rounded-lg overflow-hidden aspect-video hover:ring-2 hover:ring-amber-500 transition-all"
+                  onClick={() => selectGalleryImage(img.url)}
+                  data-testid={`gallery-image-${idx}`}
+                >
+                  <img src={img.url} alt={img.label} className="w-full h-full object-cover" />
+                  <span className="absolute bottom-0 inset-x-0 bg-black/60 text-white text-[10px] py-0.5 text-center">{img.label}</span>
+                </button>
+              ))}
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full mt-2 text-xs"
+              onClick={() => { setShowGallery(false); fileInputRef.current?.click(); }}
+              type="button"
+            >
+              <ImagePlus className="w-3.5 h-3.5 mr-1" /> Upload my own photo
+            </Button>
+          </div>
         )}
       </div>
       <div>
