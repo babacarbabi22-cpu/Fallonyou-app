@@ -86,7 +86,9 @@ function EventForm({
   const [imagePreview, setImagePreview] = useState<string | null>(formData.imageUrl || null);
   const { uploadFile, isUploading } = useUpload({
     onSuccess: (response) => {
-      const objectUrl = `/objects/${response.objectPath}`;
+      const objectUrl = response.objectPath.startsWith("/objects/")
+        ? response.objectPath
+        : `/objects/${response.objectPath}`;
       setFormData({ ...formData, imageUrl: objectUrl });
       setImagePreview(objectUrl);
     },

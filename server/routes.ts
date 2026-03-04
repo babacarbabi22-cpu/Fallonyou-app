@@ -816,6 +816,11 @@ export async function registerRoutes(
   // ========== EVENTS API ==========
   
   // Get all events
+  function fixImageUrl(url: string | null): string | null {
+    if (!url) return null;
+    return url.replace(/^\/objects\/\/objects\//, '/objects/');
+  }
+
   app.get('/api/events', async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     const { city, category } = req.query;
@@ -835,6 +840,7 @@ export async function registerRoutes(
       const creator = await storage.getUser(event.creatorId);
       return {
         ...event,
+        imageUrl: fixImageUrl(event.imageUrl),
         participantCount: participants.length,
         creator: creator ? { id: creator.id, firstName: creator.firstName, profileImageUrl: creator.profileImageUrl } : null,
       };
@@ -865,6 +871,7 @@ export async function registerRoutes(
     const creator = await storage.getUser(event.creatorId);
     res.json({
       ...event,
+      imageUrl: fixImageUrl(event.imageUrl),
       participants,
       creator: creator ? { id: creator.id, firstName: creator.firstName, profileImageUrl: creator.profileImageUrl } : null,
     });
@@ -892,7 +899,7 @@ export async function registerRoutes(
       capacity,
       latitude,
       longitude,
-      imageUrl,
+      imageUrl: fixImageUrl(imageUrl),
     }).returning();
     
     // Automatically join as participant
@@ -987,7 +994,7 @@ export async function registerRoutes(
     if (location !== undefined) updateData.location = location;
     if (startsAt !== undefined) updateData.startsAt = new Date(startsAt);
     if (capacity !== undefined) updateData.capacity = capacity;
-    if (imageUrl !== undefined) updateData.imageUrl = imageUrl;
+    if (imageUrl !== undefined) updateData.imageUrl = fixImageUrl(imageUrl);
 
     const [updated] = await db.update(events).set(updateData).where(eq(events.id, eventId)).returning();
     res.json(updated);
