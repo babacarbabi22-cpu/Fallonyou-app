@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { ArrowLeft, MapPin, Calendar, Users, Clock, Send, Loader2, Trash2, MessageCircle } from "lucide-react";
+import { ArrowLeft, MapPin, Calendar, Users, Clock, Send, Loader2, Trash2, MessageCircle, Pencil } from "lucide-react";
 import { BottomNav } from "@/components/BottomNav";
 import { useCurrentUser } from "@/hooks/use-danceme";
 import { format, formatDistanceToNow } from "date-fns";
@@ -165,9 +165,20 @@ export default function EventDetailPage() {
         >
           <ArrowLeft className="w-4 h-4" />
         </Button>
-        {isPast && (
-          <Badge className="absolute top-4 right-4 bg-black/70 text-white border-0">Ended</Badge>
-        )}
+        <div className="absolute top-4 right-4 flex gap-2">
+          {isPast && (
+            <Badge className="bg-black/70 text-white border-0">Ended</Badge>
+          )}
+          {isCreator && !isPast && (
+            <button
+              className="text-white drop-shadow-md hover:text-amber-300 transition-colors bg-black/40 rounded-full p-2"
+              onClick={() => navigate(`/?edit=${eventId}`)}
+              data-testid="button-edit-event-detail"
+            >
+              <Pencil className="w-5 h-5" />
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="p-4">
@@ -219,12 +230,12 @@ export default function EventDetailPage() {
             data-testid="button-join-event"
           >
             {joinMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-            Join this activity
+            I'm interested
           </Button>
         )}
 
-        {isJoined && !isCreator && (
-          <Badge className="mt-4 bg-green-100 text-green-800 border-green-200">You're attending</Badge>
+        {(isJoined || isCreator) && !isPast && (
+          <Badge className="mt-4 bg-green-600/90 text-white border-0" data-testid="badge-attending">✓ You're attending</Badge>
         )}
 
         {event.participants.length > 0 && (

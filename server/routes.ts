@@ -834,14 +834,17 @@ export async function registerRoutes(
       allEvents = allEvents.filter(e => e.category === category);
     }
     
-    // Enrich with participant count and creator info
+    const userId = req.user!.id;
+    // Enrich with participant count, creator info, and user participation status
     const enrichedEvents = await Promise.all(allEvents.map(async (event) => {
       const participants = await db.select().from(eventParticipants).where(eq(eventParticipants.eventId, event.id));
       const creator = await storage.getUser(event.creatorId);
+      const isParticipant = participants.some(p => p.userId === userId);
       return {
         ...event,
         imageUrl: fixImageUrl(event.imageUrl),
         participantCount: participants.length,
+        isParticipant,
         creator: creator ? { id: creator.id, firstName: creator.firstName, profileImageUrl: creator.profileImageUrl } : null,
       };
     }));

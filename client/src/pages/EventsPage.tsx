@@ -51,6 +51,7 @@ interface Event {
   capacity: number | null;
   imageUrl: string | null;
   participantCount: number;
+  isParticipant: boolean;
   creator: {
     id: string;
     firstName: string | null;
@@ -358,6 +359,18 @@ export default function EventsPage() {
     return event.imageUrl || categoryImages[event.category] || categoryImages.other;
   };
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const editId = params.get("edit");
+    if (editId && events && currentUser) {
+      const eventToEdit = events.find((e: Event) => e.id === parseInt(editId));
+      if (eventToEdit && eventToEdit.creator?.id === currentUser.id) {
+        openEditDialog(eventToEdit);
+        window.history.replaceState({}, "", "/");
+      }
+    }
+  }, [events, currentUser]);
+
   const filteredEvents = events?.filter((e) => {
     if (selectedCategory && e.category !== selectedCategory) return false;
     if (citySearch.trim() && !e.city.toLowerCase().includes(citySearch.toLowerCase())) return false;
@@ -564,7 +577,12 @@ export default function EventsPage() {
                       </span>
                     </div>
                   </div>
-                  {!isPastEvent(event.startsAt) && !isCreator(event) && (
+                  {!isPastEvent(event.startsAt) && (event.isParticipant || isCreator(event)) && (
+                    <Badge className="bg-green-600/90 text-white border-0" data-testid={`badge-attending-${event.id}`}>
+                      ✓ Attending
+                    </Badge>
+                  )}
+                  {!isPastEvent(event.startsAt) && !isCreator(event) && !event.isParticipant && (
                     <Button
                       size="sm"
                       onClick={(e) => { e.stopPropagation(); joinEventMutation.mutate(event.id); }}
@@ -572,7 +590,7 @@ export default function EventsPage() {
                       className="bg-amber-500 hover:bg-amber-600"
                       data-testid={`button-join-event-${event.id}`}
                     >
-                      Join
+                      I'm interested
                     </Button>
                   )}
                 </div>
