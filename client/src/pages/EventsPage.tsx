@@ -607,8 +607,6 @@ export default function EventsPage() {
         </div>
       </div>
 
-      <InviteFriends />
-
       <div className="p-4 space-y-4">
         {isLoading ? (
           <div className="flex justify-center py-12">
@@ -737,6 +735,10 @@ export default function EventsPage() {
               </CardContent>
             </Card>
           ))
+        )}
+
+        {filteredEvents && filteredEvents.length > 0 && (
+          <InviteFriends />
         )}
       </div>
 
