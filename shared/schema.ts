@@ -166,6 +166,17 @@ export const eventComments = pgTable("event_comments", {
 
 export type EventComment = typeof eventComments.$inferSelect;
 
+export const eventRatings = pgTable("event_ratings", {
+  id: serial("id").primaryKey(),
+  eventId: integer("event_id").notNull().references(() => events.id),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  rating: integer("rating").notNull(), // 1-5
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export type EventRating = typeof eventRatings.$inferSelect;
+export const insertEventRatingSchema = createInsertSchema(eventRatings).omit({ id: true, createdAt: true });
+
 export const pushSubscriptions = pgTable("push_subscriptions", {
   id: serial("id").primaryKey(),
   userId: varchar("user_id").notNull().references(() => users.id),

@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { ArrowLeft, MapPin, Calendar, Users, Clock, Send, Loader2, Trash2, MessageCircle, Pencil } from "lucide-react";
+import { ArrowLeft, MapPin, Calendar, Users, Clock, Send, Loader2, Trash2, MessageCircle, Pencil, Star } from "lucide-react";
 import { BottomNav } from "@/components/BottomNav";
 import { useCurrentUser } from "@/hooks/use-danceme";
 import { format, formatDistanceToNow } from "date-fns";
@@ -64,6 +64,7 @@ export default function EventDetailPage() {
   const [, navigate] = useLocation();
   const { data: currentUser } = useCurrentUser();
   const [commentText, setCommentText] = useState("");
+  const [hoverRating, setHoverRating] = useState(0);
   const eventId = params?.id ? parseInt(params.id) : 0;
 
   const { data: event, isLoading, isError, error } = useQuery<EventDetail>({
@@ -120,6 +121,30 @@ export default function EventDetailPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/events", eventId, "comments"] });
+    },
+  });
+
+  const { data: ratingData } = useQuery<{
+    userRating: number | null;
+    average: number | null;
+    count: number;
+  }>({
+    queryKey: ["/api/events", eventId, "rating"],
+    queryFn: async () => {
+      const res = await fetch(`/api/events/${eventId}/rating`, { credentials: "include" });
+      if (!res.ok) return { userRating: null, average: null, count: 0 };
+      return res.json();
+    },
+    enabled: !!eventId,
+  });
+
+  const ratingMutation = useMutation({
+    mutationFn: async (rating: number) => {
+      const res = await apiRequest("POST", `/api/events/${eventId}/rating`, { rating });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/events", eventId, "rating"] });
     },
   });
 
@@ -236,6 +261,40 @@ export default function EventDetailPage() {
 
         {(isJoined || isCreator) && !isPast && (
           <Badge className="mt-4 bg-green-600/90 text-white border-0" data-testid="badge-attending">✓ You're attending</Badge>
+        )}
+
+        {isPast && (isJoined || isCreator) && (
+          <div className="mt-4 bg-amber-50 dark:bg-amber-950/30 rounded-xl p-4 border border-amber-200 dark:border-amber-800">
+            <p className="text-sm font-medium text-amber-800 dark:text-amber-300 mb-2">
+              {ratingData?.userRating ? "Your rating:" : "How was this event?"}
+            </p>
+            <div className="flex items-center gap-1" data-testid="rating-stars">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                  key={star}
+                  data-testid={`star-${star}`}
+                  onMouseEnter={() => setHoverRating(star)}
+                  onMouseLeave={() => setHoverRating(0)}
+                  onClick={() => ratingMutation.mutate(star)}
+                  disabled={ratingMutation.isPending}
+                  className="transition-transform hover:scale-110 active:scale-95"
+                >
+                  <Star
+                    className={`w-7 h-7 ${
+                      star <= (hoverRating || ratingData?.userRating || 0)
+                        ? "fill-amber-400 text-amber-400"
+                        : "text-amber-300 dark:text-amber-700"
+                    }`}
+                  />
+                </button>
+              ))}
+            </div>
+            {ratingData?.average !== null && ratingData?.count && ratingData.count > 0 && (
+              <p className="text-xs text-muted-foreground mt-1">
+                Average: {ratingData.average}/5 ({ratingData.count} {ratingData.count === 1 ? "rating" : "ratings"})
+              </p>
+            )}
+          </div>
         )}
 
         {event.participants.length > 0 && (

@@ -1,7 +1,7 @@
 import cron from 'node-cron';
 import { db } from './db';
-import { users, profiles, photos, events as eventsTable, pushSubscriptions } from '@shared/schema';
-import { eq, sql } from 'drizzle-orm';
+import { users, profiles, photos, events as eventsTable, eventParticipants, pushSubscriptions } from '@shared/schema';
+import { eq, sql, and, gte, lte } from 'drizzle-orm';
 import { sendPushNotification } from './pushService';
 
 const weeklyMessages = [
@@ -129,13 +129,50 @@ export async function sendWeeklyNotifications() {
   console.log(`[Weekly Notifications] Done. Sent: ${sent}, Errors: ${errors}`);
 }
 
+export async function sendEventReminders() {
+  console.log('[Event Reminders] Checking for events starting in ~24h...');
+
+  const now = new Date();
+  const in23h = new Date(now.getTime() + 23 * 60 * 60 * 1000);
+  const in25h = new Date(now.getTime() + 25 * 60 * 60 * 1000);
+
+  const upcomingEvents = await db.select().from(eventsTable)
+    .where(and(gte(eventsTable.startsAt, in23h), lte(eventsTable.startsAt, in25h)));
+
+  console.log(`[Event Reminders] Found ${upcomingEvents.length} events starting in ~24h`);
+
+  for (const event of upcomingEvents) {
+    const participants = await db.select().from(eventParticipants)
+      .where(eq(eventParticipants.eventId, event.id));
+
+    for (const participant of participants) {
+      try {
+        const startTime = event.startsAt.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+        await sendPushNotification(participant.userId, {
+          title: `⏰ Mañana tienes: ${event.title}`,
+          body: `${event.city} · ${startTime} — ¡No lo olvides!`,
+          url: `/event/${event.id}`,
+          icon: '/favicon.png',
+        });
+      } catch (err) {
+        console.error(`[Event Reminders] Error sending to user ${participant.userId}:`, err);
+      }
+    }
+  }
+
+  console.log('[Event Reminders] Done');
+}
+
 export function startWeeklyNotificationScheduler() {
   // Every Monday at 10:00 AM
   cron.schedule('0 10 * * 1', async () => {
     await sendWeeklyNotifications();
-  }, {
-    timezone: 'Europe/Madrid',
-  });
+  }, { timezone: 'Europe/Madrid' });
 
-  console.log('[Weekly Notifications] Scheduler started — runs every Monday at 10:00 AM (Europe/Madrid)');
+  // Every day at 10:00 AM — check for events starting in ~24h
+  cron.schedule('0 10 * * *', async () => {
+    await sendEventReminders();
+  }, { timezone: 'Europe/Madrid' });
+
+  console.log('[Weekly Notifications] Scheduler started — weekly Mondays + daily 24h reminders at 10:00 AM (Europe/Madrid)');
 }

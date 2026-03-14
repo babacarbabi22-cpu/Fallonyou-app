@@ -52,6 +52,7 @@ interface Event {
   imageUrl: string | null;
   participantCount: number;
   isParticipant: boolean;
+  participantAvatars: { id: string; firstName: string | null; profileImageUrl: string | null }[];
   creator: {
     id: string;
     firstName: string | null;
@@ -697,11 +698,29 @@ export default function EventsPage() {
                       </div>
                     )}
                     <div className="flex items-center gap-1">
-                      <Users className="w-4 h-4 text-amber-500" />
-                      <span className="text-sm font-medium">
-                        {event.participantCount}
-                        {event.capacity && ` / ${event.capacity}`}
-                      </span>
+                      {event.participantAvatars?.length > 0 ? (
+                        <div className="flex items-center">
+                          <div className="flex -space-x-2">
+                            {event.participantAvatars.slice(0, 3).map((p) => (
+                              <Avatar key={p.id} className="w-6 h-6 border-2 border-background">
+                                <AvatarImage src={p.profileImageUrl || undefined} />
+                                <AvatarFallback className="text-[10px]">{p.firstName?.[0]}</AvatarFallback>
+                              </Avatar>
+                            ))}
+                          </div>
+                          <span className="text-sm font-medium ml-1.5">
+                            {event.participantCount}{event.capacity && `/${event.capacity}`}
+                          </span>
+                        </div>
+                      ) : (
+                        <>
+                          <Users className="w-4 h-4 text-amber-500" />
+                          <span className="text-sm font-medium">
+                            {event.participantCount}
+                            {event.capacity && ` / ${event.capacity}`}
+                          </span>
+                        </>
+                      )}
                     </div>
                   </div>
                   {!isPastEvent(event.startsAt) && isCreator(event) && (

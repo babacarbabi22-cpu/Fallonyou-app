@@ -4,7 +4,7 @@ import type { Server } from "http";
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
 import { db } from "./db";
-import { users, events, eventParticipants, eventComments } from "@shared/schema";
+import { users, events, eventParticipants, eventComments, eventRatings } from "@shared/schema";
 import { eq, and, desc, ilike } from "drizzle-orm";
 import { api } from "@shared/routes";
 import { z } from "zod";
@@ -15,7 +15,7 @@ import { registerObjectStorageRoutes } from "./replit_integrations/object_storag
 import { stripeService } from "./stripeService";
 import { getStripePublishableKey } from "./stripeClient";
 import { saveSubscription, removeSubscription, sendPushNotification, sendPushToAllExcept, getVapidPublicKey } from "./pushService";
-import { sendWeeklyNotifications } from "./weeklyNotifications";
+import { sendWeeklyNotifications, sendEventReminders } from "./weeklyNotifications";
 
 let paypalModule: any = null;
 async function loadPayPal() {
@@ -771,6 +771,15 @@ export async function registerRoutes(
     }
   });
 
+  app.post('/api/admin/send-event-reminders', requireAdmin, async (req, res) => {
+    try {
+      await sendEventReminders();
+      res.json({ success: true, message: 'Event reminders sent' });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
   // Get all reports (admin only)
   app.get('/api/admin/reports', requireAdmin, async (req, res) => {
     const allReports = await storage.getReports();
@@ -851,11 +860,18 @@ export async function registerRoutes(
       const participants = await db.select().from(eventParticipants).where(eq(eventParticipants.eventId, event.id));
       const creator = await storage.getUser(event.creatorId);
       const isParticipant = participants.some(p => p.userId === userId);
+      const participantAvatars = await Promise.all(
+        participants.slice(0, 4).map(async (p) => {
+          const u = await storage.getUser(p.userId);
+          return u ? { id: u.id, firstName: u.firstName, profileImageUrl: u.profileImageUrl } : null;
+        })
+      );
       return {
         ...event,
         imageUrl: fixImageUrl(event.imageUrl),
         participantCount: participants.length,
         isParticipant,
+        participantAvatars: participantAvatars.filter(Boolean),
         creator: creator ? { id: creator.id, firstName: creator.firstName, profileImageUrl: creator.profileImageUrl } : null,
       };
     }));
@@ -1078,6 +1094,17 @@ export async function registerRoutes(
     }).returning();
 
     const user = await storage.getUser(req.user!.id);
+
+    // Notify event creator if someone else commented
+    if (event.creatorId !== req.user!.id) {
+      sendPushNotification(event.creatorId, {
+        title: `💬 Nuevo comentario en "${event.title}"`,
+        body: `${user?.firstName || 'Alguien'}: ${content.trim().slice(0, 80)}`,
+        url: `/event/${eventId}`,
+        icon: '/favicon.png',
+      }).catch(() => {});
+    }
+
     res.json({
       ...comment,
       user: user ? { id: user.id, firstName: user.firstName, profileImageUrl: user.profileImageUrl } : null,
@@ -1097,6 +1124,58 @@ export async function registerRoutes(
 
     await db.delete(eventComments).where(eq(eventComments.id, commentId));
     res.json({ success: true });
+  });
+
+  // ============ EVENT RATINGS ============
+
+  app.post('/api/events/:id/rating', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const eventId = parseInt(req.params.id);
+    if (isNaN(eventId)) return res.status(400).json({ error: 'Invalid event ID' });
+
+    const [event] = await db.select().from(events).where(eq(events.id, eventId));
+    if (!event) return res.status(404).json({ error: 'Event not found' });
+
+    const { rating } = req.body;
+    if (!rating || typeof rating !== 'number' || rating < 1 || rating > 5) {
+      return res.status(400).json({ error: 'Rating must be between 1 and 5' });
+    }
+
+    const [existing] = await db.select().from(eventRatings)
+      .where(and(eq(eventRatings.eventId, eventId), eq(eventRatings.userId, req.user!.id)));
+
+    if (existing) {
+      const [updated] = await db.update(eventRatings)
+        .set({ rating })
+        .where(and(eq(eventRatings.eventId, eventId), eq(eventRatings.userId, req.user!.id)))
+        .returning();
+      return res.json(updated);
+    }
+
+    const [created] = await db.insert(eventRatings).values({
+      eventId,
+      userId: req.user!.id,
+      rating,
+    }).returning();
+    res.json(created);
+  });
+
+  app.get('/api/events/:id/rating', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const eventId = parseInt(req.params.id);
+    if (isNaN(eventId)) return res.status(400).json({ error: 'Invalid event ID' });
+
+    const allRatings = await db.select().from(eventRatings).where(eq(eventRatings.eventId, eventId));
+    const userRating = allRatings.find(r => r.userId === req.user!.id);
+    const average = allRatings.length > 0
+      ? allRatings.reduce((sum, r) => sum + r.rating, 0) / allRatings.length
+      : null;
+
+    res.json({
+      userRating: userRating?.rating ?? null,
+      average: average ? Math.round(average * 10) / 10 : null,
+      count: allRatings.length,
+    });
   });
 
   // ============ EVENT SEARCH ============
