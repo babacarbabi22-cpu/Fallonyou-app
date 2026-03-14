@@ -7,6 +7,7 @@ import { getStripeSync } from './stripeClient';
 import { WebhookHandlers } from './webhookHandlers';
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
+import { startWeeklyNotificationScheduler } from './weeklyNotifications';
 
 const app = express();
 const httpServer = createServer(app);
@@ -210,6 +211,7 @@ app.use((req, res, next) => {
     },
     () => {
       log(`serving on port ${port}`);
+      startWeeklyNotificationScheduler();
     },
   );
 })();

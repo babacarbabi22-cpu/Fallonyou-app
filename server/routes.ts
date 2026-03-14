@@ -15,6 +15,7 @@ import { registerObjectStorageRoutes } from "./replit_integrations/object_storag
 import { stripeService } from "./stripeService";
 import { getStripePublishableKey } from "./stripeClient";
 import { saveSubscription, removeSubscription, sendPushNotification, sendPushToAllExcept, getVapidPublicKey } from "./pushService";
+import { sendWeeklyNotifications } from "./weeklyNotifications";
 
 let paypalModule: any = null;
 async function loadPayPal() {
@@ -758,6 +759,16 @@ export async function registerRoutes(
       .where(eq(users.id, userId));
     
     res.json({ success: true });
+  });
+
+  // Manually trigger weekly notifications (admin only)
+  app.post('/api/admin/send-weekly-notifications', requireAdmin, async (req, res) => {
+    try {
+      await sendWeeklyNotifications();
+      res.json({ success: true, message: 'Weekly notifications sent' });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
   });
 
   // Get all reports (admin only)
