@@ -5,7 +5,7 @@ import { setupAuth } from "./auth";
 import { storage } from "./storage";
 import { db } from "./db";
 import { users, events, eventParticipants, eventComments, eventRatings } from "@shared/schema";
-import { eq, and, desc, ilike } from "drizzle-orm";
+import { eq, and, desc, ilike, gte } from "drizzle-orm";
 import { api } from "@shared/routes";
 import { z } from "zod";
 import multer from "multer";
@@ -1176,6 +1176,45 @@ export async function registerRoutes(
       average: average ? Math.round(average * 10) / 10 : null,
       count: allRatings.length,
     });
+  });
+
+  // ============ EVENT SUGGESTIONS ============
+
+  app.get('/api/events/suggestions', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const userId = req.user!.id;
+
+    const profile = await storage.getProfile(userId);
+    const userCity = profile?.currentCity || profile?.homeCity;
+
+    // Get upcoming events
+    const allEvents = await db.select().from(events)
+      .where(gte(events.startsAt, new Date()))
+      .orderBy(desc(events.startsAt));
+
+    // Filter: not created by user, in user's city if known
+    const candidates = userCity
+      ? allEvents.filter(e => e.city.toLowerCase() === userCity.toLowerCase() && e.creatorId !== userId)
+      : allEvents.filter(e => e.creatorId !== userId);
+
+    // Filter out events user already joined
+    const suggestions = await Promise.all(
+      candidates.map(async (event) => {
+        const participants = await db.select().from(eventParticipants).where(eq(eventParticipants.eventId, event.id));
+        const isParticipant = participants.some(p => p.userId === userId);
+        if (isParticipant) return null;
+        const creator = await storage.getUser(event.creatorId);
+        return {
+          ...event,
+          imageUrl: fixImageUrl(event.imageUrl),
+          participantCount: participants.length,
+          creator: creator ? { id: creator.id, firstName: creator.firstName, profileImageUrl: creator.profileImageUrl } : null,
+        };
+      })
+    );
+
+    const filtered = suggestions.filter(Boolean).slice(0, 10);
+    res.json({ suggestions: filtered, city: userCity || null });
   });
 
   // ============ EVENT SEARCH ============

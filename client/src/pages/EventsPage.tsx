@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Calendar, MapPin, Users, Plus, Clock, Loader2, Trash2, Pencil, ImagePlus, X, Search, MessageCircle, Image } from "lucide-react";
+import { Calendar, MapPin, Users, Plus, Clock, Loader2, Trash2, Pencil, ImagePlus, X, Search, MessageCircle, Image, Sparkles } from "lucide-react";
 import { BottomNav } from "@/components/BottomNav";
 import { WelcomeTour } from "@/components/WelcomeTour";
 import { InviteFriends } from "@/components/InviteFriends";
@@ -421,6 +421,18 @@ export default function EventsPage() {
     queryKey: ["/api/events", selectedCategory],
   });
 
+  const { data: suggestionsData } = useQuery<{
+    suggestions: (Event & { creator: { id: string; firstName: string | null; profileImageUrl: string | null } | null })[];
+    city: string | null;
+  }>({
+    queryKey: ["/api/events/suggestions"],
+    queryFn: async () => {
+      const res = await fetch("/api/events/suggestions", { credentials: "include" });
+      if (!res.ok) return { suggestions: [], city: null };
+      return res.json();
+    },
+  });
+
   const createEventMutation = useMutation({
     mutationFn: async (eventData: EventFormData) => {
       const res = await apiRequest("POST", "/api/events", {
@@ -607,6 +619,57 @@ export default function EventsPage() {
           ))}
         </div>
       </div>
+
+      {suggestionsData?.suggestions && suggestionsData.suggestions.length > 0 && (
+        <div className="px-4 py-3">
+          <div className="flex items-center gap-2 mb-3">
+            <Sparkles className="w-4 h-4 text-amber-500" />
+            <span className="font-semibold text-sm">
+              {suggestionsData.city
+                ? `Actividades en ${suggestionsData.city}`
+                : "Sugerencias para ti"}
+            </span>
+          </div>
+          <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide">
+            {suggestionsData.suggestions.map((event) => (
+              <div
+                key={event.id}
+                data-testid={`suggestion-card-${event.id}`}
+                onClick={() => navigate(`/event/${event.id}`)}
+                className="flex-shrink-0 w-48 cursor-pointer"
+              >
+                <div className="rounded-xl overflow-hidden shadow-sm border border-border hover:shadow-md transition-shadow">
+                  <div className="relative h-28 bg-gradient-to-br from-amber-100 to-amber-200 dark:from-amber-900/30 dark:to-amber-800/30 flex items-center justify-center">
+                    <span className="text-3xl absolute opacity-20">{getCategoryIcon(event.category)}</span>
+                    <img
+                      src={getEventImage(event)}
+                      alt={event.title}
+                      className="w-full h-28 object-cover relative z-[1]"
+                      onError={(e) => { e.currentTarget.style.display = "none"; }}
+                    />
+                    <Badge className="absolute top-2 left-2 bg-black/70 text-white border-0 text-[10px] px-1.5 py-0.5 backdrop-blur-sm z-[2]">
+                      {getCategoryIcon(event.category)}
+                    </Badge>
+                  </div>
+                  <div className="p-2 bg-card">
+                    <p className="text-xs font-semibold line-clamp-1 mb-0.5">{event.title}</p>
+                    <p className="text-[10px] text-muted-foreground flex items-center gap-0.5">
+                      <MapPin className="w-2.5 h-2.5" />{event.city}
+                    </p>
+                    <p className="text-[10px] text-amber-600 font-medium mt-0.5">
+                      {format(new Date(event.startsAt), "d MMM · HH:mm")}
+                    </p>
+                    <div className="flex items-center gap-1 mt-1">
+                      <Users className="w-3 h-3 text-muted-foreground" />
+                      <span className="text-[10px] text-muted-foreground">{event.participantCount} asistentes</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="p-4 space-y-4">
         {isLoading ? (
