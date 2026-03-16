@@ -9,12 +9,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Calendar, MapPin, Users, Plus, Clock, Loader2, Trash2, Pencil, ImagePlus, X, Search, MessageCircle, Image, Sparkles } from "lucide-react";
+import { Calendar, MapPin, Users, Plus, Clock, Loader2, Trash2, Pencil, ImagePlus, X, Search, MessageCircle, Image, Sparkles, Bell } from "lucide-react";
 import { BottomNav } from "@/components/BottomNav";
 import { WelcomeTour } from "@/components/WelcomeTour";
 import { InviteFriends } from "@/components/InviteFriends";
 import { useCurrentUser } from "@/hooks/use-danceme";
 import { useUpload } from "@/hooks/use-upload";
+import { usePushNotifications } from "@/hooks/use-push-notifications";
 import { format } from "date-fns";
 
 const eventCategories = [
@@ -397,7 +398,12 @@ export default function EventsPage() {
   const { data: currentUser } = useCurrentUser();
   const [, navigate] = useLocation();
   const [showWelcomeTour, setShowWelcomeTour] = useState(false);
+  const [showNotifBanner, setShowNotifBanner] = useState(() => {
+    return !localStorage.getItem("fallonyou_notif_banner_dismissed");
+  });
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const { isSupported, isSubscribed, subscribe } = usePushNotifications();
+  const [notifBannerLoading, setNotifBannerLoading] = useState(false);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [citySearch, setCitySearch] = useState("");
@@ -619,6 +625,49 @@ export default function EventsPage() {
           ))}
         </div>
       </div>
+
+      {isSupported && !isSubscribed && showNotifBanner && !showWelcomeTour && (
+        <div className="mx-4 mb-2 rounded-xl bg-amber-500/10 border border-amber-500/30 p-3 flex items-start gap-3">
+          <div className="w-8 h-8 rounded-full bg-amber-500/20 flex items-center justify-center shrink-0 mt-0.5">
+            <Bell className="w-4 h-4 text-amber-600" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium">Activa las notificaciones</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Entérate de nuevas actividades, mensajes y matches al instante.</p>
+            <div className="flex gap-2 mt-2">
+              <Button
+                size="sm"
+                className="bg-amber-500 hover:bg-amber-600 h-7 text-xs px-3"
+                disabled={notifBannerLoading}
+                data-testid="button-banner-enable-notifications"
+                onClick={async () => {
+                  setNotifBannerLoading(true);
+                  const ok = await subscribe();
+                  setNotifBannerLoading(false);
+                  if (ok) {
+                    setShowNotifBanner(false);
+                    localStorage.setItem("fallonyou_notif_banner_dismissed", "1");
+                  }
+                }}
+              >
+                {notifBannerLoading ? "Activando..." : "Activar"}
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-7 text-xs px-3 text-muted-foreground"
+                data-testid="button-banner-dismiss-notifications"
+                onClick={() => {
+                  setShowNotifBanner(false);
+                  localStorage.setItem("fallonyou_notif_banner_dismissed", "1");
+                }}
+              >
+                Ahora no
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {suggestionsData?.suggestions && suggestionsData.suggestions.length > 0 && (
         <div className="px-4 py-3">
