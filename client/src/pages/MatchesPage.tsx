@@ -2,7 +2,7 @@ import { useMatches, useCurrentUser } from "@/hooks/use-danceme";
 import { BottomNav } from "@/components/BottomNav";
 import { MatchRatingModal } from "@/components/MatchRatingModal";
 import { useState } from "react";
-import { Loader2, MessageCircle, Star, Shield, Heart } from "lucide-react";
+import { Loader2, MessageCircle, Star, Shield, Heart, Camera, ArrowRight } from "lucide-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/lib/i18n";
@@ -26,6 +26,21 @@ export default function MatchesPage() {
   return (
     <div className="min-h-screen bg-background pb-24 px-4 pt-6">
       <h1 className="text-3xl font-display font-bold mb-6 px-2">{t.matches.title}</h1>
+
+      {!currentUser.profileImageUrl && (
+        <Link href="/profile">
+          <div className="mb-4 rounded-xl bg-rose-500/10 border border-rose-400/30 p-3 flex items-center gap-3 cursor-pointer hover:bg-rose-500/15 transition-colors" data-testid="banner-matches-add-photo">
+            <div className="w-8 h-8 rounded-full bg-rose-500/20 flex items-center justify-center shrink-0">
+              <Camera className="w-4 h-4 text-rose-500" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-rose-700 dark:text-rose-400">Sin foto no apareces en Discover</p>
+              <p className="text-xs text-muted-foreground">Toca para añadir tu foto y conseguir más matches.</p>
+            </div>
+            <ArrowRight className="w-4 h-4 text-muted-foreground shrink-0" />
+          </div>
+        </Link>
+      )}
       
       <div className="space-y-4">
         {matches?.length === 0 ? (

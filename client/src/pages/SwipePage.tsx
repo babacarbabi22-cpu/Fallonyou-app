@@ -6,7 +6,7 @@ import { MatchHeartCascade } from "@/components/HeartCascade";
 import { AnimatePresence, motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Loader2, Sparkles, SlidersHorizontal, Star, X, Heart, Plane } from "lucide-react";
+import { Loader2, Sparkles, SlidersHorizontal, Star, X, Heart, Plane, Camera } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Slider } from "@/components/ui/slider";
@@ -121,6 +121,41 @@ export default function SwipePage() {
   if (!isAuthLoading && !currentUser) {
     window.location.href = "/auth";
     return null;
+  }
+
+  // Photo gate — must have a profile photo to discover others
+  if (!isAuthLoading && currentUser && !currentUser.profileImageUrl) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col">
+        <div className="flex-1 flex flex-col items-center justify-center p-8 text-center gap-6">
+          <div className="relative">
+            <div className="w-32 h-32 rounded-full bg-gradient-to-br from-amber-100 to-amber-200 dark:from-amber-900/30 dark:to-amber-800/30 flex items-center justify-center border-4 border-dashed border-amber-400 animate-pulse">
+              <Camera className="w-14 h-14 text-amber-500" />
+            </div>
+            <div className="absolute -bottom-1 -right-1 w-9 h-9 rounded-full bg-rose-500 flex items-center justify-center border-2 border-background">
+              <X className="w-5 h-5 text-white" />
+            </div>
+          </div>
+
+          <div className="space-y-2 max-w-xs">
+            <h2 className="text-2xl font-bold">Añade una foto primero</h2>
+            <p className="text-muted-foreground leading-relaxed">
+              Para poder ver y conectar con otras personas necesitas una foto de perfil. Los demás también quieren saber quién eres. 😊
+            </p>
+          </div>
+
+          <Button
+            className="bg-amber-500 hover:bg-amber-600 w-full max-w-xs"
+            onClick={() => { window.location.href = "/profile"; }}
+            data-testid="button-go-to-profile"
+          >
+            <Camera className="w-4 h-4 mr-2" />
+            Añadir foto de perfil
+          </Button>
+        </div>
+        <BottomNav />
+      </div>
+    );
   }
 
   const handleSwipe = (userId: number, direction: "left" | "right") => {
