@@ -36,6 +36,15 @@ export async function registerRoutes(
 
   app.use("/uploads", express.static("uploads"));
 
+  // Accept terms & conditions
+  app.post('/api/accept-terms', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    await db.update(users)
+      .set({ termsAcceptedAt: new Date() })
+      .where(eq(users.id, req.user!.id));
+    res.json({ success: true });
+  });
+
   // Users
   app.get(api.users.list.path, async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);

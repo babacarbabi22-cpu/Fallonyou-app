@@ -25,6 +25,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Shield, Loader2 } from "lucide-react";
+import { TermsModal } from "@/components/TermsModal";
 
 function AgeConfirmationModal() {
   const t = useTranslation();
@@ -76,7 +77,7 @@ function AgeConfirmationModal() {
 
 function ProtectedRoute({ component: Component, skipOnboarding = false }: { component: React.ComponentType; skipOnboarding?: boolean }) {
   const { data: user, isLoading } = useCurrentUser();
-  const { ageConfirmed } = useAuth();
+  const { ageConfirmed, termsAccepted } = useAuth();
 
   if (isLoading) return null;
   if (!user) return <AuthPage />;
@@ -86,6 +87,18 @@ function ProtectedRoute({ component: Component, skipOnboarding = false }: { comp
     return (
       <>
         <AgeConfirmationModal />
+        <div className="blur-sm pointer-events-none">
+          <Component />
+        </div>
+      </>
+    );
+  }
+
+  // Show terms & conditions modal if user hasn't accepted yet
+  if (!termsAccepted) {
+    return (
+      <>
+        <TermsModal />
         <div className="blur-sm pointer-events-none">
           <Component />
         </div>

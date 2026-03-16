@@ -4,6 +4,7 @@ import type { User } from "@shared/models/auth";
 interface ExtendedUser extends User {
   ageConfirmed?: boolean;
   ageConfirmedAt?: string;
+  termsAcceptedAt?: string | null;
   profile?: any;
   photos?: any[];
 }
@@ -68,6 +69,7 @@ export function useAuth() {
     isLoading,
     isAuthenticated: !!user,
     ageConfirmed: user?.ageConfirmed === true,
+    termsAccepted: !!user?.termsAcceptedAt,
     logout: logoutMutation.mutate,
     isLoggingOut: logoutMutation.isPending,
     confirmAge: confirmAgeMutation.mutate,

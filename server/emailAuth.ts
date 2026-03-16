@@ -223,6 +223,7 @@ export async function setupAuth(app: Express) {
       createdAt: user.createdAt,
       ageConfirmed: user.ageConfirmed === "true",
       ageConfirmedAt: user.ageConfirmedAt,
+      termsAcceptedAt: user.termsAcceptedAt,
       profile: profile || null,
       photos: userPhotos,
       // Also expose profile fields at top level for convenience
