@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Calendar, MapPin, Users, Plus, Clock, Loader2, Trash2, Pencil, ImagePlus, X, Search, MessageCircle, Image, Sparkles, Bell } from "lucide-react";
+import { Calendar, MapPin, Users, Plus, Clock, Loader2, Trash2, Pencil, ImagePlus, X, Search, MessageCircle, Image, Sparkles, Bell, ArrowRight } from "lucide-react";
 import { BottomNav } from "@/components/BottomNav";
 import { WelcomeTour } from "@/components/WelcomeTour";
 import { InviteFriends } from "@/components/InviteFriends";
@@ -625,6 +625,23 @@ export default function EventsPage() {
           ))}
         </div>
       </div>
+
+      {currentUser && !currentUser.profileImageUrl && (
+        <div
+          className="mx-4 mb-2 rounded-xl bg-rose-500/10 border border-rose-400/30 p-3 flex items-start gap-3 cursor-pointer hover:bg-rose-500/15 transition-colors"
+          onClick={() => navigate("/profile")}
+          data-testid="banner-add-photo"
+        >
+          <div className="w-8 h-8 rounded-full bg-rose-500/20 flex items-center justify-center shrink-0 mt-0.5">
+            <span className="text-base">📸</span>
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-rose-700 dark:text-rose-400">Añade una foto de perfil</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Los perfiles con foto reciben 5× más interacciones. Toca para añadirla.</p>
+          </div>
+          <ArrowRight className="w-4 h-4 text-muted-foreground shrink-0 mt-1" />
+        </div>
+      )}
 
       {isSupported && !isSubscribed && showNotifBanner && !showWelcomeTour && (
         <div className="mx-4 mb-2 rounded-xl bg-amber-500/10 border border-amber-500/30 p-3 flex items-start gap-3">

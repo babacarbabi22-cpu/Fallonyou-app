@@ -311,18 +311,21 @@ export default function OnboardingPage() {
                   <p className="text-muted-foreground">{t.onboarding.step1Desc}</p>
                 </div>
 
-                {/* Photo upload */}
-                <div className="flex justify-center">
+                {/* Photo upload — required */}
+                <div className="flex flex-col items-center gap-2">
                   <div
-                    className="w-32 h-32 rounded-full bg-muted flex items-center justify-center cursor-pointer overflow-hidden border-4 border-dashed border-muted-foreground/30 hover:border-primary transition-colors"
+                    className={`w-32 h-32 rounded-full bg-muted flex items-center justify-center cursor-pointer overflow-hidden border-4 border-dashed transition-colors ${
+                      photoPreview ? "border-amber-500" : "border-amber-400 animate-pulse"
+                    } hover:border-amber-600`}
                     onClick={() => fileInputRef.current?.click()}
+                    data-testid="button-upload-photo"
                   >
                     {photoPreview ? (
                       <img src={photoPreview} alt="Profile" className="w-full h-full object-cover" />
                     ) : (
                       <div className="flex flex-col items-center gap-2 text-muted-foreground">
-                        <Camera className="w-8 h-8" />
-                        <span className="text-xs">{t.onboarding.uploadPhoto}</span>
+                        <Camera className="w-8 h-8 text-amber-500" />
+                        <span className="text-xs font-medium text-amber-600">{t.onboarding.uploadPhoto}</span>
                       </div>
                     )}
                   </div>
@@ -334,8 +337,11 @@ export default function OnboardingPage() {
                     onChange={handlePhotoUpload}
                     data-testid="input-photo-upload"
                   />
+                  <div className="flex items-center gap-1">
+                    <span className="text-xs font-semibold text-amber-600">* Obligatoria</span>
+                    <span className="text-xs text-muted-foreground">— Sin foto no podrás continuar</span>
+                  </div>
                 </div>
-                <p className="text-xs text-center text-muted-foreground">{t.onboarding.photoTip}</p>
 
                 {/* Profile form */}
                 <div className="space-y-4">
@@ -387,13 +393,18 @@ export default function OnboardingPage() {
                   </div>
                 </div>
 
+                {!photoPreview && (
+                  <p className="text-center text-sm text-amber-600 font-medium">
+                    📸 Añade una foto para continuar
+                  </p>
+                )}
                 <Button
                   onClick={handleProfileSubmit}
-                  disabled={isPending || isUploading || !profileData.displayName}
+                  disabled={isPending || isUploading || !profileData.displayName || !photoPreview}
                   className="w-full"
                   data-testid="button-next-step"
                 >
-                  {t.onboarding.next}
+                  {isUploading ? "Subiendo foto..." : t.onboarding.next}
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               </CardContent>
