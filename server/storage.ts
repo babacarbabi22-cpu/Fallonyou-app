@@ -113,11 +113,14 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getPotentialMatches(userId: string): Promise<User[]> {
-    // Exclude self and users without a profile photo (not trustworthy in discover)
+    // Exclude self and users with absolutely no photo (neither profileImageUrl nor gallery photos)
     return db.select().from(users).where(
       and(
         ne(users.id, userId),
-        isNotNull(users.profileImageUrl)
+        or(
+          isNotNull(users.profileImageUrl),
+          sql`EXISTS (SELECT 1 FROM photos WHERE photos.user_id = ${users.id})`
+        )
       )
     );
   }
