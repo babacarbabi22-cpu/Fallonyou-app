@@ -8,7 +8,7 @@ import {
   type PromptResponse, type SuperLike, type Preferences, type InsertPreferences,
   type Report, type InsertReport
 } from "@shared/schema";
-import { eq, or, and, ne, sql, desc, gte } from "drizzle-orm";
+import { eq, or, and, ne, sql, desc, gte, isNotNull } from "drizzle-orm";
 
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
@@ -113,9 +113,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getPotentialMatches(userId: string): Promise<User[]> {
-    // MVP: Get all users except self
-    // Real implementation should exclude swiped users
-    return db.select().from(users).where(ne(users.id, userId));
+    // Exclude self and users without a profile photo (not trustworthy in discover)
+    return db.select().from(users).where(
+      and(
+        ne(users.id, userId),
+        isNotNull(users.profileImageUrl)
+      )
+    );
   }
 
   async createRating(rating: typeof ratings.$inferInsert): Promise<Rating> {
