@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { BottomNav } from "@/components/BottomNav";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
-import { ArrowLeft, Search, Ban, UserCheck, AlertTriangle, Flag, Shield, Users, FileWarning } from "lucide-react";
+import { ArrowLeft, Search, Ban, UserCheck, AlertTriangle, Flag, Shield, Users, FileWarning, Mail, Camera } from "lucide-react";
 import { Link } from "wouter";
 
 interface UserWithProfile {
@@ -94,6 +94,18 @@ export default function AdminPage() {
     },
   });
 
+  const photoEmailMutation = useMutation({
+    mutationFn: async () => {
+      return apiRequest("POST", "/api/admin/send-photo-reminder-emails");
+    },
+    onSuccess: (data: any) => {
+      toast({ title: `📧 Emails enviados: ${data?.sent ?? 0} OK, ${data?.failed ?? 0} fallidos` });
+    },
+    onError: () => {
+      toast({ title: "Error enviando emails", variant: "destructive" });
+    },
+  });
+
   const filteredUsers = users?.filter(user => {
     if (!searchQuery) return true;
     const search = searchQuery.toLowerCase();
@@ -122,6 +134,32 @@ export default function AdminPage() {
       </header>
 
       <div className="p-4 space-y-4">
+
+        {/* Herramientas de email */}
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm flex items-center gap-2">
+              <Mail className="w-4 h-4 text-amber-500" />
+              Herramientas
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full flex items-center gap-2"
+              onClick={() => photoEmailMutation.mutate()}
+              disabled={photoEmailMutation.isPending}
+              data-testid="button-send-photo-emails"
+            >
+              <Camera className="w-4 h-4" />
+              {photoEmailMutation.isPending
+                ? "Enviando emails..."
+                : "Enviar email de foto a usuarios sin foto"}
+            </Button>
+          </CardContent>
+        </Card>
+
         <div className="flex gap-2">
           <Button
             variant={activeTab === "users" ? "default" : "outline"}

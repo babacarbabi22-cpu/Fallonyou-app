@@ -1,8 +1,9 @@
 import cron from 'node-cron';
 import { db } from './db';
 import { users, profiles, photos, events as eventsTable, eventParticipants, pushSubscriptions } from '@shared/schema';
-import { eq, sql, and, gte, lte } from 'drizzle-orm';
+import { eq, sql, and, gte, lte, isNull } from 'drizzle-orm';
 import { sendPushNotification } from './pushService';
+import { sendPhotoReminderEmail } from './emailService';
 
 const weeklyMessages = [
   {
@@ -163,10 +164,45 @@ export async function sendEventReminders() {
   console.log('[Event Reminders] Done');
 }
 
+export async function sendPhotoReminderEmails(): Promise<{ sent: number; failed: number }> {
+  console.log('[Photo Email] Starting photo reminder email campaign...');
+
+  // Get all users without a profileImageUrl who have an email
+  const usersWithoutPhoto = await db.select({
+    id: users.id,
+    email: users.email,
+    firstName: users.firstName,
+  })
+    .from(users)
+    .where(isNull(users.profileImageUrl));
+
+  const targets = usersWithoutPhoto.filter(u => u.email);
+  console.log(`[Photo Email] Found ${targets.length} users without photo (with email)`);
+
+  let sent = 0;
+  let failed = 0;
+
+  for (const user of targets) {
+    const ok = await sendPhotoReminderEmail(user.email!, user.firstName || '');
+    if (ok) sent++;
+    else failed++;
+    // Small delay to avoid rate limits
+    await new Promise(r => setTimeout(r, 300));
+  }
+
+  console.log(`[Photo Email] Done — sent: ${sent}, failed: ${failed}`);
+  return { sent, failed };
+}
+
 export function startWeeklyNotificationScheduler() {
-  // Every Monday at 10:00 AM
+  // Every Monday at 10:00 AM — push notifications
   cron.schedule('0 10 * * 1', async () => {
     await sendWeeklyNotifications();
+  }, { timezone: 'Europe/Madrid' });
+
+  // Every Wednesday at 11:00 AM — email to users without photo
+  cron.schedule('0 11 * * 3', async () => {
+    await sendPhotoReminderEmails();
   }, { timezone: 'Europe/Madrid' });
 
   // Every day at 10:00 AM — check for events starting in ~24h

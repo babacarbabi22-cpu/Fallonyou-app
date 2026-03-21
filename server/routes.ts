@@ -15,7 +15,7 @@ import { registerObjectStorageRoutes } from "./replit_integrations/object_storag
 import { stripeService } from "./stripeService";
 import { getStripePublishableKey } from "./stripeClient";
 import { saveSubscription, removeSubscription, sendPushNotification, sendPushToAllExcept, getVapidPublicKey } from "./pushService";
-import { sendWeeklyNotifications, sendEventReminders } from "./weeklyNotifications";
+import { sendWeeklyNotifications, sendEventReminders, sendPhotoReminderEmails } from "./weeklyNotifications";
 
 let paypalModule: any = null;
 async function loadPayPal() {
@@ -784,6 +784,16 @@ export async function registerRoutes(
     try {
       await sendEventReminders();
       res.json({ success: true, message: 'Event reminders sent' });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  // Send photo reminder emails to users without profile photo (admin only)
+  app.post('/api/admin/send-photo-reminder-emails', requireAdmin, async (req, res) => {
+    try {
+      const result = await sendPhotoReminderEmails();
+      res.json({ success: true, ...result });
     } catch (err: any) {
       res.status(500).json({ error: err.message });
     }
