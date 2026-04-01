@@ -1,12 +1,23 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import type { User } from "@shared/models/auth";
 
-interface ExtendedUser extends User {
+interface ExtendedUser {
+  id: string;
+  email?: string | null;
+  firstName?: string | null;
+  lastName?: string | null;
+  profileImageUrl?: string | null;
+  isPremium?: string | null;
+  isVerified?: string | null;
+  isAdmin?: string | null;
+  isBanned?: string | null;
+  location?: string | null;
+  createdAt?: string | Date | null;
   ageConfirmed?: boolean;
-  ageConfirmedAt?: string;
-  termsAcceptedAt?: string | null;
+  ageConfirmedAt?: string | Date | null;
+  termsAcceptedAt?: string | Date | null;
   profile?: any;
   photos?: any[];
+  [key: string]: any;
 }
 
 async function fetchUser(): Promise<ExtendedUser | null> {

@@ -8,11 +8,11 @@ export function BottomNav() {
   const [location] = useLocation();
   const t = useTranslation();
 
-  const { data: likesData } = useQuery({
+  const { data: likesData } = useQuery<{ count: number } | any>({
     queryKey: ['/api/premium/liked-by'],
   });
 
-  const likesCount = likesData?.count || 0;
+  const likesCount = (likesData as any)?.count || 0;
 
   const navItems = [
     { href: "/", icon: Calendar, label: t.nav.events || "Activities" },

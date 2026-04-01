@@ -42,7 +42,7 @@ export function MatchRatingModal({ isOpen, onClose, matchId, user }: MatchRating
                 </div>
                 <DialogTitle className="text-2xl font-display text-primary">What are the odds?</DialogTitle>
                 <DialogDescription className="text-base text-muted-foreground">
-                  Rate the probability of meeting {user.displayName} in person from 1 to 10.
+                  Rate the probability of meeting {user.firstName} in person from 1 to 10.
                 </DialogDescription>
               </DialogHeader>
 

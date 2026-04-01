@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, buildUrl } from "@shared/routes";
-import { type InsertUser, type User, type Photo, type Match, type Rating } from "@shared/schema";
+import { type UpsertUser, type User, type Photo, type Match, type Rating } from "@shared/schema";
 import { z } from "zod";
 
 // --- Auth / User ---
