@@ -11,7 +11,7 @@ import { motion } from "framer-motion";
 import { useTranslation } from "@/lib/i18n";
 
 const PAYPAL_LINK = "https://www.paypal.me/babaca1vf5";
-const REVOLUT_LINK = "https://revolut.me/babaca1vf5"; // update when user confirms
+const REVOLUT_LINK = "https://revolut.me/babaca1vf5";
 
 const PLANS = {
   monthly: { label: "Mensual", price: "7,99 €", period: "/mes", hint: "Cancela cuando quieras" },
