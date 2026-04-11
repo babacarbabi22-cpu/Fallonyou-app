@@ -26,6 +26,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Shield, Loader2 } from "lucide-react";
 import { TermsModal } from "@/components/TermsModal";
+import { CookieBanner } from "@/components/CookieBanner";
 
 function AgeConfirmationModal() {
   const t = useTranslation();
@@ -170,6 +171,7 @@ function App() {
           <HeartCascade />
           <Toaster />
           <Router />
+          <CookieBanner />
         </TooltipProvider>
       </I18nProvider>
     </QueryClientProvider>

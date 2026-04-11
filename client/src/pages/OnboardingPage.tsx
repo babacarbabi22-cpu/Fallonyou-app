@@ -8,11 +8,12 @@ import { useTranslation } from "@/lib/i18n";
 import { useUpdateProfile, useCurrentUser } from "@/hooks/use-danceme";
 import { useUpload } from "@/hooks/use-upload";
 import { useLocation } from "wouter";
-import { Camera, Upload, Check, ArrowRight, User, Heart, Shield, Sparkles, Loader2, Plane, Users, MapPin } from "lucide-react";
+import { Camera, Upload, Check, ArrowRight, User, Heart, Shield, Sparkles, Loader2, Plane, Users, Bell, BellOff } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { usePushNotifications } from "@/hooks/use-push-notifications";
 
-type OnboardingStep = "journey" | "profile" | "preferences" | "verification" | "complete";
+type OnboardingStep = "journey" | "profile" | "preferences" | "verification" | "notifications" | "complete";
 
 const connectionTypeOptions = [
   { id: "friends", label: "Amigo/a", labelEn: "Friend", icon: Users, description: "Conocer gente nueva" },
@@ -38,6 +39,8 @@ export default function OnboardingPage() {
   const { data: user } = useCurrentUser();
   const { mutate: updateProfile, isPending } = useUpdateProfile();
   const { uploadFile, isUploading } = useUpload();
+  const { isSupported: notifSupported, subscribe: subscribeNotifs } = usePushNotifications();
+  const [notifLoading, setNotifLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [step, setStep] = useState<OnboardingStep>("journey");
@@ -59,7 +62,7 @@ export default function OnboardingPage() {
   const [currentCity, setCurrentCity] = useState("");
   const [destination, setDestination] = useState("");
 
-  const steps: OnboardingStep[] = ["journey", "profile", "preferences", "verification", "complete"];
+  const steps: OnboardingStep[] = ["journey", "profile", "preferences", "verification", "notifications", "complete"];
   const currentStepIndex = steps.indexOf(step);
   const progress = ((currentStepIndex + 1) / steps.length) * 100;
 
@@ -104,6 +107,13 @@ export default function OnboardingPage() {
   };
 
   const handleSkipVerification = () => {
+    setStep("notifications");
+  };
+
+  const handleEnableNotifications = async () => {
+    setNotifLoading(true);
+    await subscribeNotifs();
+    setNotifLoading(false);
     setStep("complete");
   };
 
@@ -120,12 +130,10 @@ export default function OnboardingPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/verification/status"] });
       queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
-      // Auto-proceed to complete step after verification
-      setStep("complete");
+      setStep("notifications");
     },
     onError: () => {
-      // If verification fails, still proceed
-      setStep("complete");
+      setStep("notifications");
     },
   });
 
@@ -141,6 +149,7 @@ export default function OnboardingPage() {
     profile: User,
     preferences: Heart,
     verification: Shield,
+    notifications: Bell,
     complete: Sparkles,
   };
 
@@ -509,6 +518,63 @@ export default function OnboardingPage() {
                     <p className="text-sm text-muted-foreground">{t.verification.benefits}</p>
                   </div>
                 )}
+              </CardContent>
+            </Card>
+          )}
+
+          {step === "notifications" && (
+            <Card>
+              <CardContent className="p-6 space-y-6">
+                <div className="text-center">
+                  <div className="w-20 h-20 rounded-full bg-amber-500/10 flex items-center justify-center mx-auto mb-4">
+                    <Bell className="w-10 h-10 text-amber-500" />
+                  </div>
+                  <h2 className="text-2xl font-bold mb-2">¿Activar notificaciones?</h2>
+                  <p className="text-muted-foreground text-sm leading-relaxed">
+                    Recibe avisos cuando alguien se una a tu actividad, te deje un comentario o tengas nuevas conexiones.
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  {[
+                    "🎉 Alguien se une a tu actividad",
+                    "💬 Nuevo comentario en tu actividad",
+                    "❤️ Nuevas conexiones y matches",
+                    "📅 Recordatorio 24h antes de un plan",
+                  ].map((item) => (
+                    <div key={item} className="flex items-center gap-3 bg-muted/40 rounded-xl px-4 py-2.5 text-sm">
+                      <span>{item}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="space-y-3">
+                  {notifSupported ? (
+                    <Button
+                      className="w-full bg-amber-500 hover:bg-amber-600 text-black font-bold"
+                      size="lg"
+                      onClick={handleEnableNotifications}
+                      disabled={notifLoading}
+                      data-testid="button-enable-notifications"
+                    >
+                      {notifLoading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Bell className="w-4 h-4 mr-2" />}
+                      Activar notificaciones
+                    </Button>
+                  ) : (
+                    <p className="text-xs text-center text-muted-foreground">
+                      Las notificaciones push no están disponibles en este dispositivo.
+                    </p>
+                  )}
+                  <Button
+                    variant="ghost"
+                    className="w-full text-muted-foreground"
+                    onClick={() => setStep("complete")}
+                    data-testid="button-skip-notifications"
+                  >
+                    <BellOff className="w-4 h-4 mr-2" />
+                    Ahora no
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           )}
