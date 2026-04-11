@@ -770,6 +770,26 @@ export async function registerRoutes(
     res.json({ success: true });
   });
 
+  // Set or remove premium for a user (admin only)
+  app.post('/api/admin/users/:userId/set-premium', requireAdmin, async (req, res) => {
+    const { userId } = req.params;
+    const { isPremium, months } = req.body;
+
+    if (isPremium) {
+      const expiresAt = new Date();
+      expiresAt.setMonth(expiresAt.getMonth() + (months || 1));
+      await db.update(users)
+        .set({ isPremium: 'true', premiumExpiresAt: expiresAt })
+        .where(eq(users.id, userId));
+    } else {
+      await db.update(users)
+        .set({ isPremium: 'false', premiumExpiresAt: null })
+        .where(eq(users.id, userId));
+    }
+
+    res.json({ success: true });
+  });
+
   // Manually trigger weekly notifications (admin only)
   app.post('/api/admin/send-weekly-notifications', requireAdmin, async (req, res) => {
     try {

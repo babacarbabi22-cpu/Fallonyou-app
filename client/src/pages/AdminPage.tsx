@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { BottomNav } from "@/components/BottomNav";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
-import { ArrowLeft, Search, Ban, UserCheck, AlertTriangle, Flag, Shield, Users, FileWarning, Mail, Camera } from "lucide-react";
+import { ArrowLeft, Search, Ban, UserCheck, AlertTriangle, Flag, Shield, Users, FileWarning, Mail, Camera, Crown } from "lucide-react";
 import { Link } from "wouter";
 
 interface UserWithProfile {
@@ -81,6 +81,19 @@ export default function AdminPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
       toast({ title: t.admin.userUnbanned, description: t.admin.userUnbannedDesc });
+    },
+  });
+
+  const setPremiumMutation = useMutation({
+    mutationFn: async ({ userId, isPremium, months }: { userId: string; isPremium: boolean; months?: number }) => {
+      return apiRequest("POST", `/api/admin/users/${userId}/set-premium`, { isPremium, months });
+    },
+    onSuccess: (_, vars) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      toast({
+        title: vars.isPremium ? "⭐ Premium activado" : "Premium desactivado",
+        description: vars.isPremium ? `Premium activado por ${vars.months || 1} mes(es)` : "El usuario ya no tiene Premium",
+      });
     },
   });
 
@@ -246,6 +259,33 @@ export default function AdminPage() {
                           )}
                         </div>
                         <div className="flex flex-col gap-2">
+                          {/* Premium toggle */}
+                          {user.isPremium === "true" ? (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="border-amber-500 text-amber-600 hover:bg-amber-50"
+                              onClick={() => setPremiumMutation.mutate({ userId: user.id, isPremium: false })}
+                              disabled={setPremiumMutation.isPending}
+                              data-testid={`button-remove-premium-${user.id}`}
+                            >
+                              <Crown className="w-4 h-4 mr-1" />
+                              Quitar Premium
+                            </Button>
+                          ) : (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="border-amber-400 text-amber-600 hover:bg-amber-50"
+                              onClick={() => setPremiumMutation.mutate({ userId: user.id, isPremium: true, months: 1 })}
+                              disabled={setPremiumMutation.isPending}
+                              data-testid={`button-set-premium-${user.id}`}
+                            >
+                              <Crown className="w-4 h-4 mr-1" />
+                              Dar Premium
+                            </Button>
+                          )}
+                          {/* Ban toggle */}
                           {user.isBanned === "true" ? (
                             <Button
                               size="sm"
