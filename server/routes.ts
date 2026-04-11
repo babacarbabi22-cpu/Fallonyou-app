@@ -4,7 +4,7 @@ import type { Server } from "http";
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
 import { db } from "./db";
-import { users, events, eventParticipants, eventComments, eventRatings } from "@shared/schema";
+import { users, events, eventParticipants, eventComments, eventRatings, matches, preferences } from "@shared/schema";
 import { eq, and, desc, ilike, gte } from "drizzle-orm";
 import { api } from "@shared/routes";
 import { z } from "zod";
@@ -48,13 +48,38 @@ export async function registerRoutes(
   // Users
   app.get(api.users.list.path, async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
-    const users = await storage.getPotentialMatches(req.user!.id);
-    const enriched = await Promise.all(users.map(async u => {
+    const currentUserId = req.user!.id;
+
+    // Get current user's discovery preferences
+    const [userPrefs] = await db.select().from(preferences).where(eq(preferences.userId, currentUserId));
+    const showMe = userPrefs?.showMe ?? 'everyone';
+
+    // Get IDs of users already swiped (user1Id = current user)
+    const alreadySwiped = await db.select({ id: matches.user2Id }).from(matches).where(eq(matches.user1Id, currentUserId));
+    const swipedIds = alreadySwiped.map(r => r.id);
+
+    // Get all potential matches (excludes self + users with no photos)
+    const allUsers = await storage.getPotentialMatches(currentUserId);
+
+    // Enrich with profile and photos
+    const enriched = await Promise.all(allUsers.map(async u => {
       const profile = await storage.getProfile(u.id);
       const photos = await storage.getPhotos(u.id);
       return { ...u, profile: profile || null, photos };
     }));
-    res.json(enriched);
+
+    // Apply gender filter based on showMe preference
+    const filtered = enriched.filter(u => {
+      // Skip already swiped users
+      if (swipedIds.includes(u.id)) return false;
+
+      // Apply gender filter
+      if (showMe === 'men') return u.profile?.gender === 'male';
+      if (showMe === 'women') return u.profile?.gender === 'female';
+      return true; // 'everyone'
+    });
+
+    res.json(filtered);
   });
 
   app.patch(api.users.updateProfile.path, async (req, res) => {
