@@ -1010,7 +1010,19 @@ export async function registerRoutes(
       userId: req.user!.id,
       status: 'going',
     });
-    
+
+    // Notify event creator when someone joins (not if creator joins their own event)
+    const [event] = await db.select().from(events).where(eq(events.id, eventId));
+    if (event && event.creatorId !== req.user!.id) {
+      const joiner = await storage.getUser(req.user!.id);
+      sendPushNotification(event.creatorId, {
+        title: `🎉 Nuevo participante en "${event.title}"`,
+        body: `${joiner?.firstName || 'Alguien'} se ha apuntado a tu actividad.`,
+        url: `/event/${eventId}`,
+        icon: '/favicon.png',
+      }).catch(() => {});
+    }
+
     res.json({ success: true });
   });
 
