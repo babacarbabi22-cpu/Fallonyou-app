@@ -21,7 +21,8 @@ const PLANS = {
 export default function PremiumPage() {
   const { toast } = useToast();
   const t = useTranslation();
-  const [plan, setPlan] = useState<"monthly" | "yearly">("monthly");
+  const [plan, setPlan] = useState<"monthly" | "yearly" | null>(null);
+  const [showPlans, setShowPlans] = useState(false);
   const searchParams = new URLSearchParams(window.location.search);
   const success = searchParams.get("success");
   const canceled = searchParams.get("canceled");
@@ -170,44 +171,70 @@ export default function PremiumPage() {
 
             {/* ===== SECCIÓN DE PAGO ===== */}
             <section>
-              <h2 className="text-xl font-bold mb-4">Elige tu plan</h2>
+              <h2 className="text-xl font-bold mb-4">Hazte Premium</h2>
 
-              {/* Selector mensual / anual */}
-              <div className="flex gap-3 mb-5">
-                {(["monthly", "yearly"] as const).map((p) => (
-                  <button key={p} onClick={() => setPlan(p)}
-                    className={`flex-1 rounded-2xl border-2 p-4 text-left transition-all ${
-                      plan === p
-                        ? "border-amber-500 bg-amber-50 dark:bg-amber-950/30"
-                        : "border-muted bg-card hover:border-amber-300"
-                    }`}
-                    data-testid={`button-plan-${p}`}>
-                    <div className="font-bold text-base">{PLANS[p].label}</div>
-                    <div className="text-2xl font-extrabold text-amber-600 leading-tight">
-                      {PLANS[p].price}<span className="text-sm font-normal text-muted-foreground">{PLANS[p].period}</span>
-                    </div>
-                    <div className="text-xs text-muted-foreground mt-1">{PLANS[p].hint}</div>
-                  </button>
-                ))}
-              </div>
-
-              {/* Botón de pago */}
-              <a
-                href={plan === "monthly" ? STRIPE_MONTHLY_LINK : STRIPE_YEARLY_LINK}
-                target="_blank"
-                rel="noopener noreferrer"
-                data-testid="button-pay-stripe"
-              >
-                <Button className="w-full h-16 text-lg font-bold bg-[#635BFF] hover:bg-[#5046e5] text-white rounded-2xl flex items-center gap-3 shadow-lg shadow-indigo-500/30">
-                  <SiStripe className="w-7 h-7" />
-                  Suscribirse ahora
-                  <span className="ml-auto text-indigo-200 font-normal text-base">{PLANS[plan].price}</span>
+              {!showPlans ? (
+                /* CTA inicial — sin precios visibles */
+                <Button
+                  onClick={() => setShowPlans(true)}
+                  className="w-full h-14 text-lg font-bold bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white rounded-2xl shadow-lg shadow-amber-500/30"
+                  data-testid="button-show-plans"
+                >
+                  <Crown className="w-5 h-5 mr-2" />
+                  Ver planes y precios
                 </Button>
-              </a>
+              ) : (
+                <motion.div
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="space-y-4"
+                >
+                  {/* Selector mensual / anual */}
+                  <div className="flex gap-3">
+                    {(["monthly", "yearly"] as const).map((p) => (
+                      <button key={p} onClick={() => setPlan(p)}
+                        className={`flex-1 rounded-2xl border-2 p-4 text-left transition-all ${
+                          plan === p
+                            ? "border-amber-500 bg-amber-50 dark:bg-amber-950/30"
+                            : "border-muted bg-card hover:border-amber-300"
+                        }`}
+                        data-testid={`button-plan-${p}`}>
+                        {p === "yearly" && (
+                          <div className="text-xs font-bold text-amber-600 mb-1 uppercase tracking-wide">Mejor valor</div>
+                        )}
+                        <div className="font-bold text-base">{PLANS[p].label}</div>
+                        <div className="text-2xl font-extrabold text-amber-600 leading-tight">
+                          {PLANS[p].price}<span className="text-sm font-normal text-muted-foreground">{PLANS[p].period}</span>
+                        </div>
+                        <div className="text-xs text-muted-foreground mt-1">{PLANS[p].hint}</div>
+                      </button>
+                    ))}
+                  </div>
 
-              <div className="bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-xl p-3 text-xs text-center text-green-800 dark:text-green-300">
-                🔒 Pago seguro con tarjeta — activación automática e instantánea
-              </div>
+                  {/* Botón de pago — solo visible si eligió plan */}
+                  {plan ? (
+                    <a
+                      href={plan === "monthly" ? STRIPE_MONTHLY_LINK : STRIPE_YEARLY_LINK}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      data-testid="button-pay-stripe"
+                    >
+                      <Button className="w-full h-16 text-lg font-bold bg-[#635BFF] hover:bg-[#5046e5] text-white rounded-2xl flex items-center gap-3 shadow-lg shadow-indigo-500/30">
+                        <SiStripe className="w-7 h-7" />
+                        Suscribirse ahora
+                        <span className="ml-auto text-indigo-200 font-normal text-base">{PLANS[plan].price}</span>
+                      </Button>
+                    </a>
+                  ) : (
+                    <p className="text-center text-sm text-muted-foreground">Selecciona un plan para continuar</p>
+                  )}
+
+                  <div className="bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-xl p-3 text-xs text-center text-green-800 dark:text-green-300">
+                    🔒 Pago seguro con tarjeta — activación automática e instantánea
+                  </div>
+                </motion.div>
+              )}
             </section>
           </>
         )}
