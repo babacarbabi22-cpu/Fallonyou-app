@@ -4,14 +4,12 @@ import { BottomNav } from "@/components/BottomNav";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Loader2, Crown, Heart, Eye, Sparkles, Check, Gift, Shield, Star, CreditCard, HelpCircle } from "lucide-react";
-import { SiPaypal, SiRevolut, SiStripe } from "react-icons/si";
+import { SiStripe } from "react-icons/si";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
 import { useTranslation } from "@/lib/i18n";
 
-const PAYPAL_LINK = "https://www.paypal.me/babaca1vf5";
-const REVOLUT_LINK = "https://revolut.me/babaca1vf5";
 const STRIPE_MONTHLY_LINK = "https://buy.stripe.com/4gMcMY2wsdUS462gpSfw400";
 const STRIPE_YEARLY_LINK = "https://buy.stripe.com/5kQ7sE9YUg30cCy7Tmfw401";
 
@@ -193,62 +191,22 @@ export default function PremiumPage() {
                 ))}
               </div>
 
-              {/* Botones de pago */}
-              <div className="space-y-3">
-                <p className="text-sm text-muted-foreground text-center">Paga directamente con tu método favorito:</p>
+              {/* Botón de pago */}
+              <a
+                href={plan === "monthly" ? STRIPE_MONTHLY_LINK : STRIPE_YEARLY_LINK}
+                target="_blank"
+                rel="noopener noreferrer"
+                data-testid="button-pay-stripe"
+              >
+                <Button className="w-full h-16 text-lg font-bold bg-[#635BFF] hover:bg-[#5046e5] text-white rounded-2xl flex items-center gap-3 shadow-lg shadow-indigo-500/30">
+                  <SiStripe className="w-7 h-7" />
+                  Suscribirse ahora
+                  <span className="ml-auto text-indigo-200 font-normal text-base">{PLANS[plan].price}</span>
+                </Button>
+              </a>
 
-                {/* PayPal */}
-                <a
-                  href={`${PAYPAL_LINK}/${plan === "monthly" ? "7.99" : "59.99"}EUR`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  data-testid="button-pay-paypal"
-                >
-                  <Button className="w-full h-14 text-base font-bold bg-[#0070BA] hover:bg-[#005ea6] text-white rounded-2xl flex items-center gap-3 shadow-md shadow-blue-500/20">
-                    <SiPaypal className="w-6 h-6" />
-                    Pagar con PayPal
-                    <span className="ml-auto text-blue-200 font-normal text-sm">{PLANS[plan].price}</span>
-                  </Button>
-                </a>
-
-                {/* Revolut */}
-                <a
-                  href={REVOLUT_LINK}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  data-testid="button-pay-revolut"
-                >
-                  <Button className="w-full h-14 text-base font-bold bg-[#7C3AED] hover:bg-[#6d28d9] text-white rounded-2xl flex items-center gap-3 shadow-md shadow-violet-500/20">
-                    <SiRevolut className="w-6 h-6" />
-                    Pagar con Revolut
-                    <span className="ml-auto text-violet-200 font-normal text-sm">{PLANS[plan].price}</span>
-                  </Button>
-                </a>
-
-                {/* Stripe — tarjeta de crédito/débito */}
-                {(plan === "monthly" ? STRIPE_MONTHLY_LINK : STRIPE_YEARLY_LINK) && (
-                  <a
-                    href={plan === "monthly" ? STRIPE_MONTHLY_LINK : STRIPE_YEARLY_LINK}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    data-testid="button-pay-stripe"
-                  >
-                    <Button className="w-full h-14 text-base font-bold bg-[#635BFF] hover:bg-[#5046e5] text-white rounded-2xl flex items-center gap-3 shadow-md shadow-indigo-500/20">
-                      <SiStripe className="w-6 h-6" />
-                      Pagar con tarjeta
-                      <span className="ml-auto text-indigo-200 font-normal text-sm">{PLANS[plan].price}</span>
-                    </Button>
-                  </a>
-                )}
-
-                <div className="space-y-2">
-                  <div className="bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-xl p-3 text-xs text-center text-green-800 dark:text-green-300">
-                    ✅ Pago con tarjeta — activación automática e instantánea
-                  </div>
-                  <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-xl p-3 text-xs text-center text-amber-800 dark:text-amber-300">
-                    💬 PayPal / Revolut — confirma por WhatsApp tras el pago (menos de 24h)
-                  </div>
-                </div>
+              <div className="bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-xl p-3 text-xs text-center text-green-800 dark:text-green-300">
+                🔒 Pago seguro con tarjeta — activación automática e instantánea
               </div>
             </section>
           </>
@@ -294,21 +252,27 @@ export default function PremiumPage() {
           <Card>
             <CardContent className="space-y-4 p-4">
               <div>
-                <h3 className="font-semibold mb-1">¿Cómo confirmo mi pago?</h3>
+                <h3 className="font-semibold mb-1">¿Cómo funciona el pago?</h3>
                 <p className="text-sm text-muted-foreground">
-                  Después de pagar por PayPal o Revolut, escríbenos por WhatsApp con el comprobante. Activaremos tu cuenta Premium en menos de 24h.
+                  Al pulsar "Suscribirse ahora" irás a la página de pago seguro de Stripe. Una vez confirmado, tu cuenta Premium se activa de forma automática e instantánea.
                 </p>
               </div>
               <div>
-                <h3 className="font-semibold mb-1">¿Es seguro el pago?</h3>
+                <h3 className="font-semibold mb-1">¿Es seguro?</h3>
                 <p className="text-sm text-muted-foreground">
-                  Sí. PayPal y Revolut son plataformas de pago seguras con protección al comprador.
+                  Sí. Usamos Stripe, el procesador de pagos más usado del mundo. Tus datos de tarjeta nunca se almacenan en nuestros servidores.
+                </p>
+              </div>
+              <div>
+                <h3 className="font-semibold mb-1">¿Cómo cancelo?</h3>
+                <p className="text-sm text-muted-foreground">
+                  Puedes cancelar en cualquier momento desde tu perfil → Gestionar suscripción. Sin permanencia.
                 </p>
               </div>
               <div>
                 <h3 className="font-semibold mb-1">¿Necesitas ayuda?</h3>
                 <p className="text-sm text-muted-foreground">
-                  Escríbenos a <strong>fallonyouapp@hotmail.com</strong> o por WhatsApp.
+                  Escríbenos a <strong>fallonyouapp@hotmail.com</strong>
                 </p>
               </div>
             </CardContent>
