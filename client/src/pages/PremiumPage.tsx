@@ -13,7 +13,7 @@ import { useTranslation } from "@/lib/i18n";
 const PAYPAL_LINK = "https://www.paypal.me/babaca1vf5";
 const REVOLUT_LINK = "https://revolut.me/babaca1vf5";
 const STRIPE_MONTHLY_LINK = "https://buy.stripe.com/4gMcMY2wsdUS462gpSfw400";
-const STRIPE_YEARLY_LINK = ""; // añadir cuando esté disponible
+const STRIPE_YEARLY_LINK = "https://buy.stripe.com/5kQ7sE9YUg30cCy7Tmfw401";
 
 const PLANS = {
   monthly: { label: "Mensual", price: "7,99 €", period: "/mes", hint: "Cancela cuando quieras" },
