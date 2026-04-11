@@ -4,7 +4,7 @@ import { BottomNav } from "@/components/BottomNav";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Loader2, Crown, Heart, Eye, Sparkles, Check, Gift, Shield, Star, CreditCard, HelpCircle } from "lucide-react";
-import { SiPaypal, SiRevolut } from "react-icons/si";
+import { SiPaypal, SiRevolut, SiStripe } from "react-icons/si";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
@@ -12,6 +12,8 @@ import { useTranslation } from "@/lib/i18n";
 
 const PAYPAL_LINK = "https://www.paypal.me/babaca1vf5";
 const REVOLUT_LINK = "https://revolut.me/babaca1vf5";
+const STRIPE_MONTHLY_LINK = "https://buy.stripe.com/4gMcMY2wsdUS462gpSfw400";
+const STRIPE_YEARLY_LINK = ""; // añadir cuando esté disponible
 
 const PLANS = {
   monthly: { label: "Mensual", price: "7,99 €", period: "/mes", hint: "Cancela cuando quieras" },
@@ -223,8 +225,29 @@ export default function PremiumPage() {
                   </Button>
                 </a>
 
-                <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-xl p-4 text-sm text-center text-amber-800 dark:text-amber-300">
-                  💬 Una vez realizado el pago, escríbenos por WhatsApp para confirmar tu cuenta Premium en menos de 24h.
+                {/* Stripe — tarjeta de crédito/débito */}
+                {(plan === "monthly" ? STRIPE_MONTHLY_LINK : STRIPE_YEARLY_LINK) && (
+                  <a
+                    href={plan === "monthly" ? STRIPE_MONTHLY_LINK : STRIPE_YEARLY_LINK}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    data-testid="button-pay-stripe"
+                  >
+                    <Button className="w-full h-14 text-base font-bold bg-[#635BFF] hover:bg-[#5046e5] text-white rounded-2xl flex items-center gap-3 shadow-md shadow-indigo-500/20">
+                      <SiStripe className="w-6 h-6" />
+                      Pagar con tarjeta
+                      <span className="ml-auto text-indigo-200 font-normal text-sm">{PLANS[plan].price}</span>
+                    </Button>
+                  </a>
+                )}
+
+                <div className="space-y-2">
+                  <div className="bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-xl p-3 text-xs text-center text-green-800 dark:text-green-300">
+                    ✅ Pago con tarjeta — activación automática e instantánea
+                  </div>
+                  <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-xl p-3 text-xs text-center text-amber-800 dark:text-amber-300">
+                    💬 PayPal / Revolut — confirma por WhatsApp tras el pago (menos de 24h)
+                  </div>
                 </div>
               </div>
             </section>
