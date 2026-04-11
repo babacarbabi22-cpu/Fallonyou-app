@@ -52,9 +52,10 @@ export default function AdminPage() {
   const [banReason, setBanReason] = useState("");
   const [showBanDialog, setShowBanDialog] = useState(false);
   const [activeTab, setActiveTab] = useState<"users" | "reports">("users");
+  const [userFilter, setUserFilter] = useState<"all" | "premium" | "banned">("all");
 
   const { data: users, isLoading: usersLoading } = useQuery<UserWithProfile[]>({
-    queryKey: ["/api/admin/users", searchQuery],
+    queryKey: ["/api/admin/users"],
   });
 
   const { data: reports, isLoading: reportsLoading } = useQuery<Report[]>({
@@ -120,6 +121,8 @@ export default function AdminPage() {
   });
 
   const filteredUsers = users?.filter(user => {
+    if (userFilter === "premium" && user.isPremium !== "true") return false;
+    if (userFilter === "banned" && user.isBanned !== "true") return false;
     if (!searchQuery) return true;
     const search = searchQuery.toLowerCase();
     return (
@@ -210,6 +213,26 @@ export default function AdminPage() {
                 className="pl-10"
                 data-testid="input-search-users"
               />
+            </div>
+
+            {/* Filtros de usuario */}
+            <div className="flex gap-2">
+              {(["all", "premium", "banned"] as const).map((f) => (
+                <button
+                  key={f}
+                  onClick={() => setUserFilter(f)}
+                  data-testid={`filter-users-${f}`}
+                  className={`flex-1 py-1.5 rounded-full text-sm font-medium border transition-all ${
+                    userFilter === f
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-card border-muted text-muted-foreground hover:border-primary/50"
+                  }`}
+                >
+                  {f === "all" && `Todos (${users?.length ?? 0})`}
+                  {f === "premium" && `⭐ Premium (${users?.filter(u => u.isPremium === "true").length ?? 0})`}
+                  {f === "banned" && `🚫 Baneados (${users?.filter(u => u.isBanned === "true").length ?? 0})`}
+                </button>
+              ))}
             </div>
 
             {usersLoading ? (
@@ -319,7 +342,11 @@ export default function AdminPage() {
                 ))}
                 {filteredUsers?.length === 0 && (
                   <div className="text-center py-8 text-muted-foreground">
-                    {t.admin.noUsersFound}
+                    {userFilter === "premium"
+                      ? "No hay usuarios Premium"
+                      : userFilter === "banned"
+                      ? "No hay usuarios baneados"
+                      : t.admin.noUsersFound}
                   </div>
                 )}
               </div>
