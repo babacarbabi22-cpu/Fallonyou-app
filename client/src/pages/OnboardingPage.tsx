@@ -118,7 +118,7 @@ export default function OnboardingPage() {
   };
 
   const handleComplete = () => {
-    setLocation("/");
+    setLocation("/profile");
   };
 
   // Auto-verification mutation
@@ -582,27 +582,75 @@ export default function OnboardingPage() {
           {step === "complete" && (
             <Card>
               <CardContent className="p-6 space-y-6">
+                {/* Celebration header */}
                 <div className="text-center">
                   <div className="w-20 h-20 rounded-full bg-amber-500/10 flex items-center justify-center mx-auto mb-4">
                     <Sparkles className="w-10 h-10 text-amber-500" />
                   </div>
-                  <h2 className="text-2xl font-bold mb-2">{t.onboarding.step4Title}</h2>
-                  <p className="text-muted-foreground">{t.onboarding.step4Desc}</p>
+                  <h2 className="text-2xl font-bold mb-2">¡Ya estás dentro!</h2>
+                  <p className="text-muted-foreground text-sm">
+                    Para que otros usuarios te vean y puedas conectar al máximo, completa estos pasos:
+                  </p>
                 </div>
 
-                <div className="flex justify-center gap-2">
-                  <Check className="w-5 h-5 text-amber-500" />
-                  <span className="text-sm">{t.onboarding.step1Title}</span>
-                </div>
-                <div className="flex justify-center gap-2">
-                  <Check className="w-5 h-5 text-amber-500" />
-                  <span className="text-sm">{t.onboarding.step2Title}</span>
+                {/* Next steps guide */}
+                <div className="space-y-3">
+                  {[
+                    {
+                      icon: "📸",
+                      title: "Añade 3 fotos o más",
+                      desc: "Con 3+ fotos tu perfil queda verificado y aparece antes en los resultados. ¡La primera impresión importa!",
+                      badge: "Necesario para verificación",
+                      badgeColor: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
+                    },
+                    {
+                      icon: "✍️",
+                      title: "Escribe tu bio",
+                      desc: "Cuéntale a los demás quién eres y qué buscas. Unos pocos detalles marcan la diferencia.",
+                      badge: "Recomendado",
+                      badgeColor: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300",
+                    },
+                    {
+                      icon: "🎉",
+                      title: "Crea o únete a una actividad",
+                      desc: "Organiza un plan — cena, viaje, deporte — o únete al de alguien. Así es como se hacen amigos aquí.",
+                      badge: "Divertido",
+                      badgeColor: "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300",
+                    },
+                  ].map((item, i) => (
+                    <div key={i} className="flex gap-3 bg-muted/40 rounded-xl p-3">
+                      <div className="text-2xl flex-shrink-0 mt-0.5">{item.icon}</div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap mb-0.5">
+                          <span className="font-semibold text-sm">{item.title}</span>
+                          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${item.badgeColor}`}>
+                            {item.badge}
+                          </span>
+                        </div>
+                        <p className="text-xs text-muted-foreground leading-relaxed">{item.desc}</p>
+                      </div>
+                    </div>
+                  ))}
                 </div>
 
-                <Button onClick={handleComplete} className="w-full" size="lg" data-testid="button-finish-onboarding">
-                  {t.onboarding.finish}
-                  <Sparkles className="w-4 h-4 ml-2" />
-                </Button>
+                {/* Verification info */}
+                <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-xl p-3 text-sm text-center">
+                  <Shield className="w-5 h-5 text-amber-500 mx-auto mb-1" />
+                  <p className="font-semibold text-amber-800 dark:text-amber-300">¿Cómo funciona la verificación?</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Sube 3 o más fotos tuyas → tu perfil se marca como verificado → los demás confían más en ti y apareces más visible.
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Button onClick={handleComplete} className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold" size="lg" data-testid="button-finish-onboarding">
+                    Ir a completar mi perfil
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
+                  <Button variant="ghost" onClick={() => setLocation("/")} className="w-full text-muted-foreground text-sm" data-testid="button-skip-complete">
+                    Lo haré más tarde
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           )}

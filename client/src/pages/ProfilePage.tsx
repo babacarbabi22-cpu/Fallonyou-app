@@ -1,4 +1,5 @@
 import { useCurrentUser, useUpdateProfile, useDeletePhoto, UserWithPhotos } from "@/hooks/use-danceme";
+import { ProfileCompletionCard } from "@/components/ProfileCompletionCard";
 import { BottomNav } from "@/components/BottomNav";
 import { useAuth } from "@/hooks/use-auth";
 import { useUpload } from "@/hooks/use-upload";
@@ -243,44 +244,8 @@ export default function ProfilePage() {
       </div>
 
       <div className="mt-16 px-6 space-y-8">
-        {/* Profile Completion Indicator - Simplified to 5 essential fields */}
-        {(() => {
-          const fields = [
-            formState.displayName,
-            formState.age > 18,
-            formState.bio,
-            formState.gender,
-            (user?.photos?.length || 0) > 0,
-          ];
-          const completed = fields.filter(Boolean).length;
-          const total = fields.length;
-          const percentage = Math.round((completed / total) * 100);
-          
-          if (percentage < 100) {
-            return (
-              <section>
-                <Card className="border-primary/20 bg-gradient-to-r from-primary/5 to-secondary/5">
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <p className="font-medium">{t.profileDetails?.profileCompletion || "Profile Completion"}</p>
-                      <span className="text-primary font-bold">{percentage}%</span>
-                    </div>
-                    <div className="w-full bg-muted rounded-full h-2">
-                      <div 
-                        className="bg-primary rounded-full h-2 transition-all duration-500"
-                        style={{ width: `${percentage}%` }}
-                      />
-                    </div>
-                    <p className="text-sm text-muted-foreground mt-2">
-                      {t.profileDetails?.completeProfile || "Complete your profile for more matches"}
-                    </p>
-                  </CardContent>
-                </Card>
-              </section>
-            );
-          }
-          return null;
-        })()}
+        {/* Profile Completion Card */}
+        <ProfileCompletionCard user={user} />
 
         {/* Save Changes Button - At top */}
         <section>

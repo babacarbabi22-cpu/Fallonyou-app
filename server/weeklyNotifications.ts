@@ -54,6 +54,29 @@ const noEventMessages = [
   },
 ];
 
+const incompleteProfileMessages = [
+  {
+    title: "📸 ¡Añade más fotos y conéctate!",
+    body: "Con 3 fotos o más tu perfil queda verificado y aparece antes. ¡Solo te faltan un par!",
+    url: "/profile",
+  },
+  {
+    title: "🌟 Tu perfil casi está listo",
+    body: "Sube más fotos, escribe tu bio y empieza a recibir conexiones. ¡Tardas 2 minutos!",
+    url: "/profile",
+  },
+  {
+    title: "✅ Completa tu verificación",
+    body: "Los perfiles verificados generan el doble de conexiones. ¡Solo faltan tus fotos!",
+    url: "/profile",
+  },
+  {
+    title: "👋 ¡Alguien podría estar esperándote!",
+    body: "Completa tu perfil con más fotos para que puedan encontrarte. ¡Es fácil y rápido!",
+    url: "/profile",
+  },
+];
+
 let weeklyMessageIndex = 0;
 
 async function getUsersWithSubscriptions() {
@@ -70,6 +93,51 @@ async function hasProfilePhoto(userId: string): Promise<boolean> {
   const userPhotos = await db.select().from(photos)
     .where(eq(photos.userId, userId));
   return userPhotos.length > 0;
+}
+
+async function getPhotoCount(userId: string): Promise<number> {
+  const userPhotos = await db.select({ id: photos.id })
+    .from(photos).where(eq(photos.userId, userId));
+  return userPhotos.length;
+}
+
+async function hasBio(userId: string): Promise<boolean> {
+  const profile = await db.select({ bio: profiles.bio })
+    .from(profiles).where(eq(profiles.userId, userId));
+  return !!(profile[0]?.bio && profile[0].bio.trim().length > 0);
+}
+
+export async function sendIncompleteProfileNotifications() {
+  console.log('[Profile Notifications] Checking for users with incomplete profiles...');
+
+  const userIds = await getUsersWithSubscriptions();
+  let sent = 0;
+  let skipped = 0;
+
+  for (const userId of userIds) {
+    try {
+      const photoCount = await getPhotoCount(userId);
+      const bio = await hasBio(userId);
+
+      // Only send if profile is incomplete (fewer than 3 photos or no bio)
+      if (photoCount < 3 || !bio) {
+        const msg = incompleteProfileMessages[Math.floor(Math.random() * incompleteProfileMessages.length)];
+        await sendPushNotification(userId, {
+          title: msg.title,
+          body: msg.body,
+          url: msg.url,
+          icon: '/favicon.png',
+        });
+        sent++;
+      } else {
+        skipped++;
+      }
+    } catch (err) {
+      console.error(`[Profile Notifications] Error sending to user ${userId}:`, err);
+    }
+  }
+
+  console.log(`[Profile Notifications] Done. Sent: ${sent}, Skipped (complete): ${skipped}`);
 }
 
 async function hasCreatedEvent(userId: string): Promise<boolean> {
@@ -210,5 +278,10 @@ export function startWeeklyNotificationScheduler() {
     await sendEventReminders();
   }, { timezone: 'Europe/Madrid' });
 
-  console.log('[Weekly Notifications] Scheduler started — weekly Mondays + daily 24h reminders at 10:00 AM (Europe/Madrid)');
+  // Tuesdays and Thursdays at 9:00 AM — encourage incomplete profiles
+  cron.schedule('0 9 * * 2,4', async () => {
+    await sendIncompleteProfileNotifications();
+  }, { timezone: 'Europe/Madrid' });
+
+  console.log('[Weekly Notifications] Scheduler started — weekly Mondays + daily 24h reminders + Tue/Thu profile nudges (Europe/Madrid)');
 }
