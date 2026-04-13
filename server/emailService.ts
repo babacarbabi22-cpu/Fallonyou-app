@@ -171,6 +171,85 @@ export async function sendPhotoReminderEmail(to: string, firstName: string): Pro
   }
 }
 
+export async function sendPasswordResetEmail(to: string, firstName: string, resetLink: string): Promise<boolean> {
+  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+    console.warn("[Email] EMAIL_USER or EMAIL_PASS not configured");
+    return false;
+  }
+
+  const name = firstName || "usuario";
+
+  try {
+    await transporter.sendMail({
+      from: `"FallonYou" <${process.env.EMAIL_USER}>`,
+      to,
+      subject: "🔑 Restablece tu contraseña de FallonYou",
+      html: `
+<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/></head>
+<body style="margin:0;padding:0;background:#f9f6f0;font-family:Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9f6f0;padding:32px 0;">
+    <tr><td align="center">
+      <table width="500" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:20px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.08);">
+        <tr>
+          <td style="background:linear-gradient(135deg,#c9a227,#f0c040,#c9a227);padding:36px 32px 28px;text-align:center;">
+            <p style="margin:0;font-size:36px;">🔑</p>
+            <h1 style="margin:12px 0 4px;color:#1a1a1a;font-size:26px;font-weight:800;">FallonYou</h1>
+            <p style="margin:0;color:#5a4000;font-size:13px;font-weight:600;letter-spacing:1px;">RESTABLECER CONTRASEÑA</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:36px 32px 0;">
+            <h2 style="margin:0 0 12px;color:#111;font-size:20px;">Hola ${name} 👋</h2>
+            <p style="margin:0 0 16px;color:#555;font-size:16px;line-height:1.7;">
+              Recibimos una solicitud para restablecer la contraseña de tu cuenta en FallonYou.
+            </p>
+            <p style="margin:0 0 24px;color:#555;font-size:16px;line-height:1.7;">
+              Haz clic en el botón de abajo para crear una nueva contraseña. 
+              <strong>Este enlace expira en 1 hora.</strong>
+            </p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:8px 32px 24px;text-align:center;">
+            <a href="${resetLink}" style="display:inline-block;background:linear-gradient(135deg,#c9a227,#f0c040);color:#1a1a1a;font-weight:800;font-size:17px;padding:16px 40px;border-radius:50px;text-decoration:none;box-shadow:0 4px 12px rgba(201,162,39,0.4);">
+              🔑 Crear nueva contraseña →
+            </a>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:0 32px 12px;">
+            <div style="background:#fff8e1;border:1px solid #f0c040;border-radius:12px;padding:14px 18px;">
+              <p style="margin:0;color:#7a5c00;font-size:13px;line-height:1.6;">
+                ⚠️ Si no solicitaste este cambio, puedes ignorar este email de forma segura. Tu contraseña no cambiará.
+              </p>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:16px 32px 32px;">
+            <hr style="border:none;border-top:1px solid #eee;margin:0 0 16px;"/>
+            <p style="margin:0;color:#aaa;font-size:12px;text-align:center;line-height:1.7;">
+              FallonYou · <a href="https://fallonyou.app" style="color:#c9a227;text-decoration:none;">fallonyou.app</a>
+            </p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`,
+    });
+
+    console.log(`[Email] Password reset sent to ${to}`);
+    return true;
+  } catch (err) {
+    console.error(`[Email] Failed to send reset email to ${to}:`, err);
+    return false;
+  }
+}
+
 export async function verifyEmailConnection(): Promise<boolean> {
   try {
     await transporter.verify();

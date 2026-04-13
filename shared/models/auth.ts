@@ -44,6 +44,8 @@ export const users = pgTable("users", {
   bannedAt: timestamp("banned_at"),
   banReason: varchar("ban_reason"),
   termsAcceptedAt: timestamp("terms_accepted_at"),
+  passwordResetToken: varchar("password_reset_token"),
+  passwordResetTokenExpiry: timestamp("password_reset_token_expiry"),
 });
 
 export type UpsertUser = typeof users.$inferInsert;

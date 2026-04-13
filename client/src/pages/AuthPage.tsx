@@ -255,6 +255,18 @@ export default function AuthPage() {
             </Button>
           </form>
 
+          {isLogin && (
+            <div className="mt-2 text-center">
+              <Link
+                href="/reset-password"
+                className="text-xs text-amber-600 hover:text-amber-700 dark:text-amber-400 transition-colors underline-offset-4 hover:underline"
+                data-testid="link-forgot-password"
+              >
+                ¿Olvidaste tu contraseña?
+              </Link>
+            </div>
+          )}
+
           <div className="mt-4 pt-4 border-t border-border/50">
             <Link href="/legal" className="text-xs text-muted-foreground hover:text-primary transition-colors underline-offset-4 hover:underline" data-testid="link-legal">
               {t.legal.terms} & {t.legal.privacy}

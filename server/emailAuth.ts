@@ -2,9 +2,11 @@ import { Express, RequestHandler } from "express";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
 import { db } from "./db";
 import { users, profiles, photos } from "@shared/schema";
 import { eq } from "drizzle-orm";
+import { sendPasswordResetEmail } from "./emailService";
 
 declare global {
   namespace Express {
@@ -232,6 +234,79 @@ export async function setupAuth(app: Express) {
       gender: profile?.gender,
       preference: profile?.preference,
     });
+  });
+
+  // Forgot password — generate token and send reset email
+  app.post("/api/auth/forgot-password", async (req, res) => {
+    try {
+      const { email } = req.body;
+      if (!email) return res.status(400).json({ error: "Email is required" });
+
+      const [user] = await db.select().from(users).where(eq(users.email, email.toLowerCase()));
+
+      // Always respond with success to prevent email enumeration
+      if (!user || !user.password) {
+        return res.json({ success: true });
+      }
+
+      // Generate secure token (expires in 1 hour)
+      const token = crypto.randomBytes(32).toString("hex");
+      const expiry = new Date(Date.now() + 60 * 60 * 1000);
+
+      await db.update(users)
+        .set({ passwordResetToken: token, passwordResetTokenExpiry: expiry })
+        .where(eq(users.id, user.id));
+
+      const baseUrl = process.env.NODE_ENV === "production"
+        ? "https://fallonyou.app"
+        : `${req.protocol}://${req.get("host")}`;
+      const resetLink = `${baseUrl}/reset-password?token=${token}`;
+
+      await sendPasswordResetEmail(user.email!, user.firstName || "", resetLink);
+
+      res.json({ success: true });
+    } catch (err) {
+      console.error("Forgot password error:", err);
+      res.status(500).json({ error: "Failed to process request" });
+    }
+  });
+
+  // Reset password — validate token and set new password
+  app.post("/api/auth/reset-password", async (req, res) => {
+    try {
+      const { token, newPassword } = req.body;
+      if (!token || !newPassword) {
+        return res.status(400).json({ error: "Token and new password are required" });
+      }
+      if (newPassword.length < 6) {
+        return res.status(400).json({ error: "Password must be at least 6 characters" });
+      }
+
+      const [user] = await db.select().from(users).where(eq(users.passwordResetToken, token));
+
+      if (!user || !user.passwordResetTokenExpiry) {
+        return res.status(400).json({ error: "Invalid or expired reset link" });
+      }
+
+      if (new Date() > new Date(user.passwordResetTokenExpiry)) {
+        return res.status(400).json({ error: "Reset link has expired. Please request a new one." });
+      }
+
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+      await db.update(users)
+        .set({
+          password: hashedPassword,
+          passwordResetToken: null,
+          passwordResetTokenExpiry: null,
+        })
+        .where(eq(users.id, user.id));
+
+      res.json({ success: true });
+    } catch (err) {
+      console.error("Reset password error:", err);
+      res.status(500).json({ error: "Failed to reset password" });
+    }
   });
 
   // Confirm age for existing users

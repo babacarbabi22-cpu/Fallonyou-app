@@ -18,6 +18,7 @@ import LegalPage from "@/pages/LegalPage";
 import SafetyPage from "@/pages/SafetyPage";
 import AdminPage from "@/pages/AdminPage";
 import DeleteAccountPage from "@/pages/DeleteAccountPage";
+import ResetPasswordPage from "@/pages/ResetPasswordPage";
 import EventsPage from "@/pages/EventsPage";
 import EventDetailPage from "@/pages/EventDetailPage";
 import { useCurrentUser } from "@/hooks/use-danceme";
@@ -157,6 +158,7 @@ function Router() {
       <Route path="/event/:id">
         {() => <ProtectedRoute component={EventDetailPage} />}
       </Route>
+      <Route path="/reset-password" component={ResetPasswordPage} />
       <Route path="/delete-account" component={DeleteAccountPage} />
       <Route component={NotFound} />
     </Switch>
