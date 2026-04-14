@@ -689,7 +689,11 @@ export default function ProfilePage() {
         {/* Settings Section - At bottom */}
         <section className="space-y-4">
           <h2 className="text-xl font-display font-bold mb-4">{t.settings.title}</h2>
-          <VerificationStatus />
+          <VerificationStatus user={{
+            isVerified: user?.isVerified,
+            verificationStatus: (user as any)?.verificationStatus,
+            verificationRejectedReason: (user as any)?.verificationRejectedReason,
+          }} />
           <NotificationToggle />
           
           {/* Safety Center */}

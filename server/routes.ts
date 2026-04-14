@@ -1303,6 +1303,108 @@ export async function registerRoutes(
     res.json(uniqueCities);
   });
 
+  // ============ SELFIE VERIFICATION ============
+
+  // Submit selfie for verification
+  app.post('/api/verification/submit', upload.single('selfie'), async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const userId = req.user!.id;
+
+    const [currentUser] = await db.select().from(users).where(eq(users.id, userId));
+    if (currentUser?.verificationStatus === 'approved') {
+      return res.status(400).json({ error: 'Already verified' });
+    }
+    if (currentUser?.verificationStatus === 'pending') {
+      return res.status(400).json({ error: 'Verification already pending' });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({ error: 'Selfie file required' });
+    }
+
+    const selfieUrl = `/uploads/${req.file.filename}`;
+
+    await db.update(users)
+      .set({
+        verificationStatus: 'pending',
+        verificationSelfieUrl: selfieUrl,
+        verificationRequestedAt: new Date(),
+        verificationRejectedReason: null,
+      })
+      .where(eq(users.id, userId));
+
+    res.json({ success: true });
+  });
+
+  // Admin: list all verification requests
+  app.get('/api/admin/verifications', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const [admin] = await db.select().from(users).where(eq(users.id, req.user!.id));
+    if (admin?.isAdmin !== 'true') return res.sendStatus(403);
+
+    const allUsers = await db.select({
+      id: users.id,
+      email: users.email,
+      firstName: users.firstName,
+      lastName: users.lastName,
+      profileImageUrl: users.profileImageUrl,
+      isVerified: users.isVerified,
+      verificationStatus: users.verificationStatus,
+      verificationSelfieUrl: users.verificationSelfieUrl,
+      verificationRequestedAt: users.verificationRequestedAt,
+      verificationReviewedAt: users.verificationReviewedAt,
+      verificationRejectedReason: users.verificationRejectedReason,
+    }).from(users);
+
+    const withVerification = allUsers.filter(u =>
+      u.verificationStatus && u.verificationStatus !== 'none'
+    ).sort((a, b) => {
+      if (a.verificationStatus === 'pending' && b.verificationStatus !== 'pending') return -1;
+      if (b.verificationStatus === 'pending' && a.verificationStatus !== 'pending') return 1;
+      return 0;
+    });
+
+    res.json(withVerification);
+  });
+
+  // Admin: approve verification
+  app.post('/api/admin/verifications/:userId/approve', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const [admin] = await db.select().from(users).where(eq(users.id, req.user!.id));
+    if (admin?.isAdmin !== 'true') return res.sendStatus(403);
+
+    await db.update(users)
+      .set({
+        isVerified: 'true',
+        verifiedAt: new Date(),
+        verificationStatus: 'approved',
+        verificationReviewedAt: new Date(),
+        verificationRejectedReason: null,
+      })
+      .where(eq(users.id, req.params.userId));
+
+    res.json({ success: true });
+  });
+
+  // Admin: reject verification
+  app.post('/api/admin/verifications/:userId/reject', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const [admin] = await db.select().from(users).where(eq(users.id, req.user!.id));
+    if (admin?.isAdmin !== 'true') return res.sendStatus(403);
+
+    const { reason } = req.body;
+    await db.update(users)
+      .set({
+        isVerified: 'false',
+        verificationStatus: 'rejected',
+        verificationReviewedAt: new Date(),
+        verificationRejectedReason: reason || null,
+      })
+      .where(eq(users.id, req.params.userId));
+
+    res.json({ success: true });
+  });
+
   // ============ PUSH NOTIFICATIONS ============
   app.get('/api/push/vapid-key', (req, res) => {
     res.json({ publicKey: getVapidPublicKey() });

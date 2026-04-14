@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { BottomNav } from "@/components/BottomNav";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
-import { ArrowLeft, Search, Ban, UserCheck, AlertTriangle, Flag, Shield, Users, FileWarning, Mail, Camera, Crown } from "lucide-react";
+import { ArrowLeft, Search, Ban, UserCheck, AlertTriangle, Flag, Shield, Users, FileWarning, Mail, Camera, Crown, CheckCircle2, XCircle, ShieldCheck } from "lucide-react";
 import { Link } from "wouter";
 
 interface UserWithProfile {
@@ -30,6 +30,20 @@ interface UserWithProfile {
     age: number | null;
   };
   reportsCount?: number;
+}
+
+interface VerificationRequest {
+  id: string;
+  email: string | null;
+  firstName: string | null;
+  lastName: string | null;
+  profileImageUrl: string | null;
+  isVerified: string | null;
+  verificationStatus: string | null;
+  verificationSelfieUrl: string | null;
+  verificationRequestedAt: string | null;
+  verificationReviewedAt: string | null;
+  verificationRejectedReason: string | null;
 }
 
 interface Report {
@@ -51,8 +65,11 @@ export default function AdminPage() {
   const [selectedUser, setSelectedUser] = useState<UserWithProfile | null>(null);
   const [banReason, setBanReason] = useState("");
   const [showBanDialog, setShowBanDialog] = useState(false);
-  const [activeTab, setActiveTab] = useState<"users" | "reports">("users");
+  const [activeTab, setActiveTab] = useState<"users" | "reports" | "verifications">("users");
   const [userFilter, setUserFilter] = useState<"all" | "premium" | "banned">("all");
+  const [showRejectDialog, setShowRejectDialog] = useState(false);
+  const [rejectTarget, setRejectTarget] = useState<VerificationRequest | null>(null);
+  const [rejectReason, setRejectReason] = useState("");
 
   const { data: users, isLoading: usersLoading } = useQuery<UserWithProfile[]>({
     queryKey: ["/api/admin/users"],
@@ -60,6 +77,33 @@ export default function AdminPage() {
 
   const { data: reports, isLoading: reportsLoading } = useQuery<Report[]>({
     queryKey: ["/api/admin/reports"],
+  });
+
+  const { data: verifications, isLoading: verificationsLoading } = useQuery<VerificationRequest[]>({
+    queryKey: ["/api/admin/verifications"],
+  });
+
+  const approveVerificationMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      return apiRequest("POST", `/api/admin/verifications/${userId}/approve`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/verifications"] });
+      toast({ title: "✅ Verificación aprobada", description: "El usuario tiene ahora la insignia azul" });
+    },
+  });
+
+  const rejectVerificationMutation = useMutation({
+    mutationFn: async ({ userId, reason }: { userId: string; reason: string }) => {
+      return apiRequest("POST", `/api/admin/verifications/${userId}/reject`, { reason });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/verifications"] });
+      toast({ title: "Verificación rechazada" });
+      setShowRejectDialog(false);
+      setRejectTarget(null);
+      setRejectReason("");
+    },
   });
 
   const banMutation = useMutation({
@@ -176,7 +220,7 @@ export default function AdminPage() {
           </CardContent>
         </Card>
 
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           <Button
             variant={activeTab === "users" ? "default" : "outline"}
             onClick={() => setActiveTab("users")}
@@ -199,6 +243,20 @@ export default function AdminPage() {
                 {pendingReports.length}
               </Badge>
             )}
+          </Button>
+          <Button
+            variant={activeTab === "verifications" ? "default" : "outline"}
+            onClick={() => setActiveTab("verifications")}
+            className="flex-1 relative"
+            data-testid="tab-verifications"
+          >
+            <ShieldCheck className="w-4 h-4 mr-2" />
+            Verificaciones
+            {verifications?.filter(v => v.verificationStatus === "pending").length ? (
+              <Badge variant="destructive" className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center text-xs">
+                {verifications.filter(v => v.verificationStatus === "pending").length}
+              </Badge>
+            ) : null}
           </Button>
         </div>
 
@@ -412,7 +470,128 @@ export default function AdminPage() {
             )}
           </>
         )}
+
+        {activeTab === "verifications" && (
+          <>
+            {verificationsLoading ? (
+              <div className="text-center py-8 text-muted-foreground">Cargando...</div>
+            ) : !verifications?.length ? (
+              <div className="text-center py-10">
+                <ShieldCheck className="w-12 h-12 text-muted-foreground mx-auto mb-3 opacity-40" />
+                <p className="text-muted-foreground">No hay solicitudes de verificación</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {verifications.map((v) => (
+                  <Card key={v.id} className="overflow-hidden">
+                    <CardContent className="p-0">
+                      {/* Selfie image */}
+                      {v.verificationSelfieUrl && (
+                        <div className="relative">
+                          <img
+                            src={v.verificationSelfieUrl}
+                            alt="Selfie"
+                            className="w-full h-52 object-cover"
+                          />
+                          <div className="absolute top-2 right-2">
+                            {v.verificationStatus === "pending" && (
+                              <Badge className="bg-amber-500 text-black font-bold">Pendiente</Badge>
+                            )}
+                            {v.verificationStatus === "approved" && (
+                              <Badge className="bg-blue-500 text-white font-bold">Aprobado ✓</Badge>
+                            )}
+                            {v.verificationStatus === "rejected" && (
+                              <Badge variant="destructive">Rechazado</Badge>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                      <div className="p-4 space-y-3">
+                        <div className="flex items-center gap-3">
+                          <Avatar className="w-10 h-10">
+                            <AvatarImage src={v.profileImageUrl || ""} />
+                            <AvatarFallback>{(v.firstName || "?")[0]}</AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <p className="font-semibold text-sm">{v.firstName} {v.lastName}</p>
+                            <p className="text-xs text-muted-foreground">{v.email}</p>
+                            {v.verificationRequestedAt && (
+                              <p className="text-xs text-muted-foreground">
+                                Solicitado: {new Date(v.verificationRequestedAt).toLocaleDateString("es")}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+
+                        {v.verificationRejectedReason && (
+                          <div className="bg-red-50 dark:bg-red-950/30 rounded-lg p-2">
+                            <p className="text-xs text-red-600 dark:text-red-400">Motivo: {v.verificationRejectedReason}</p>
+                          </div>
+                        )}
+
+                        {v.verificationStatus === "pending" && (
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+                              onClick={() => approveVerificationMutation.mutate(v.id)}
+                              disabled={approveVerificationMutation.isPending}
+                              data-testid={`button-approve-verification-${v.id}`}
+                            >
+                              <CheckCircle2 className="w-4 h-4 mr-1" />
+                              Aprobar
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              className="flex-1"
+                              onClick={() => { setRejectTarget(v); setShowRejectDialog(true); }}
+                              data-testid={`button-reject-verification-${v.id}`}
+                            >
+                              <XCircle className="w-4 h-4 mr-1" />
+                              Rechazar
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </>
+        )}
       </div>
+
+      {/* Reject Verification Dialog */}
+      <Dialog open={showRejectDialog} onOpenChange={setShowRejectDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Rechazar verificación</DialogTitle>
+            <DialogDescription>
+              Opcionalmente indica el motivo del rechazo a {rejectTarget?.firstName}.
+            </DialogDescription>
+          </DialogHeader>
+          <Textarea
+            placeholder="Motivo del rechazo (opcional, ej: foto borrosa, no se ve el documento...)"
+            value={rejectReason}
+            onChange={(e) => setRejectReason(e.target.value)}
+            className="min-h-[80px]"
+            data-testid="input-reject-reason"
+          />
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setShowRejectDialog(false)}>Cancelar</Button>
+            <Button
+              variant="destructive"
+              onClick={() => rejectTarget && rejectVerificationMutation.mutate({ userId: rejectTarget.id, reason: rejectReason })}
+              disabled={rejectVerificationMutation.isPending}
+              data-testid="button-confirm-reject"
+            >
+              Rechazar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={showBanDialog} onOpenChange={setShowBanDialog}>
         <DialogContent>

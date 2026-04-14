@@ -46,6 +46,11 @@ export const users = pgTable("users", {
   termsAcceptedAt: timestamp("terms_accepted_at"),
   passwordResetToken: varchar("password_reset_token"),
   passwordResetTokenExpiry: timestamp("password_reset_token_expiry"),
+  verificationStatus: varchar("verification_status").default("none"),
+  verificationSelfieUrl: varchar("verification_selfie_url"),
+  verificationRequestedAt: timestamp("verification_requested_at"),
+  verificationReviewedAt: timestamp("verification_reviewed_at"),
+  verificationRejectedReason: varchar("verification_rejected_reason"),
 });
 
 export type UpsertUser = typeof users.$inferInsert;
