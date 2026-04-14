@@ -27,6 +27,12 @@ async function loadPayPal() {
 
 const upload = multer({ dest: "uploads/" });
 
+// Strip sensitive fields before sending user data to frontend
+function safeUser(user: Record<string, any>) {
+  const { password, passwordResetToken, passwordResetTokenExpiry, verificationSelfieUrl, ...safe } = user;
+  return safe;
+}
+
 export async function registerRoutes(
   httpServer: Server,
   app: Express
@@ -232,7 +238,7 @@ export async function registerRoutes(
       const photos = await storage.getPhotos(otherId);
       return { 
         ...m, 
-        otherUser: { ...otherUser!, profile: profile || null, photos } 
+        otherUser: { ...safeUser(otherUser!), profile: profile || null, photos } 
       };
     }));
     
@@ -447,7 +453,7 @@ export async function registerRoutes(
     const profile = await storage.getProfile(otherId);
     const photos = await storage.getPhotos(otherId);
     
-    res.json({ ...match, otherUser: { ...otherUser, profile, photos } });
+    res.json({ ...match, otherUser: { ...safeUser(otherUser!), profile, photos } });
   });
 
   // ============ MESSAGING ============
@@ -759,7 +765,7 @@ export async function registerRoutes(
     const allUsers = await db.select().from(users);
     const enriched = await Promise.all(allUsers.map(async u => {
       const profile = await storage.getProfile(u.id);
-      return { ...u, profile };
+      return { ...safeUser(u), profile };
     }));
     res.json(enriched);
   });
@@ -943,6 +949,51 @@ export async function registerRoutes(
     res.json(enrichedEvents);
   });
 
+  // ============ EVENT SUGGESTIONS (must be before /:id) ============
+
+  app.get('/api/events/suggestions', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const userId = req.user!.id;
+
+    const profile = await storage.getProfile(userId);
+    const userCity = profile?.currentCity || profile?.homeCity;
+
+    const allEvents = await db.select().from(events)
+      .where(gte(events.startsAt, new Date()))
+      .orderBy(desc(events.startsAt));
+
+    const candidates = userCity
+      ? allEvents.filter(e => e.city.toLowerCase() === userCity.toLowerCase() && e.creatorId !== userId)
+      : allEvents.filter(e => e.creatorId !== userId);
+
+    const suggestions = await Promise.all(
+      candidates.map(async (event) => {
+        const participants = await db.select().from(eventParticipants).where(eq(eventParticipants.eventId, event.id));
+        const isParticipant = participants.some(p => p.userId === userId);
+        if (isParticipant) return null;
+        const creator = await storage.getUser(event.creatorId);
+        return {
+          ...event,
+          imageUrl: fixImageUrl(event.imageUrl),
+          participantCount: participants.length,
+          creator: creator ? { id: creator.id, firstName: creator.firstName, profileImageUrl: creator.profileImageUrl } : null,
+        };
+      })
+    );
+
+    const filtered = suggestions.filter(Boolean).slice(0, 10);
+    res.json({ suggestions: filtered, city: userCity || null });
+  });
+
+  app.get('/api/events/search/cities', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const allEvents = await db.select({ city: events.city }).from(events);
+    const uniqueCities = [...new Set(allEvents.map(e => e.city))].sort();
+    res.json(uniqueCities);
+  });
+
+  // ============ SINGLE EVENT (must be after named routes) ============
+
   app.get('/api/events/:id', async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     const eventId = parseInt(req.params.id);
@@ -1012,29 +1063,6 @@ export async function registerRoutes(
     }).catch(err => console.error('Push notification error:', err));
     
     res.json(newEvent);
-  });
-
-  // Get single event
-  app.get('/api/events/:id', async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-    const eventId = parseInt(req.params.id);
-    
-    const [event] = await db.select().from(events).where(eq(events.id, eventId));
-    if (!event) return res.status(404).json({ error: 'Event not found' });
-    
-    const participants = await db.select().from(eventParticipants).where(eq(eventParticipants.eventId, eventId));
-    const participantUsers = await Promise.all(participants.map(async (p) => {
-      const user = await storage.getUser(p.userId);
-      return user ? { id: user.id, firstName: user.firstName, profileImageUrl: user.profileImageUrl, status: p.status } : null;
-    }));
-    
-    const creator = await storage.getUser(event.creatorId);
-    
-    res.json({
-      ...event,
-      participants: participantUsers.filter(Boolean),
-      creator: creator ? { id: creator.id, firstName: creator.firstName, profileImageUrl: creator.profileImageUrl } : null,
-    });
   });
 
   // Join event
@@ -1252,55 +1280,6 @@ export async function registerRoutes(
       average: average ? Math.round(average * 10) / 10 : null,
       count: allRatings.length,
     });
-  });
-
-  // ============ EVENT SUGGESTIONS ============
-
-  app.get('/api/events/suggestions', async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-    const userId = req.user!.id;
-
-    const profile = await storage.getProfile(userId);
-    const userCity = profile?.currentCity || profile?.homeCity;
-
-    // Get upcoming events
-    const allEvents = await db.select().from(events)
-      .where(gte(events.startsAt, new Date()))
-      .orderBy(desc(events.startsAt));
-
-    // Filter: not created by user, in user's city if known
-    const candidates = userCity
-      ? allEvents.filter(e => e.city.toLowerCase() === userCity.toLowerCase() && e.creatorId !== userId)
-      : allEvents.filter(e => e.creatorId !== userId);
-
-    // Filter out events user already joined
-    const suggestions = await Promise.all(
-      candidates.map(async (event) => {
-        const participants = await db.select().from(eventParticipants).where(eq(eventParticipants.eventId, event.id));
-        const isParticipant = participants.some(p => p.userId === userId);
-        if (isParticipant) return null;
-        const creator = await storage.getUser(event.creatorId);
-        return {
-          ...event,
-          imageUrl: fixImageUrl(event.imageUrl),
-          participantCount: participants.length,
-          creator: creator ? { id: creator.id, firstName: creator.firstName, profileImageUrl: creator.profileImageUrl } : null,
-        };
-      })
-    );
-
-    const filtered = suggestions.filter(Boolean).slice(0, 10);
-    res.json({ suggestions: filtered, city: userCity || null });
-  });
-
-  // ============ EVENT SEARCH ============
-
-  app.get('/api/events/search/cities', async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-
-    const allEvents = await db.select({ city: events.city }).from(events);
-    const uniqueCities = [...new Set(allEvents.map(e => e.city))].sort();
-    res.json(uniqueCities);
   });
 
   // ============ SELFIE VERIFICATION ============

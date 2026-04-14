@@ -9,6 +9,14 @@ import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import { startWeeklyNotificationScheduler } from './weeklyNotifications';
 
+// Prevent the process from crashing on unhandled errors
+process.on('uncaughtException', (err) => {
+  console.error('[Uncaught Exception]', err.message, err.stack);
+});
+process.on('unhandledRejection', (reason: any) => {
+  console.error('[Unhandled Rejection]', reason?.message || reason);
+});
+
 const app = express();
 const httpServer = createServer(app);
 
@@ -183,9 +191,10 @@ app.use((req, res, next) => {
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
-
-    res.status(status).json({ message });
-    throw err;
+    console.error("[Server Error]", status, message, err.stack || "");
+    if (!res.headersSent) {
+      res.status(status).json({ message });
+    }
   });
 
   // importantly only setup vite in development and after

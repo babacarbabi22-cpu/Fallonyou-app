@@ -28,6 +28,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Shield, Loader2 } from "lucide-react";
 import { TermsModal } from "@/components/TermsModal";
 import { CookieBanner } from "@/components/CookieBanner";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 function AgeConfirmationModal() {
   const t = useTranslation();
@@ -81,7 +82,11 @@ function ProtectedRoute({ component: Component, skipOnboarding = false }: { comp
   const { data: user, isLoading } = useCurrentUser();
   const { ageConfirmed, termsAccepted } = useAuth();
 
-  if (isLoading) return null;
+  if (isLoading) return (
+    <div className="min-h-screen flex items-center justify-center bg-background">
+      <Loader2 className="w-8 h-8 animate-spin text-primary" />
+    </div>
+  );
   if (!user) return <AuthPage />;
   
   // Show age confirmation modal if user hasn't confirmed yet
@@ -170,10 +175,12 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <I18nProvider>
         <TooltipProvider>
-          <HeartCascade />
-          <Toaster />
-          <Router />
-          <CookieBanner />
+          <ErrorBoundary>
+            <HeartCascade />
+            <Toaster />
+            <Router />
+            <CookieBanner />
+          </ErrorBoundary>
         </TooltipProvider>
       </I18nProvider>
     </QueryClientProvider>
