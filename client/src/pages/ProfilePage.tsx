@@ -127,15 +127,15 @@ export default function ProfilePage() {
 
       {/* Header banner */}
       <div className="relative h-44 bg-gradient-to-br from-zinc-900 via-black to-zinc-800">
-        <div className="absolute inset-0 flex items-center justify-center opacity-30 pointer-events-none">
-          <div className="flex items-center gap-4">
-            <Heart className="w-8 h-8 text-amber-300 fill-amber-300" />
-            <Plane className="w-8 h-8 text-amber-300 fill-amber-300 -rotate-45" />
-            <span className="text-3xl font-display font-black text-amber-200 uppercase tracking-widest">
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <div className="flex items-center gap-3">
+            <Heart className="w-9 h-9 text-amber-400 fill-amber-400 opacity-70" />
+            <Plane className="w-9 h-9 text-amber-400 fill-amber-400 opacity-70 -rotate-45" />
+            <span className="text-3xl font-display font-black text-amber-200 uppercase tracking-widest drop-shadow-lg">
               {formState.displayName || user.firstName || "You"}
             </span>
-            <Plane className="w-8 h-8 text-amber-300 fill-amber-300 rotate-45" />
-            <Heart className="w-8 h-8 text-amber-300 fill-amber-300" />
+            <Plane className="w-9 h-9 text-amber-400 fill-amber-400 opacity-70 rotate-45" />
+            <Heart className="w-9 h-9 text-amber-400 fill-amber-400 opacity-70" />
           </div>
         </div>
 

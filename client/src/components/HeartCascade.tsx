@@ -105,14 +105,21 @@ export function MatchHeartCascade({ isActive, duration = 3000 }: MatchHeartCasca
 }
 
 const backgroundIcons = [
-  { delay: 0, duration: 14, left: 5, size: 16, color: "text-amber-500", rotation: 0, type: 'heart' as const },
-  { delay: 2, duration: 12, left: 15, size: 14, color: "text-yellow-500", rotation: 0, type: 'star' as const },
-  { delay: 4, duration: 16, left: 25, size: 18, color: "text-amber-400", rotation: 0, type: 'heart' as const },
-  { delay: 1, duration: 18, left: 40, size: 12, color: "text-amber-300", rotation: 0, type: 'star' as const },
-  { delay: 3, duration: 13, left: 55, size: 14, color: "text-amber-500", rotation: 0, type: 'heart' as const },
-  { delay: 5, duration: 15, left: 70, size: 16, color: "text-yellow-400", rotation: 0, type: 'star' as const },
-  { delay: 2.5, duration: 17, left: 85, size: 10, color: "text-amber-400", rotation: 0, type: 'heart' as const },
-  { delay: 6, duration: 14, left: 95, size: 12, color: "text-amber-300", rotation: 0, type: 'star' as const },
+  { delay: 0,   duration: 14, left: 5,  size: 18, color: "text-amber-500", rotation: 15,  type: 'heart' as const },
+  { delay: 2,   duration: 12, left: 12, size: 14, color: "text-yellow-500", rotation: -20, type: 'star' as const },
+  { delay: 4,   duration: 16, left: 22, size: 20, color: "text-amber-400", rotation: 10,  type: 'heart' as const },
+  { delay: 1,   duration: 18, left: 33, size: 13, color: "text-amber-300", rotation: 0,   type: 'star' as const },
+  { delay: 3,   duration: 13, left: 44, size: 16, color: "text-amber-500", rotation: -10, type: 'heart' as const },
+  { delay: 5,   duration: 15, left: 55, size: 18, color: "text-yellow-400", rotation: 20, type: 'star' as const },
+  { delay: 2.5, duration: 17, left: 65, size: 12, color: "text-amber-400", rotation: -15, type: 'heart' as const },
+  { delay: 6,   duration: 14, left: 75, size: 14, color: "text-amber-300", rotation: 5,   type: 'star' as const },
+  { delay: 0.5, duration: 19, left: 83, size: 16, color: "text-yellow-500", rotation: -5, type: 'heart' as const },
+  { delay: 7,   duration: 11, left: 91, size: 12, color: "text-amber-500", rotation: 25,  type: 'star' as const },
+  { delay: 3.5, duration: 15, left: 48, size: 10, color: "text-amber-400", rotation: -30, type: 'heart' as const },
+  { delay: 8,   duration: 13, left: 8,  size: 14, color: "text-yellow-400", rotation: 0,  type: 'star' as const },
+  { delay: 1.5, duration: 20, left: 38, size: 22, color: "text-amber-500", rotation: 12,  type: 'heart' as const },
+  { delay: 4.5, duration: 16, left: 58, size: 11, color: "text-amber-300", rotation: -18, type: 'star' as const },
+  { delay: 9,   duration: 14, left: 97, size: 15, color: "text-yellow-500", rotation: 8,  type: 'heart' as const },
 ];
 
 export function HeartCascade() {
@@ -122,7 +129,7 @@ export function HeartCascade() {
         <IconComponent
           key={i}
           type={icon.type}
-          className={`absolute ${icon.color} fill-current opacity-15 animate-heartfall`}
+          className={`absolute ${icon.color} fill-current opacity-20 animate-heartfall`}
           style={{
             width: `${icon.size}px`,
             height: `${icon.size}px`,

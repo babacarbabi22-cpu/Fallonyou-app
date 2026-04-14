@@ -140,10 +140,10 @@
     opacity: 0;
   }
   10% {
-    opacity: 0.2;
+    opacity: 0.35;
   }
   90% {
-    opacity: 0.2;
+    opacity: 0.3;
   }
   100% {
     transform: translateY(100vh) rotate(360deg);
