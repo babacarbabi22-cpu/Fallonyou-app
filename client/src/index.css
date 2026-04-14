@@ -164,16 +164,16 @@
 }
 
 .animate-twinkle {
-  animation: twinkle 2.2s ease-in-out infinite;
+  animation: twinkle 4.0s ease-in-out infinite;
 }
 .animate-twinkle-delay-1 {
-  animation: twinkle 2.2s ease-in-out 0.4s infinite;
+  animation: twinkle 4.0s ease-in-out 0.9s infinite;
 }
 .animate-twinkle-delay-2 {
-  animation: twinkle 2.2s ease-in-out 0.9s infinite;
+  animation: twinkle 4.0s ease-in-out 1.9s infinite;
 }
 .animate-twinkle-delay-3 {
-  animation: twinkle 2.2s ease-in-out 1.4s infinite;
+  animation: twinkle 4.0s ease-in-out 2.8s infinite;
 }
 
 /* Slow background particles — subtle, dreamy */
@@ -181,21 +181,21 @@
   0%, 100% { opacity: 0.08; transform: scale(1);    }
   50%       { opacity: 0.45; transform: scale(1.25); }
 }
-.animate-slowblink   { animation: slowblink 3.5s ease-in-out infinite; }
-.animate-slowblink-1 { animation: slowblink 4.0s ease-in-out 0.7s  infinite; }
-.animate-slowblink-2 { animation: slowblink 3.2s ease-in-out 1.3s  infinite; }
-.animate-slowblink-3 { animation: slowblink 4.8s ease-in-out 0.2s  infinite; }
-.animate-slowblink-4 { animation: slowblink 3.8s ease-in-out 2.1s  infinite; }
-.animate-slowblink-5 { animation: slowblink 4.3s ease-in-out 1.8s  infinite; }
-.animate-slowblink-6 { animation: slowblink 3.0s ease-in-out 2.9s  infinite; }
-.animate-slowblink-7 { animation: slowblink 5.0s ease-in-out 0.5s  infinite; }
+.animate-slowblink   { animation: slowblink 6.0s ease-in-out infinite; }
+.animate-slowblink-1 { animation: slowblink 7.5s ease-in-out 1.2s  infinite; }
+.animate-slowblink-2 { animation: slowblink 6.8s ease-in-out 2.5s  infinite; }
+.animate-slowblink-3 { animation: slowblink 8.5s ease-in-out 0.4s  infinite; }
+.animate-slowblink-4 { animation: slowblink 7.0s ease-in-out 3.8s  infinite; }
+.animate-slowblink-5 { animation: slowblink 8.0s ease-in-out 1.8s  infinite; }
+.animate-slowblink-6 { animation: slowblink 6.5s ease-in-out 4.5s  infinite; }
+.animate-slowblink-7 { animation: slowblink 9.0s ease-in-out 0.9s  infinite; }
 
-/* Gold glow pulse on name text */
+/* Gold glow pulse on name text — uses drop-shadow so it works with gradient text */
 @keyframes goldglow {
-  0%, 100% { text-shadow: 0 0 8px rgba(251,191,36,0.3), 0 2px 4px rgba(0,0,0,0.6); }
-  50%       { text-shadow: 0 0 22px rgba(251,191,36,0.75), 0 2px 8px rgba(0,0,0,0.6); }
+  0%, 100% { filter: drop-shadow(0 0 4px rgba(251,191,36,0.25)) drop-shadow(0 2px 6px rgba(0,0,0,0.7)); }
+  50%       { filter: drop-shadow(0 0 18px rgba(251,191,36,0.85)) drop-shadow(0 2px 8px rgba(0,0,0,0.7)); }
 }
-.animate-goldglow { animation: goldglow 3s ease-in-out infinite; }
+.animate-goldglow { animation: goldglow 4s ease-in-out infinite; }
 
 /* Photo ring pulse */
 @keyframes ringpulse {

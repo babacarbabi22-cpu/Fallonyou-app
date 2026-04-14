@@ -126,7 +126,7 @@ export default function ProfilePage() {
     <div className="min-h-screen bg-background pb-24">
 
       {/* Header banner */}
-      <div className="relative h-52 bg-gradient-to-br from-zinc-900 via-black to-zinc-800 overflow-hidden">
+      <div className="relative h-52 bg-gradient-to-br from-zinc-900 via-black to-zinc-800">
 
         {/* Scattered background particles */}
         <div className="absolute inset-0 pointer-events-none">
@@ -152,7 +152,19 @@ export default function ProfilePage() {
           <div className="flex items-center gap-3">
             <Heart className="w-9 h-9 text-amber-400 fill-amber-400 animate-twinkle" />
             <Plane className="w-9 h-9 text-amber-400 fill-amber-400 animate-twinkle-delay-1 -rotate-45" />
-            <span className="text-3xl font-display font-black text-amber-200 uppercase tracking-widest animate-goldglow">
+            <span
+              className="font-black uppercase tracking-[0.2em] animate-goldglow select-none"
+              style={{
+                fontSize: "clamp(1.6rem, 6vw, 2.4rem)",
+                fontFamily: "'Georgia', 'Times New Roman', serif",
+                fontStyle: "italic",
+                background: "linear-gradient(135deg, #fde68a 0%, #f59e0b 35%, #fbbf24 60%, #fde68a 100%)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text",
+                letterSpacing: "0.22em",
+              }}
+            >
               {formState.displayName || user.firstName || "You"}
             </span>
             <Plane className="w-9 h-9 text-amber-400 fill-amber-400 animate-twinkle-delay-2 rotate-45" />
