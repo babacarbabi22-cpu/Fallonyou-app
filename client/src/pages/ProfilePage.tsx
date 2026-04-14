@@ -1,11 +1,12 @@
-import { useCurrentUser, useUpdateProfile, useDeletePhoto } from "@/hooks/use-danceme";
+import { useCurrentUser, useUpdateProfile, useDeletePhoto, UserWithPhotos } from "@/hooks/use-danceme";
+import { ProfileDetailSheet } from "@/components/ProfileDetailSheet";
 import { BottomNav } from "@/components/BottomNav";
 import { useAuth } from "@/hooks/use-auth";
 import { useUpload } from "@/hooks/use-upload";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Camera, LogOut, Shield, User, Star, Plane, MapPin, Heart, Trash2, FileText, Mail, Briefcase } from "lucide-react";
+import { Loader2, Camera, LogOut, Shield, User, Star, Plane, MapPin, Heart, Trash2, FileText, Mail, Briefcase, Eye } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { api } from "@shared/routes";
 import { useToast } from "@/hooks/use-toast";
@@ -52,6 +53,7 @@ export default function ProfilePage() {
 
   // Must be before any conditional returns
   const [isSettingProfilePic, setIsSettingProfilePic] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -183,6 +185,17 @@ export default function ProfilePage() {
       </div>
 
       <div className="mt-16 px-4 space-y-6">
+
+        {/* Ver perfil preview */}
+        <Button
+          variant="outline"
+          className="w-full h-10 rounded-xl font-medium border-primary/30 text-primary hover:bg-primary/5"
+          onClick={() => setShowPreview(true)}
+          data-testid="button-ver-perfil"
+        >
+          <Eye className="w-4 h-4 mr-2" />
+          {t.profile.viewProfile || "Ver mi perfil"}
+        </Button>
 
         {/* Basic info form */}
         <section className="space-y-4">
@@ -427,6 +440,12 @@ export default function ProfilePage() {
       </div>
 
       <BottomNav />
+
+      <ProfileDetailSheet
+        user={user as unknown as UserWithPhotos}
+        open={showPreview}
+        onClose={() => setShowPreview(false)}
+      />
     </div>
   );
 }
