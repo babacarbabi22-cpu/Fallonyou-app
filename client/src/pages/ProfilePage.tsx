@@ -6,7 +6,7 @@ import { useUpload } from "@/hooks/use-upload";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Camera, LogOut, Shield, User, Star, Plane, MapPin, Heart, Trash2, FileText, Mail, Briefcase, Eye } from "lucide-react";
+import { Loader2, Camera, LogOut, Shield, User, Star, Plane, MapPin, Heart, Trash2, FileText, Mail, Briefcase, Eye, Sparkles } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { api } from "@shared/routes";
 import { useToast } from "@/hooks/use-toast";
@@ -126,12 +126,33 @@ export default function ProfilePage() {
     <div className="min-h-screen bg-background pb-24">
 
       {/* Header banner */}
-      <div className="relative h-44 bg-gradient-to-br from-zinc-900 via-black to-zinc-800">
+      <div className="relative h-52 bg-gradient-to-br from-zinc-900 via-black to-zinc-800 overflow-hidden">
+
+        {/* Scattered background particles */}
+        <div className="absolute inset-0 pointer-events-none">
+          <Heart  className="absolute text-amber-400 fill-amber-400 w-4 h-4 animate-slowblink"   style={{ top: '12%', left:  '6%' }} />
+          <Star   className="absolute text-yellow-400 fill-yellow-400 w-3 h-3 animate-slowblink-1" style={{ top: '18%', left: '18%' }} />
+          <Heart  className="absolute text-amber-300 fill-amber-300 w-3 h-3 animate-slowblink-2" style={{ top:  '8%', left: '32%' }} />
+          <Star   className="absolute text-amber-500 fill-amber-500 w-4 h-4 animate-slowblink-3" style={{ top: '22%', left: '50%' }} />
+          <Heart  className="absolute text-yellow-300 fill-yellow-300 w-3 h-3 animate-slowblink-4" style={{ top:  '9%', left: '65%' }} />
+          <Star   className="absolute text-amber-400 fill-amber-400 w-4 h-4 animate-slowblink-5" style={{ top: '20%', left: '80%' }} />
+          <Heart  className="absolute text-amber-300 fill-amber-300 w-3 h-3 animate-slowblink-6" style={{ top: '15%', left: '92%' }} />
+          <Star   className="absolute text-yellow-500 fill-yellow-500 w-3 h-3 animate-slowblink-7" style={{ top: '62%', left:  '3%' }} />
+          <Heart  className="absolute text-amber-400 fill-amber-400 w-5 h-5 animate-slowblink-3" style={{ top: '70%', left: '22%' }} />
+          <Star   className="absolute text-amber-300 fill-amber-300 w-3 h-3 animate-slowblink-1" style={{ top: '55%', left: '42%' }} />
+          <Heart  className="absolute text-yellow-400 fill-yellow-400 w-3 h-3 animate-slowblink-5" style={{ top: '75%', left: '60%' }} />
+          <Star   className="absolute text-amber-500 fill-amber-500 w-4 h-4 animate-slowblink-2" style={{ top: '58%', left: '76%' }} />
+          <Heart  className="absolute text-amber-300 fill-amber-300 w-3 h-3 animate-slowblink-6" style={{ top: '68%', left: '90%' }} />
+          <Sparkles className="absolute text-yellow-300 fill-yellow-300 w-4 h-4 animate-slowblink-4" style={{ top: '35%', left: '12%' }} />
+          <Sparkles className="absolute text-amber-400 fill-amber-400 w-3 h-3 animate-slowblink-7" style={{ top: '40%', left: '87%' }} />
+        </div>
+
+        {/* Name + icons row */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
           <div className="flex items-center gap-3">
             <Heart className="w-9 h-9 text-amber-400 fill-amber-400 animate-twinkle" />
             <Plane className="w-9 h-9 text-amber-400 fill-amber-400 animate-twinkle-delay-1 -rotate-45" />
-            <span className="text-3xl font-display font-black text-amber-200 uppercase tracking-widest drop-shadow-lg">
+            <span className="text-3xl font-display font-black text-amber-200 uppercase tracking-widest animate-goldglow">
               {formState.displayName || user.firstName || "You"}
             </span>
             <Plane className="w-9 h-9 text-amber-400 fill-amber-400 animate-twinkle-delay-2 rotate-45" />
@@ -139,10 +160,13 @@ export default function ProfilePage() {
           </div>
         </div>
 
+        {/* Gold accent line at bottom */}
+        <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-amber-400/60 to-transparent" />
+
         {/* Profile photo */}
         <div className="absolute -bottom-12 left-6">
           <div className="relative w-24 h-24">
-            <div className="absolute -inset-1.5 bg-gradient-to-br from-amber-400 to-amber-600 rounded-full opacity-70" />
+            <div className="absolute -inset-1.5 bg-gradient-to-br from-amber-400 to-amber-600 rounded-full animate-ringpulse" />
             <img
               src={user.profileImageUrl || user.photos?.[0]?.url || "https://images.unsplash.com/photo-1511367461989-f85a21fda167?w=200&auto=format&fit=crop&q=60"}
               className="relative w-full h-full rounded-full object-cover border-3 border-background shadow-lg"
@@ -184,7 +208,7 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      <div className="mt-16 px-4 space-y-6">
+      <div className="mt-20 px-4 space-y-6">
 
         {/* Ver perfil preview */}
         <Button
