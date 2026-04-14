@@ -73,6 +73,10 @@ export default function ProfilePage() {
     relationshipType: "",
   });
 
+  // These MUST stay before any conditional returns (React Rules of Hooks)
+  const [isSettingProfilePic, setIsSettingProfilePic] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
+
   useEffect(() => {
     if (user) {
       setFormState({
@@ -94,7 +98,7 @@ export default function ProfilePage() {
         pets: user.profile?.pets || "",
         exercise: user.profile?.exercise || "",
         incognito: user.profile?.incognito || false,
-        interests: user.profile?.interests || [],
+        interests: Array.isArray(user.profile?.interests) ? user.profile.interests : [],
         relationshipType: user.profile?.relationshipType || "",
       });
     }
@@ -127,9 +131,6 @@ export default function ProfilePage() {
       await uploadFile(file);
     }
   };
-
-  const [isSettingProfilePic, setIsSettingProfilePic] = useState(false);
-  const [showPreview, setShowPreview] = useState(false);
   
   const setAsProfilePicture = async (photoUrl: string) => {
     setIsSettingProfilePic(true);

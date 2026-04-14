@@ -95,6 +95,7 @@ export async function registerRoutes(
       displayName, bio, age, gender, preference,
       zodiacSign, smoking, drinking, children, education,
       occupation, birthplace, height, religion, politics, pets, exercise, incognito,
+      interests, relationshipType,
       connectionTypes, travelInterests, travelerMode, currentCity, homeCity, latitude, longitude
     } = req.body;
     
@@ -124,6 +125,8 @@ export async function registerRoutes(
     if (pets !== undefined) profileData.pets = pets;
     if (exercise !== undefined) profileData.exercise = exercise;
     if (incognito !== undefined) profileData.incognito = incognito;
+    if (interests !== undefined) profileData.interests = Array.isArray(interests) ? interests : [];
+    if (relationshipType !== undefined) profileData.relationshipType = relationshipType;
     if (connectionTypes !== undefined) profileData.connectionTypes = connectionTypes;
     if (travelInterests !== undefined) profileData.travelInterests = travelInterests;
     if (travelerMode !== undefined) profileData.travelerMode = travelerMode;
