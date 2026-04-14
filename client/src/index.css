@@ -156,3 +156,22 @@
   animation-timing-function: linear;
   animation-iteration-count: infinite;
 }
+
+@keyframes twinkle {
+  0%, 100% { opacity: 0.75; transform: scale(1) rotate(var(--tw-rotate, 0deg)); }
+  30%       { opacity: 1;    transform: scale(1.18) rotate(var(--tw-rotate, 0deg)); }
+  60%       { opacity: 0.45; transform: scale(0.88) rotate(var(--tw-rotate, 0deg)); }
+}
+
+.animate-twinkle {
+  animation: twinkle 2.2s ease-in-out infinite;
+}
+.animate-twinkle-delay-1 {
+  animation: twinkle 2.2s ease-in-out 0.4s infinite;
+}
+.animate-twinkle-delay-2 {
+  animation: twinkle 2.2s ease-in-out 0.9s infinite;
+}
+.animate-twinkle-delay-3 {
+  animation: twinkle 2.2s ease-in-out 1.4s infinite;
+}
