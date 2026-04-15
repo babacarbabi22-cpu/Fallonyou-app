@@ -91,53 +91,58 @@ export async function registerRoutes(
   app.patch(api.users.updateProfile.path, async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     
-    const { 
-      displayName, bio, age, gender, preference,
-      zodiacSign, smoking, drinking, children, education,
-      occupation, birthplace, height, religion, politics, pets, exercise, incognito,
-      interests, relationshipType,
-      connectionTypes, travelInterests, travelerMode, currentCity, homeCity, latitude, longitude
-    } = req.body;
-    
-    // Update user's display name if provided
-    if (displayName) {
-      await db.update(users)
-        .set({ firstName: displayName })
-        .where(eq(users.id, req.user!.id));
+    try {
+      const { 
+        displayName, bio, age, gender, preference,
+        zodiacSign, smoking, drinking, children, education,
+        occupation, birthplace, height, religion, politics, pets, exercise, incognito,
+        interests, relationshipType,
+        connectionTypes, travelInterests, travelerMode, currentCity, homeCity, latitude, longitude
+      } = req.body;
+      
+      // Update user's display name if provided
+      if (displayName) {
+        await db.update(users)
+          .set({ firstName: displayName })
+          .where(eq(users.id, req.user!.id));
+      }
+      
+      // Update profile data
+      const profileData: any = {};
+      if (bio !== undefined) profileData.bio = bio;
+      if (age !== undefined) profileData.age = Number(age) || null;
+      if (gender !== undefined) profileData.gender = gender;
+      if (preference !== undefined) profileData.preference = preference;
+      if (zodiacSign !== undefined) profileData.zodiacSign = zodiacSign;
+      if (smoking !== undefined) profileData.smoking = smoking;
+      if (drinking !== undefined) profileData.drinking = drinking;
+      if (children !== undefined) profileData.children = children;
+      if (education !== undefined) profileData.education = education;
+      if (occupation !== undefined) profileData.occupation = occupation;
+      if (birthplace !== undefined) profileData.birthplace = birthplace;
+      if (height !== undefined) profileData.height = height;
+      if (religion !== undefined) profileData.religion = religion;
+      if (politics !== undefined) profileData.politics = politics;
+      if (pets !== undefined) profileData.pets = pets;
+      if (exercise !== undefined) profileData.exercise = exercise;
+      if (incognito !== undefined) profileData.incognito = incognito;
+      if (interests !== undefined) profileData.interests = Array.isArray(interests) ? interests : [];
+      if (relationshipType !== undefined) profileData.relationshipType = relationshipType;
+      if (connectionTypes !== undefined) profileData.connectionTypes = connectionTypes;
+      if (travelInterests !== undefined) profileData.travelInterests = travelInterests;
+      if (travelerMode !== undefined) profileData.travelerMode = travelerMode;
+      if (currentCity !== undefined) profileData.currentCity = currentCity;
+      if (homeCity !== undefined) profileData.homeCity = homeCity;
+      if (latitude !== undefined) profileData.latitude = latitude;
+      if (longitude !== undefined) profileData.longitude = longitude;
+      if (latitude !== undefined || longitude !== undefined) profileData.lastLocationAt = new Date();
+      
+      const updated = await storage.upsertProfile(req.user!.id, profileData);
+      res.json({ ...updated, displayName });
+    } catch (err) {
+      console.error("[updateProfile] Error saving profile:", err);
+      res.status(500).json({ error: "No se pudo guardar el perfil. Por favor inténtalo de nuevo." });
     }
-    
-    // Update profile data
-    const profileData: any = {};
-    if (bio !== undefined) profileData.bio = bio;
-    if (age !== undefined) profileData.age = age;
-    if (gender !== undefined) profileData.gender = gender;
-    if (preference !== undefined) profileData.preference = preference;
-    if (zodiacSign !== undefined) profileData.zodiacSign = zodiacSign;
-    if (smoking !== undefined) profileData.smoking = smoking;
-    if (drinking !== undefined) profileData.drinking = drinking;
-    if (children !== undefined) profileData.children = children;
-    if (education !== undefined) profileData.education = education;
-    if (occupation !== undefined) profileData.occupation = occupation;
-    if (birthplace !== undefined) profileData.birthplace = birthplace;
-    if (height !== undefined) profileData.height = height;
-    if (religion !== undefined) profileData.religion = religion;
-    if (politics !== undefined) profileData.politics = politics;
-    if (pets !== undefined) profileData.pets = pets;
-    if (exercise !== undefined) profileData.exercise = exercise;
-    if (incognito !== undefined) profileData.incognito = incognito;
-    if (interests !== undefined) profileData.interests = Array.isArray(interests) ? interests : [];
-    if (relationshipType !== undefined) profileData.relationshipType = relationshipType;
-    if (connectionTypes !== undefined) profileData.connectionTypes = connectionTypes;
-    if (travelInterests !== undefined) profileData.travelInterests = travelInterests;
-    if (travelerMode !== undefined) profileData.travelerMode = travelerMode;
-    if (currentCity !== undefined) profileData.currentCity = currentCity;
-    if (homeCity !== undefined) profileData.homeCity = homeCity;
-    if (latitude !== undefined) profileData.latitude = latitude;
-    if (longitude !== undefined) profileData.longitude = longitude;
-    if (latitude !== undefined || longitude !== undefined) profileData.lastLocationAt = new Date();
-    
-    const updated = await storage.upsertProfile(req.user!.id, profileData);
-    res.json({ ...updated, displayName });
   });
 
   // Photos - supports both file upload and URL registration
