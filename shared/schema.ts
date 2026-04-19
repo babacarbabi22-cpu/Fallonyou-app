@@ -293,3 +293,13 @@ export type Event = typeof events.$inferSelect;
 export type InsertEvent = z.infer<typeof insertEventSchema>;
 export type EventParticipant = typeof eventParticipants.$inferSelect;
 export type InsertEventParticipant = z.infer<typeof insertEventParticipantSchema>;
+
+export const referrals = pgTable("referrals", {
+  id: serial("id").primaryKey(),
+  referrerId: varchar("referrer_id").notNull().references(() => users.id),
+  refereeId: varchar("referee_id").notNull().references(() => users.id).unique(),
+  createdAt: timestamp("created_at").defaultNow(),
+  rewardGranted: varchar("reward_granted").default("none"),
+});
+
+export type Referral = typeof referrals.$inferSelect;

@@ -409,6 +409,23 @@ export default function ProfilePage() {
 
           <NotificationToggle />
 
+          <Link href="/ambassadors">
+            <Card className="cursor-pointer hover:bg-muted/50 transition-colors border-amber-500/25 bg-gradient-to-r from-amber-950/20 to-transparent">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-full bg-amber-500/20 flex items-center justify-center flex-shrink-0">
+                    <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-bold text-sm text-amber-500">Programa de Embajadores</p>
+                    <p className="text-xs text-muted-foreground">Invita amigos y gana recompensas Premium</p>
+                  </div>
+                  <Sparkles className="w-4 h-4 text-amber-400 animate-twinkle flex-shrink-0" />
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+
           <Link href="/safety">
             <Card className="cursor-pointer hover:bg-muted/50 transition-colors">
               <CardContent className="p-4">

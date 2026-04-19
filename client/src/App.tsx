@@ -21,6 +21,7 @@ import DeleteAccountPage from "@/pages/DeleteAccountPage";
 import ResetPasswordPage from "@/pages/ResetPasswordPage";
 import EventsPage from "@/pages/EventsPage";
 import EventDetailPage from "@/pages/EventDetailPage";
+import AmbassadorsPage from "@/pages/AmbassadorsPage";
 import { useCurrentUser } from "@/hooks/use-danceme";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
@@ -162,6 +163,9 @@ function Router() {
       </Route>
       <Route path="/event/:id">
         {() => <ProtectedRoute component={EventDetailPage} />}
+      </Route>
+      <Route path="/ambassadors">
+        {() => <ProtectedRoute component={AmbassadorsPage} />}
       </Route>
       <Route path="/reset-password" component={ResetPasswordPage} />
       <Route path="/delete-account" component={DeleteAccountPage} />

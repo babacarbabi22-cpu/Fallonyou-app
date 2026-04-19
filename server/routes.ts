@@ -4,7 +4,7 @@ import type { Server } from "http";
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
 import { db } from "./db";
-import { users, events, eventParticipants, eventComments, eventRatings, matches, preferences } from "@shared/schema";
+import { users, events, eventParticipants, eventComments, eventRatings, matches, preferences, referrals } from "@shared/schema";
 import { eq, and, desc, ilike, gte } from "drizzle-orm";
 import { api } from "@shared/routes";
 import { z } from "zod";
@@ -913,6 +913,79 @@ export async function registerRoutes(
 
   // ========== EVENTS API ==========
   
+  // ── Referral / Ambassador Programme ─────────────────────────────────────
+  function generateReferralCode(): string {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let code = 'FALL-';
+    for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
+    return code;
+  }
+
+  const REFERRAL_TIERS = [
+    { min: 1,  max: 4,   reward: 'likes_bonus',    label: '+10 likes/semana' },
+    { min: 5,  max: 9,   reward: 'premium_1week',  label: '1 semana Premium' },
+    { min: 10, max: 24,  reward: 'premium_1month',  label: '1 mes Premium' },
+    { min: 25, max: 49,  reward: 'premium_3months', label: '3 meses Premium' },
+    { min: 50, max: Infinity, reward: 'ambassador', label: 'Embajador Oficial' },
+  ];
+
+  app.get('/api/referrals/stats', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    try {
+      const [user] = await db.select().from(users).where(eq(users.id, req.user!.id));
+      let code = user.referralCode;
+      if (!code) {
+        // Lazy-generate unique code
+        let attempts = 0;
+        do {
+          code = generateReferralCode();
+          const [existing] = await db.select().from(users).where(eq(users.referralCode, code));
+          if (!existing) break;
+          attempts++;
+        } while (attempts < 10);
+        await db.update(users).set({ referralCode: code }).where(eq(users.id, req.user!.id));
+      }
+
+      const myReferrals = await db.select().from(referrals).where(eq(referrals.referrerId, req.user!.id));
+      const count = myReferrals.length;
+      const currentTier = REFERRAL_TIERS.find(t => count >= t.min && count <= t.max) || null;
+      const nextTier = REFERRAL_TIERS.find(t => t.min > count) || null;
+
+      res.json({ code, count, currentTier, nextTier, tiers: REFERRAL_TIERS, referredBy: user.referredBy || null });
+    } catch (err) {
+      console.error('[referrals/stats]', err);
+      res.status(500).json({ error: 'Error cargando estadísticas' });
+    }
+  });
+
+  app.post('/api/referrals/apply', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    try {
+      const { code } = req.body;
+      if (!code) return res.status(400).json({ error: 'Código requerido' });
+
+      const [me] = await db.select().from(users).where(eq(users.id, req.user!.id));
+      if (me.referredBy) return res.status(400).json({ error: 'Ya usaste un código de referido' });
+
+      const [referrer] = await db.select().from(users).where(eq(users.referralCode, code.toUpperCase()));
+      if (!referrer) return res.status(404).json({ error: 'Código no válido' });
+      if (referrer.id === req.user!.id) return res.status(400).json({ error: 'No puedes usar tu propio código' });
+
+      // Check not already referred
+      const [existing] = await db.select().from(referrals).where(eq(referrals.refereeId, req.user!.id));
+      if (existing) return res.status(400).json({ error: 'Ya usaste un código de referido' });
+
+      await db.update(users).set({ referredBy: code.toUpperCase() }).where(eq(users.id, req.user!.id));
+      await db.insert(referrals).values({ referrerId: referrer.id, refereeId: req.user!.id });
+
+      res.json({ success: true, referrerName: referrer.firstName || 'tu amigo' });
+    } catch (err) {
+      console.error('[referrals/apply]', err);
+      res.status(500).json({ error: 'Error aplicando código' });
+    }
+  });
+  // ─────────────────────────────────────────────────────────────────────────
+
   // Get all events
   function fixImageUrl(url: string | null): string | null {
     if (!url) return null;

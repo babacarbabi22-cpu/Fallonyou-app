@@ -51,6 +51,8 @@ export const users = pgTable("users", {
   verificationRequestedAt: timestamp("verification_requested_at"),
   verificationReviewedAt: timestamp("verification_reviewed_at"),
   verificationRejectedReason: varchar("verification_rejected_reason"),
+  referralCode: varchar("referral_code").unique(),
+  referredBy: varchar("referred_by"),
 });
 
 export type UpsertUser = typeof users.$inferInsert;
