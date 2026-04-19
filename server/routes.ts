@@ -978,6 +978,34 @@ export async function registerRoutes(
       await db.update(users).set({ referredBy: code.toUpperCase() }).where(eq(users.id, req.user!.id));
       await db.insert(referrals).values({ referrerId: referrer.id, refereeId: req.user!.id });
 
+      // Count referrer's total referrals after this one
+      const allReferrals = await db.select().from(referrals).where(eq(referrals.referrerId, referrer.id));
+      const newCount = allReferrals.length;
+      const newTier = REFERRAL_TIERS.find(t => t.min === newCount); // Exact tier unlock
+
+      const refereeName = (req.user as any)?.firstName || 'Alguien';
+
+      // Notify referrer: someone used their code
+      await sendPushNotification(referrer.id, {
+        title: '🎉 ¡Nuevo invitado en FallonYou!',
+        body: `${refereeName} se ha unido usando tu código. Llevas ${newCount} invitado${newCount !== 1 ? 's' : ''}${newTier ? ` — ¡${newTier.label} desbloqueado! 🏆` : ''}`,
+        url: '/ambassadors',
+      });
+
+      // Notify tier milestone (5, 10, 25, 50)
+      if (newTier) {
+        const milestoneMessages: Record<string, { title: string; body: string }> = {
+          premium_1week:  { title: '⭐ ¡1 semana Premium desbloqueada!',    body: `Has conseguido ${newCount} invitados. ¡Tu semana Premium ya está activa!` },
+          premium_1month: { title: '👑 ¡1 mes Premium desbloqueado!',        body: `¡Increíble! ${newCount} invitados. ¡Tu mes Premium ya está activo!` },
+          premium_3months:{ title: '🏆 ¡3 meses Premium desbloqueados!',     body: `¡Eres una estrella! ${newCount} invitados. ¡3 meses Premium para ti!` },
+          ambassador:     { title: '🌟 ¡Embajador Oficial FallonYou!',       body: `¡50+ invitados! Eres Embajador Oficial. El equipo de FallonYou te contactará pronto con beneficios exclusivos.` },
+        };
+        const msg = milestoneMessages[newTier.reward];
+        if (msg) {
+          await sendPushNotification(referrer.id, { ...msg, url: '/ambassadors' });
+        }
+      }
+
       res.json({ success: true, referrerName: referrer.firstName || 'tu amigo' });
     } catch (err) {
       console.error('[referrals/apply]', err);
