@@ -3,6 +3,7 @@ import session from "express-session";
 import connectPg from "connect-pg-simple";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
+import { sendAdminAlert } from "./emailService";
 import { db } from "./db";
 import { users, profiles, photos } from "@shared/schema";
 import { eq } from "drizzle-orm";
@@ -86,6 +87,9 @@ export async function setupAuth(app: Express) {
         firstName: newUser.firstName,
         lastName: newUser.lastName,
       };
+
+      // Notify admin of new registration (fire-and-forget)
+      sendAdminAlert({ type: 'new_user', data: { email: newUser.email || '', firstName: newUser.firstName || '', lastName: newUser.lastName || '' } }).catch(() => {});
 
       req.session.save((err) => {
         if (err) {

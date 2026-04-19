@@ -1,5 +1,6 @@
 import { getStripeSync, getUncachableStripeClient } from './stripeClient';
 import { storage } from './storage';
+import { sendAdminAlert } from './emailService';
 
 export class WebhookHandlers {
   static async processWebhook(payload: Buffer, signature: string): Promise<void> {
@@ -62,19 +63,25 @@ export class WebhookHandlers {
     
     if (result) {
       console.log(`Updated premium status for customer ${customerId}: ${isPremium}`);
+      if (isPremium) {
+        sendAdminAlert({ type: 'new_premium', data: { userEmail: result.email || '', userName: `${result.firstName || ''} ${result.lastName || ''}`.trim() || undefined, customerId } }).catch(() => {});
+      }
     }
   }
 
   static async handleSubscriptionCanceled(subscription: any): Promise<void> {
     const customerId = subscription.customer;
     
-    await storage.updateUserByStripeCustomerId(customerId, {
+    const result = await storage.updateUserByStripeCustomerId(customerId, {
       isPremium: 'false',
       stripeSubscriptionId: null,
       premiumExpiresAt: null,
     });
     
     console.log(`Canceled subscription for customer ${customerId}`);
+    if (result) {
+      sendAdminAlert({ type: 'premium_canceled', data: { userEmail: result.email || '', userName: `${result.firstName || ''} ${result.lastName || ''}`.trim() || undefined, customerId } }).catch(() => {});
+    }
   }
 
   static async handleCheckoutCompleted(session: any): Promise<void> {

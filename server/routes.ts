@@ -16,7 +16,7 @@ import { stripeService } from "./stripeService";
 import { getStripePublishableKey } from "./stripeClient";
 import { saveSubscription, removeSubscription, sendPushNotification, sendPushToAllExcept, getVapidPublicKey } from "./pushService";
 import { sendWeeklyNotifications, sendEventReminders, sendPhotoReminderEmails } from "./weeklyNotifications";
-import { sendReferralEmail } from "./emailService";
+import { sendReferralEmail, sendAdminAlert } from "./emailService";
 
 let paypalModule: any = null;
 async function loadPayPal() {
@@ -673,6 +673,12 @@ export async function registerRoutes(
       reason,
       details
     });
+
+    // Admin alert
+    const [reporter] = await db.select().from(users).where(eq(users.id, req.user!.id));
+    const [reported] = await db.select().from(users).where(eq(users.id, req.params.userId));
+    sendAdminAlert({ type: 'new_report', data: { reporterEmail: reporter?.email || req.user!.id, reportedEmail: reported?.email || req.params.userId, reason, details } }).catch(() => {});
+
     res.json({ success: true, reportId: report.id });
   });
 
@@ -783,6 +789,8 @@ export async function registerRoutes(
   app.post('/api/admin/users/:userId/ban', requireAdmin, async (req, res) => {
     const { userId } = req.params;
     const { reason } = req.body;
+
+    const [targetUser] = await db.select().from(users).where(eq(users.id, userId));
     
     await db.update(users)
       .set({ 
@@ -791,6 +799,9 @@ export async function registerRoutes(
         banReason: reason 
       })
       .where(eq(users.id, userId));
+
+    const [adminUser] = await db.select().from(users).where(eq(users.id, req.user!.id));
+    sendAdminAlert({ type: 'user_banned', data: { userEmail: targetUser?.email || userId, userName: `${targetUser?.firstName || ''} ${targetUser?.lastName || ''}`.trim() || undefined, reason: reason || undefined, adminEmail: adminUser?.email || req.user!.id } }).catch(() => {});
     
     res.json({ success: true });
   });
@@ -798,6 +809,8 @@ export async function registerRoutes(
   // Unban a user (admin only)
   app.post('/api/admin/users/:userId/unban', requireAdmin, async (req, res) => {
     const { userId } = req.params;
+
+    const [targetUser] = await db.select().from(users).where(eq(users.id, userId));
     
     await db.update(users)
       .set({ 
@@ -806,6 +819,9 @@ export async function registerRoutes(
         banReason: null 
       })
       .where(eq(users.id, userId));
+
+    const [adminUser] = await db.select().from(users).where(eq(users.id, req.user!.id));
+    sendAdminAlert({ type: 'user_unbanned', data: { userEmail: targetUser?.email || userId, userName: `${targetUser?.firstName || ''} ${targetUser?.lastName || ''}`.trim() || undefined, adminEmail: adminUser?.email || req.user!.id } }).catch(() => {});
     
     res.json({ success: true });
   });
@@ -1432,6 +1448,9 @@ export async function registerRoutes(
         verificationRejectedReason: null,
       })
       .where(eq(users.id, userId));
+
+    // Admin alert
+    sendAdminAlert({ type: 'new_verification', data: { userEmail: currentUser?.email || userId, userName: `${currentUser?.firstName || ''} ${currentUser?.lastName || ''}`.trim() || undefined } }).catch(() => {});
 
     res.json({ success: true });
   });
