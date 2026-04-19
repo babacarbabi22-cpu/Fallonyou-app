@@ -250,6 +250,121 @@ export async function sendPasswordResetEmail(to: string, firstName: string, rese
   }
 }
 
+export async function sendReferralEmail(
+  to: string,
+  firstName: string,
+  opts: {
+    refereeName: string;
+    newCount: number;
+    tierLabel?: string;
+    isAmbassador?: boolean;
+  }
+): Promise<boolean> {
+  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+    console.warn("[Email] EMAIL_USER or EMAIL_PASS not configured");
+    return false;
+  }
+
+  const name = firstName || "viajero";
+  const { refereeName, newCount, tierLabel, isAmbassador } = opts;
+
+  const subject = isAmbassador
+    ? `🌟 ¡${name}, eres Embajador Oficial de FallonYou!`
+    : tierLabel
+      ? `🏆 ¡${name}, has desbloqueado: ${tierLabel}!`
+      : `🎉 ¡${name}, tienes un nuevo invitado en FallonYou!`;
+
+  const headerEmoji = isAmbassador ? "🌟 🏆 ✈️" : tierLabel ? "🎁 ⭐ 🎉" : "🎉 ✈️ 👥";
+  const headerColor = isAmbassador
+    ? "linear-gradient(135deg,#b8860b,#ffd700,#b8860b)"
+    : "linear-gradient(135deg,#c9a227,#f0c040,#c9a227)";
+
+  const mainHeading = isAmbassador
+    ? "¡Eres Embajador Oficial!"
+    : tierLabel
+      ? `¡${tierLabel} desbloqueado!`
+      : "¡Nuevo invitado!";
+
+  const mainBody = isAmbassador
+    ? `<b>${refereeName}</b> se ha unido usando tu código y has alcanzado los <b>50 invitados</b>. ¡Enhorabuena! Eres Embajador Oficial de FallonYou. Nuestro equipo se pondrá en contacto contigo pronto para darte acceso a tus beneficios exclusivos.`
+    : tierLabel
+      ? `<b>${refereeName}</b> se ha unido usando tu código. Llevas <b>${newCount} invitados</b> y acabas de desbloquear <b>${tierLabel}</b>. ¡Sigue así!`
+      : `<b>${refereeName}</b> acaba de registrarse en FallonYou usando tu enlace personal. Llevas <b>${newCount} invitado${newCount !== 1 ? "s" : ""}</b> en total. ¡Gracias por ayudarnos a crecer!`;
+
+  try {
+    await transporter.sendMail({
+      from: `"FallonYou" <${process.env.EMAIL_USER}>`,
+      to,
+      subject,
+      html: `
+<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/></head>
+<body style="margin:0;padding:0;background:#f9f6f0;font-family:Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9f6f0;padding:32px 0;">
+    <tr><td align="center">
+      <table width="500" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:20px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.08);">
+
+        <tr>
+          <td style="background:${headerColor};padding:36px 32px 28px;text-align:center;">
+            <p style="margin:0;font-size:38px;letter-spacing:6px;">${headerEmoji}</p>
+            <h1 style="margin:12px 0 4px;color:#1a1a1a;font-size:26px;font-weight:900;letter-spacing:-0.5px;">FallonYou</h1>
+            <p style="margin:0;color:#5a4000;font-size:13px;font-weight:700;letter-spacing:1.5px;">CONECTA · VIAJA · VIVE</p>
+          </td>
+        </tr>
+
+        <tr>
+          <td style="padding:36px 36px 20px;">
+            <h2 style="margin:0 0 16px;color:#1a1a1a;font-size:22px;font-weight:800;">${mainHeading}</h2>
+            <p style="margin:0 0 20px;color:#444;font-size:15px;line-height:1.7;">
+              ¡Hola, <b>${name}</b>! 👋<br/><br/>
+              ${mainBody}
+            </p>
+
+            <!-- Counter badge -->
+            <table cellpadding="0" cellspacing="0" style="margin:0 0 24px;">
+              <tr>
+                <td style="background:#1a1a1a;border-radius:12px;padding:16px 28px;text-align:center;">
+                  <p style="margin:0;color:#c9a227;font-size:36px;font-weight:900;">${newCount}</p>
+                  <p style="margin:4px 0 0;color:#aaa;font-size:12px;font-weight:600;letter-spacing:1px;">INVITADO${newCount !== 1 ? "S" : ""} TOTALES</p>
+                </td>
+                ${tierLabel ? `<td style="padding-left:16px;">
+                  <p style="margin:0;background:linear-gradient(135deg,#c9a227,#ffd700);color:#1a1a1a;font-size:13px;font-weight:800;padding:10px 18px;border-radius:20px;white-space:nowrap;">🎁 ${tierLabel}</p>
+                </td>` : ""}
+              </tr>
+            </table>
+
+            <a href="https://fallonyou.app/ambassadors"
+               style="display:inline-block;background:linear-gradient(135deg,#c9a227,#f0c040);color:#1a1a1a;font-weight:800;font-size:14px;padding:14px 28px;border-radius:50px;text-decoration:none;letter-spacing:0.5px;">
+              Ver mi panel de embajador →
+            </a>
+          </td>
+        </tr>
+
+        <tr>
+          <td style="padding:20px 36px 36px;">
+            <hr style="border:none;border-top:1px solid #eee;margin:0 0 20px;"/>
+            <p style="margin:0;color:#aaa;font-size:12px;text-align:center;line-height:1.7;">
+              Recibes este email porque participas en el programa de embajadores de FallonYou.<br/>
+              <a href="https://fallonyou.app" style="color:#c9a227;text-decoration:none;">fallonyou.app</a>
+            </p>
+          </td>
+        </tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`,
+    });
+    console.log(`[Email] Referral notification sent to ${to}`);
+    return true;
+  } catch (err) {
+    console.error(`[Email] Referral email failed for ${to}:`, err);
+    return false;
+  }
+}
+
 export async function verifyEmailConnection(): Promise<boolean> {
   try {
     await transporter.verify();
