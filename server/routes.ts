@@ -16,6 +16,7 @@ import { stripeService } from "./stripeService";
 import { getStripePublishableKey } from "./stripeClient";
 import { saveSubscription, removeSubscription, sendPushNotification, sendPushToAllExcept, getVapidPublicKey } from "./pushService";
 import { sendWeeklyNotifications, sendEventReminders, sendPhotoReminderEmails } from "./weeklyNotifications";
+import { sendReferralEmail } from "./emailService";
 
 let paypalModule: any = null;
 async function loadPayPal() {
@@ -1004,6 +1005,17 @@ export async function registerRoutes(
         if (msg) {
           await sendPushNotification(referrer.id, { ...msg, url: '/ambassadors' });
         }
+      }
+
+      // Send email notification to referrer
+      if (referrer.email) {
+        const isAmbassador = newTier?.reward === 'ambassador';
+        sendReferralEmail(referrer.email, referrer.firstName || '', {
+          refereeName,
+          newCount,
+          tierLabel: newTier?.label,
+          isAmbassador,
+        }).catch((err) => console.error('[referrals] Email send failed:', err));
       }
 
       res.json({ success: true, referrerName: referrer.firstName || 'tu amigo' });
