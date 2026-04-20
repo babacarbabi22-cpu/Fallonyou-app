@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Calendar, Star, MessageCircle, Users, Plane, ArrowRight, X, Bell, Check } from "lucide-react";
 import { usePushNotifications } from "@/hooks/use-push-notifications";
+import { useI18n } from "@/lib/i18n";
 
 interface WelcomeTourProps {
   onComplete: () => void;
@@ -13,6 +14,8 @@ export function WelcomeTour({ onComplete }: WelcomeTourProps) {
   const [notifDone, setNotifDone] = useState(false);
   const [notifLoading, setNotifLoading] = useState(false);
   const { isSupported, isSubscribed, subscribe } = usePushNotifications();
+  const { t } = useI18n();
+  const tour = t.onboarding.tour;
 
   const totalSlides = 6;
 
@@ -39,34 +42,34 @@ export function WelcomeTour({ onComplete }: WelcomeTourProps) {
   const slides = [
     {
       icon: <Plane className="w-16 h-16" />,
-      title: "¡Bienvenido a FallonYou!",
-      description: "Tu compañero de viaje perfecto. Conecta con viajeros, crea actividades y conoce gente nueva estés donde estés.",
+      title: tour.slide1Title,
+      description: tour.slide1Desc,
     },
     {
       icon: <Calendar className="w-16 h-16" />,
-      title: "Crea y únete a actividades",
-      description: "Organiza tours, cenas, fiestas o deportes. Encuentra personas con tus mismos intereses para explorar juntos.",
+      title: tour.slide2Title,
+      description: tour.slide2Desc,
     },
     {
       icon: <Star className="w-16 h-16" />,
-      title: "Descubre personas",
-      description: "Desliza para encontrar compañeros de viaje, amigos locales o conexiones especiales. Tú decides qué tipo de conexión buscas.",
+      title: tour.slide3Title,
+      description: tour.slide3Desc,
     },
     {
       icon: <MessageCircle className="w-16 h-16" />,
-      title: "Conecta y chatea",
-      description: "Cuando haya interés mutuo, podrás chatear y planificar vuestra próxima aventura juntos.",
+      title: tour.slide4Title,
+      description: tour.slide4Desc,
     },
     {
       icon: <Bell className="w-16 h-16" />,
-      title: "Activa las notificaciones",
+      title: tour.slide5Title,
       description: null,
       isNotifSlide: true,
     },
     {
       icon: <Users className="w-16 h-16" />,
-      title: "¡Comienza tu aventura!",
-      description: "Explora actividades, conoce viajeros y vive experiencias únicas. Tu próxima conexión te espera.",
+      title: tour.slide6Title,
+      description: tour.slide6Desc,
     },
   ];
 
@@ -102,7 +105,7 @@ export function WelcomeTour({ onComplete }: WelcomeTourProps) {
               {isNotifSlide ? (
                 <div className="space-y-3">
                   <p className="text-muted-foreground leading-relaxed">
-                    Recibe avisos cuando alguien te escriba, cuando empiece una actividad en tu ciudad o cuando tengas un nuevo match.
+                    {tour.slide5Desc}
                   </p>
 
                   {isSupported && !isSubscribed && !notifDone && (
@@ -114,7 +117,7 @@ export function WelcomeTour({ onComplete }: WelcomeTourProps) {
                         data-testid="button-enable-notifications"
                       >
                         <Bell className="w-4 h-4 mr-2" />
-                        {notifLoading ? "Activando..." : "Activar notificaciones"}
+                        {notifLoading ? tour.slide5Enabling : tour.slide5Enable}
                       </Button>
                       <Button
                         variant="ghost"
@@ -122,7 +125,7 @@ export function WelcomeTour({ onComplete }: WelcomeTourProps) {
                         className="w-full text-muted-foreground"
                         data-testid="button-skip-notifications"
                       >
-                        Ahora no
+                        {tour.slide5Skip}
                       </Button>
                     </div>
                   )}
@@ -130,13 +133,13 @@ export function WelcomeTour({ onComplete }: WelcomeTourProps) {
                   {(isSubscribed || notifDone) && (
                     <div className="flex items-center justify-center gap-2 text-green-600 font-medium pt-2">
                       <Check className="w-5 h-5" />
-                      ¡Notificaciones activadas!
+                      {tour.slide5Done}
                     </div>
                   )}
 
                   {!isSupported && (
                     <p className="text-sm text-muted-foreground">
-                      Tu navegador no soporta notificaciones. Puedes activarlas más tarde desde tu perfil.
+                      {tour.slide5Unsupported}
                     </p>
                   )}
                 </div>
@@ -172,14 +175,14 @@ export function WelcomeTour({ onComplete }: WelcomeTourProps) {
                       className="flex-1"
                       data-testid="button-skip"
                     >
-                      Saltar
+                      {t.onboarding.skip}
                     </Button>
                     <Button
                       onClick={handleNext}
                       className="flex-1 bg-amber-500 hover:bg-amber-600"
                       data-testid="button-next"
                     >
-                      Siguiente
+                      {t.onboarding.next}
                       <ArrowRight className="w-4 h-4 ml-2" />
                     </Button>
                   </>
@@ -189,7 +192,7 @@ export function WelcomeTour({ onComplete }: WelcomeTourProps) {
                     className="w-full bg-amber-500 hover:bg-amber-600"
                     data-testid="button-start"
                   >
-                    ¡Comenzar!
+                    {t.onboarding.start}
                     <ArrowRight className="w-4 h-4 ml-2" />
                   </Button>
                 )}

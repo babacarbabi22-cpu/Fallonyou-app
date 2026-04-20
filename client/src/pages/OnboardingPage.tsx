@@ -15,26 +15,44 @@ import { usePushNotifications } from "@/hooks/use-push-notifications";
 
 type OnboardingStep = "journey" | "profile" | "preferences" | "verification" | "notifications" | "complete";
 
-const connectionTypeOptions = [
-  { id: "friends", label: "Amigo/a", labelEn: "Friend", icon: Users, description: "Conocer gente nueva" },
-  { id: "travel_buddy", label: "Compañero de viaje", labelEn: "Travel Buddy", icon: Plane, description: "Explorar juntos" },
-  { id: "something_more", label: "Algo más", labelEn: "Something More", icon: Heart, description: "Conexión especial" },
+const CONNECTION_TYPE_IDS = [
+  { id: "friends", icon: Users },
+  { id: "travel_buddy", icon: Plane },
+  { id: "something_more", icon: Heart },
 ];
 
-const activityOptions = [
-  { id: "explore_city", label: "Explorar la ciudad", labelEn: "Explore the city", icon: "🏛️" },
-  { id: "food_drinks", label: "Comer y beber", labelEn: "Food & drinks", icon: "🍽️" },
-  { id: "nightlife", label: "Vida nocturna", labelEn: "Nightlife", icon: "🎉" },
-  { id: "outdoor", label: "Actividades al aire libre", labelEn: "Outdoor activities", icon: "🏔️" },
-  { id: "beach", label: "Playa y relax", labelEn: "Beach & relax", icon: "🏖️" },
-  { id: "culture", label: "Cultura y museos", labelEn: "Culture & museums", icon: "🎨" },
-  { id: "sports", label: "Deportes", labelEn: "Sports", icon: "⚽" },
-  { id: "shopping", label: "Compras", labelEn: "Shopping", icon: "🛍️" },
+const ACTIVITY_IDS = [
+  { id: "explore_city", icon: "🏛️" },
+  { id: "food_drinks", icon: "🍽️" },
+  { id: "nightlife", icon: "🎉" },
+  { id: "outdoor", icon: "🏔️" },
+  { id: "beach", icon: "🏖️" },
+  { id: "culture", icon: "🎨" },
+  { id: "sports", icon: "⚽" },
+  { id: "shopping", icon: "🛍️" },
 ];
 
 
 export default function OnboardingPage() {
   const t = useTranslation();
+  const jt = t.onboarding.journey;
+
+  const connectionTypeOptions = [
+    { id: "friends",       label: jt.connectionFriend, icon: Users, description: jt.connectionFriendDesc },
+    { id: "travel_buddy",  label: jt.connectionTravel, icon: Plane, description: jt.connectionTravelDesc },
+    { id: "something_more",label: jt.connectionMore,   icon: Heart, description: jt.connectionMoreDesc },
+  ];
+
+  const activityOptions = [
+    { id: "explore_city", label: jt.activityCity,     icon: "🏛️" },
+    { id: "food_drinks",  label: jt.activityFood,     icon: "🍽️" },
+    { id: "nightlife",    label: jt.activityNight,    icon: "🎉" },
+    { id: "outdoor",      label: jt.activityOutdoor,  icon: "🏔️" },
+    { id: "beach",        label: jt.activityBeach,    icon: "🏖️" },
+    { id: "culture",      label: jt.activityCulture,  icon: "🎨" },
+    { id: "sports",       label: jt.activitySports,   icon: "⚽" },
+    { id: "shopping",     label: jt.activityShopping, icon: "🛍️" },
+  ];
   const [, setLocation] = useLocation();
   const { data: user } = useCurrentUser();
   const { mutate: updateProfile, isPending } = useUpdateProfile();
@@ -226,12 +244,12 @@ export default function OnboardingPage() {
                   <div className="w-16 h-16 rounded-full bg-amber-500/10 flex items-center justify-center mx-auto mb-4">
                     <Plane className="w-8 h-8 text-amber-500 -rotate-45" />
                   </div>
-                  <h2 className="text-2xl font-bold mb-2">¡Bienvenido a FallonYou!</h2>
-                  <p className="text-muted-foreground">Cuéntanos sobre tu aventura</p>
+                  <h2 className="text-2xl font-bold mb-2">{jt.title}</h2>
+                  <p className="text-muted-foreground">{jt.subtitle}</p>
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium mb-3 block">¿Qué tipo de conexión buscas?</label>
+                  <label className="text-sm font-medium mb-3 block">{jt.connectionLabel}</label>
                   <div className="grid grid-cols-1 gap-2">
                     {connectionTypeOptions.map((option) => {
                       const Icon = option.icon;
@@ -258,7 +276,7 @@ export default function OnboardingPage() {
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium mb-3 block">¿Qué actividad te gustaría realizar?</label>
+                  <label className="text-sm font-medium mb-3 block">{jt.activityLabel}</label>
                   <div className="grid grid-cols-2 gap-2">
                     {activityOptions.map((activity) => {
                       const isSelected = selectedActivities.includes(activity.id);
@@ -280,20 +298,20 @@ export default function OnboardingPage() {
 
                 <div className="space-y-4">
                   <div>
-                    <label className="text-sm font-medium mb-2 block">¿Dónde estás ahora?</label>
+                    <label className="text-sm font-medium mb-2 block">{jt.currentCity}</label>
                     <Input
                       value={currentCity}
                       onChange={(e) => setCurrentCity(e.target.value)}
-                      placeholder="Ej: Barcelona, España"
+                      placeholder={jt.currentCityPlaceholder}
                       data-testid="input-current-city"
                     />
                   </div>
                   <div>
-                    <label className="text-sm font-medium mb-2 block">¿A dónde vas? (opcional)</label>
+                    <label className="text-sm font-medium mb-2 block">{jt.destination}</label>
                     <Input
                       value={destination}
                       onChange={(e) => setDestination(e.target.value)}
-                      placeholder="Ej: París, Francia"
+                      placeholder={jt.destinationPlaceholder}
                       data-testid="input-destination"
                     />
                   </div>
@@ -305,7 +323,7 @@ export default function OnboardingPage() {
                   className="w-full bg-amber-500 hover:bg-amber-600"
                   data-testid="button-next-journey"
                 >
-                  Continuar
+                  {jt.continue}
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               </CardContent>
@@ -347,8 +365,8 @@ export default function OnboardingPage() {
                     data-testid="input-photo-upload"
                   />
                   <div className="flex items-center gap-1">
-                    <span className="text-xs font-semibold text-amber-600">* Obligatoria</span>
-                    <span className="text-xs text-muted-foreground">— Sin foto no podrás continuar</span>
+                    <span className="text-xs font-semibold text-amber-600">{t.onboarding.photoRequired}</span>
+                    <span className="text-xs text-muted-foreground">{t.onboarding.photoRequiredHint}</span>
                   </div>
                 </div>
 
@@ -404,7 +422,7 @@ export default function OnboardingPage() {
 
                 {!photoPreview && (
                   <p className="text-center text-sm text-amber-600 font-medium">
-                    📸 Añade una foto para continuar
+                    {t.onboarding.addPhotoToContinue}
                   </p>
                 )}
                 <Button
@@ -413,7 +431,7 @@ export default function OnboardingPage() {
                   className="w-full"
                   data-testid="button-next-step"
                 >
-                  {isUploading ? "Subiendo foto..." : t.onboarding.next}
+                  {isUploading ? t.onboarding.uploadingPhoto : t.onboarding.next}
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               </CardContent>
@@ -529,18 +547,18 @@ export default function OnboardingPage() {
                   <div className="w-20 h-20 rounded-full bg-amber-500/10 flex items-center justify-center mx-auto mb-4">
                     <Bell className="w-10 h-10 text-amber-500" />
                   </div>
-                  <h2 className="text-2xl font-bold mb-2">¿Activar notificaciones?</h2>
+                  <h2 className="text-2xl font-bold mb-2">{t.onboarding.notifStep.title}</h2>
                   <p className="text-muted-foreground text-sm leading-relaxed">
-                    Recibe avisos cuando alguien se una a tu actividad, te deje un comentario o tengas nuevas conexiones.
+                    {t.onboarding.notifStep.desc}
                   </p>
                 </div>
 
                 <div className="space-y-2">
                   {[
-                    "🎉 Alguien se une a tu actividad",
-                    "💬 Nuevo comentario en tu actividad",
-                    "❤️ Nuevas conexiones y matches",
-                    "📅 Recordatorio 24h antes de un plan",
+                    t.onboarding.notifStep.bullet1,
+                    t.onboarding.notifStep.bullet2,
+                    t.onboarding.notifStep.bullet3,
+                    t.onboarding.notifStep.bullet4,
                   ].map((item) => (
                     <div key={item} className="flex items-center gap-3 bg-muted/40 rounded-xl px-4 py-2.5 text-sm">
                       <span>{item}</span>
@@ -558,11 +576,11 @@ export default function OnboardingPage() {
                       data-testid="button-enable-notifications"
                     >
                       {notifLoading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Bell className="w-4 h-4 mr-2" />}
-                      Activar notificaciones
+                      {notifLoading ? t.onboarding.notifStep.enabling : t.onboarding.notifStep.enable}
                     </Button>
                   ) : (
                     <p className="text-xs text-center text-muted-foreground">
-                      Las notificaciones push no están disponibles en este dispositivo.
+                      {t.onboarding.notifStep.unsupported}
                     </p>
                   )}
                   <Button
@@ -572,7 +590,7 @@ export default function OnboardingPage() {
                     data-testid="button-skip-notifications"
                   >
                     <BellOff className="w-4 h-4 mr-2" />
-                    Ahora no
+                    {t.onboarding.notifStep.skip}
                   </Button>
                 </div>
               </CardContent>
@@ -587,9 +605,9 @@ export default function OnboardingPage() {
                   <div className="w-20 h-20 rounded-full bg-amber-500/10 flex items-center justify-center mx-auto mb-4">
                     <Sparkles className="w-10 h-10 text-amber-500" />
                   </div>
-                  <h2 className="text-2xl font-bold mb-2">¡Ya estás dentro!</h2>
+                  <h2 className="text-2xl font-bold mb-2">{t.onboarding.completeStep.title}</h2>
                   <p className="text-muted-foreground text-sm">
-                    Para que otros usuarios te vean y puedas conectar al máximo, completa estos pasos:
+                    {t.onboarding.completeStep.desc}
                   </p>
                 </div>
 
@@ -598,23 +616,23 @@ export default function OnboardingPage() {
                   {[
                     {
                       icon: "📸",
-                      title: "Añade 3 fotos o más",
-                      desc: "Con 3+ fotos tu perfil queda verificado y aparece antes en los resultados. ¡La primera impresión importa!",
-                      badge: "Necesario para verificación",
+                      title: t.onboarding.completeStep.step1Title,
+                      desc: t.onboarding.completeStep.step1Desc,
+                      badge: t.onboarding.completeStep.step1Badge,
                       badgeColor: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
                     },
                     {
                       icon: "✍️",
-                      title: "Escribe tu bio",
-                      desc: "Cuéntale a los demás quién eres y qué buscas. Unos pocos detalles marcan la diferencia.",
-                      badge: "Recomendado",
+                      title: t.onboarding.completeStep.step2Title,
+                      desc: t.onboarding.completeStep.step2Desc,
+                      badge: t.onboarding.completeStep.step2Badge,
                       badgeColor: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300",
                     },
                     {
                       icon: "🎉",
-                      title: "Crea o únete a una actividad",
-                      desc: "Organiza un plan — cena, viaje, deporte — o únete al de alguien. Así es como se hacen amigos aquí.",
-                      badge: "Divertido",
+                      title: t.onboarding.completeStep.step3Title,
+                      desc: t.onboarding.completeStep.step3Desc,
+                      badge: t.onboarding.completeStep.step3Badge,
                       badgeColor: "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300",
                     },
                   ].map((item, i) => (
@@ -636,19 +654,19 @@ export default function OnboardingPage() {
                 {/* Verification info */}
                 <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-xl p-3 text-sm text-center">
                   <Shield className="w-5 h-5 text-amber-500 mx-auto mb-1" />
-                  <p className="font-semibold text-amber-800 dark:text-amber-300">¿Cómo funciona la verificación?</p>
+                  <p className="font-semibold text-amber-800 dark:text-amber-300">{t.onboarding.completeStep.verifyTitle}</p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Sube 3 o más fotos tuyas → tu perfil se marca como verificado → los demás confían más en ti y apareces más visible.
+                    {t.onboarding.completeStep.verifyDesc}
                   </p>
                 </div>
 
                 <div className="space-y-2">
                   <Button onClick={handleComplete} className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold" size="lg" data-testid="button-finish-onboarding">
-                    Ir a completar mi perfil
+                    {t.onboarding.completeStep.button}
                     <ArrowRight className="w-4 h-4 ml-2" />
                   </Button>
                   <Button variant="ghost" onClick={() => setLocation("/")} className="w-full text-muted-foreground text-sm" data-testid="button-skip-complete">
-                    Lo haré más tarde
+                    {t.onboarding.completeStep.later}
                   </Button>
                 </div>
               </CardContent>
