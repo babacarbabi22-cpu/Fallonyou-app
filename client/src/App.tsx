@@ -22,6 +22,7 @@ import ResetPasswordPage from "@/pages/ResetPasswordPage";
 import EventsPage from "@/pages/EventsPage";
 import EventDetailPage from "@/pages/EventDetailPage";
 import AmbassadorsPage from "@/pages/AmbassadorsPage";
+import HowItWorksPage from "@/pages/HowItWorksPage";
 import { useCurrentUser } from "@/hooks/use-danceme";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
@@ -166,6 +167,9 @@ function Router() {
       </Route>
       <Route path="/ambassadors">
         {() => <ProtectedRoute component={AmbassadorsPage} />}
+      </Route>
+      <Route path="/how-it-works">
+        {() => <ProtectedRoute component={HowItWorksPage} />}
       </Route>
       <Route path="/reset-password" component={ResetPasswordPage} />
       <Route path="/delete-account" component={DeleteAccountPage} />

@@ -6,7 +6,7 @@ import { useUpload } from "@/hooks/use-upload";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Camera, LogOut, Shield, User, Star, Plane, MapPin, Heart, Trash2, FileText, Mail, Briefcase, Eye, Sparkles } from "lucide-react";
+import { Loader2, Camera, LogOut, Shield, User, Star, Plane, MapPin, Heart, Trash2, FileText, Mail, Briefcase, Eye, Sparkles, Lightbulb, ChevronRight } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { api } from "@shared/routes";
 import { useToast } from "@/hooks/use-toast";
@@ -421,6 +421,23 @@ export default function ProfilePage() {
                     <p className="text-xs text-muted-foreground">Invita amigos y gana recompensas Premium</p>
                   </div>
                   <Sparkles className="w-4 h-4 text-amber-400 animate-twinkle flex-shrink-0" />
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+
+          <Link href="/how-it-works">
+            <Card className="cursor-pointer hover:bg-muted/50 transition-colors border-blue-500/20 bg-gradient-to-r from-blue-950/10 to-transparent">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-full bg-blue-500/15 flex items-center justify-center flex-shrink-0">
+                    <Lightbulb className="w-4 h-4 text-blue-500" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-bold text-sm">{t.howItWorks?.title || "Cómo funciona"}</p>
+                    <p className="text-xs text-muted-foreground">{t.howItWorks?.heroDesc || "Guía completa para sacar el máximo partido"}</p>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                 </div>
               </CardContent>
             </Card>
