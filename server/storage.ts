@@ -8,7 +8,7 @@ import {
   type PromptResponse, type SuperLike, type Preferences, type InsertPreferences,
   type Report, type InsertReport
 } from "@shared/schema";
-import { eq, or, and, ne, sql, desc, gte, isNotNull } from "drizzle-orm";
+import { eq, or, and, ne, sql, desc, gte, isNotNull, inArray } from "drizzle-orm";
 
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
@@ -143,7 +143,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUsersWhoLikedMe(userId: string): Promise<User[]> {
-    const pendingMatches = await db.select()
+    const pendingMatches = await db.select({ user1Id: matches.user1Id })
       .from(matches)
       .where(and(
         eq(matches.user2Id, userId),
@@ -153,10 +153,7 @@ export class DatabaseStorage implements IStorage {
     const userIds = pendingMatches.map(m => m.user1Id);
     if (userIds.length === 0) return [];
     
-    const likedByUsers = await Promise.all(
-      userIds.map(id => this.getUser(id))
-    );
-    return likedByUsers.filter(Boolean) as User[];
+    return db.select().from(users).where(inArray(users.id, userIds));
   }
 
   async canUserLike(userId: string): Promise<{ canLike: boolean; remainingLikes: number; isPremium: boolean }> {

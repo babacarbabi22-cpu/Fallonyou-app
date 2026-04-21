@@ -4,8 +4,8 @@ import type { Server } from "http";
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
 import { db } from "./db";
-import { users, events, eventParticipants, eventComments, eventRatings, matches, preferences, referrals } from "@shared/schema";
-import { eq, and, desc, ilike, gte } from "drizzle-orm";
+import { users, profiles, photos, events, eventParticipants, eventComments, eventRatings, matches, preferences, referrals } from "@shared/schema";
+import { eq, and, desc, ilike, gte, inArray, or } from "drizzle-orm";
 import { api } from "@shared/routes";
 import { z } from "zod";
 import multer from "multer";
@@ -52,38 +52,51 @@ export async function registerRoutes(
     res.json({ success: true });
   });
 
+  // Batch helper: enrich user list with profiles + photos (3 queries instead of 1+2N)
+  async function enrichUsers(userList: { id: string; [key: string]: any }[]) {
+    if (userList.length === 0) return [];
+    const ids = userList.map(u => u.id);
+    const [allProfiles, allPhotos] = await Promise.all([
+      db.select().from(profiles).where(inArray(profiles.userId, ids)),
+      db.select().from(photos).where(inArray(photos.userId, ids)),
+    ]);
+    const profileMap = new Map(allProfiles.map(p => [p.userId, p]));
+    const photosMap = new Map<string, typeof allPhotos>();
+    for (const p of allPhotos) {
+      if (!photosMap.has(p.userId)) photosMap.set(p.userId, []);
+      photosMap.get(p.userId)!.push(p);
+    }
+    return userList.map(u => ({
+      ...u,
+      profile: profileMap.get(u.id) ?? null,
+      photos: photosMap.get(u.id) ?? [],
+    }));
+  }
+
   // Users
   app.get(api.users.list.path, async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     const currentUserId = req.user!.id;
 
-    // Get current user's discovery preferences
-    const [userPrefs] = await db.select().from(preferences).where(eq(preferences.userId, currentUserId));
+    // Fetch preferences + already swiped in parallel
+    const [[userPrefs], alreadySwiped, allUsers] = await Promise.all([
+      db.select().from(preferences).where(eq(preferences.userId, currentUserId)),
+      db.select({ id: matches.user2Id }).from(matches).where(eq(matches.user1Id, currentUserId)),
+      storage.getPotentialMatches(currentUserId),
+    ]);
+
     const showMe = userPrefs?.showMe ?? 'everyone';
+    const swipedSet = new Set(alreadySwiped.map(r => r.id));
 
-    // Get IDs of users already swiped (user1Id = current user)
-    const alreadySwiped = await db.select({ id: matches.user2Id }).from(matches).where(eq(matches.user1Id, currentUserId));
-    const swipedIds = alreadySwiped.map(r => r.id);
+    // Batch-enrich all users (3 queries instead of 1+2N)
+    const enriched = await enrichUsers(allUsers);
 
-    // Get all potential matches (excludes self + users with no photos)
-    const allUsers = await storage.getPotentialMatches(currentUserId);
-
-    // Enrich with profile and photos
-    const enriched = await Promise.all(allUsers.map(async u => {
-      const profile = await storage.getProfile(u.id);
-      const photos = await storage.getPhotos(u.id);
-      return { ...u, profile: profile || null, photos };
-    }));
-
-    // Apply gender filter based on showMe preference
+    // Filter by swiped + gender preference
     const filtered = enriched.filter(u => {
-      // Skip already swiped users
-      if (swipedIds.includes(u.id)) return false;
-
-      // Apply gender filter
+      if (swipedSet.has(u.id)) return false;
       if (showMe === 'men') return u.profile?.gender === 'male';
       if (showMe === 'women') return u.profile?.gender === 'female';
-      return true; // 'everyone'
+      return true;
     });
 
     res.json(filtered);
@@ -238,19 +251,42 @@ export async function registerRoutes(
 
   app.get(api.matches.list.path, async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
-    const matches = await storage.getMatches(req.user!.id);
-    
-    const enriched = await Promise.all(matches.map(async m => {
-      const otherId = m.user1Id === req.user!.id ? m.user2Id : m.user1Id;
-      const otherUser = await storage.getUser(otherId);
-      const profile = await storage.getProfile(otherId);
-      const photos = await storage.getPhotos(otherId);
-      return { 
-        ...m, 
-        otherUser: { ...safeUser(otherUser!), profile: profile || null, photos } 
+    const currentUserId = req.user!.id;
+    const matchList = await storage.getMatches(currentUserId);
+
+    if (matchList.length === 0) return res.json([]);
+
+    // Collect the other user IDs, then batch-fetch in 3 queries
+    const otherIds = matchList.map(m => m.user1Id === currentUserId ? m.user2Id : m.user1Id);
+    const uniqueOtherIds = [...new Set(otherIds)];
+
+    const [otherUsers, otherProfiles, otherPhotos] = await Promise.all([
+      db.select().from(users).where(inArray(users.id, uniqueOtherIds)),
+      db.select().from(profiles).where(inArray(profiles.userId, uniqueOtherIds)),
+      db.select().from(photos).where(inArray(photos.userId, uniqueOtherIds)),
+    ]);
+
+    const userMap = new Map(otherUsers.map(u => [u.id, u]));
+    const profileMap = new Map(otherProfiles.map(p => [p.userId, p]));
+    const photosMap = new Map<string, typeof otherPhotos>();
+    for (const p of otherPhotos) {
+      if (!photosMap.has(p.userId)) photosMap.set(p.userId, []);
+      photosMap.get(p.userId)!.push(p);
+    }
+
+    const enriched = matchList.map(m => {
+      const otherId = m.user1Id === currentUserId ? m.user2Id : m.user1Id;
+      const otherUser = userMap.get(otherId);
+      return {
+        ...m,
+        otherUser: {
+          ...safeUser(otherUser!),
+          profile: profileMap.get(otherId) ?? null,
+          photos: photosMap.get(otherId) ?? [],
+        },
       };
-    }));
-    
+    });
+
     res.json(enriched);
   });
 
@@ -426,11 +462,7 @@ export async function registerRoutes(
     }
     
     const likers = await storage.getUsersWhoLikedMe(req.user!.id);
-    const enriched = await Promise.all(likers.map(async u => {
-      const profile = await storage.getProfile(u.id);
-      const photos = await storage.getPhotos(u.id);
-      return { ...u, profile, photos };
-    }));
+    const enriched = await enrichUsers(likers);
     
     res.json({ 
       count: likers.length, 
