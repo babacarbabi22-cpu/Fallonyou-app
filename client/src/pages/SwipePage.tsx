@@ -105,7 +105,7 @@ export default function SwipePage() {
     onError: () => {
       toast({
         title: "No super likes left",
-        description: "Get Premium for more super likes!",
+        description: "You've used all your super likes for today.",
         variant: "destructive",
       });
     }
@@ -264,33 +264,6 @@ export default function SwipePage() {
         </div>
       </div>
 
-      {/* Who Liked You Banner */}
-      {(likesReceived as any)?.count > 0 && (
-        <div className="px-4 mb-3">
-          <div className="bg-gradient-to-r from-amber-500 to-yellow-500 rounded-xl p-3 shadow-lg relative overflow-hidden">
-            {/* Decorative small stars */}
-            <Star className="absolute top-1 right-12 w-3 h-3 text-white/30 fill-white/30" />
-            <Star className="absolute top-3 right-20 w-2 h-2 text-white/20 fill-white/20" />
-            <Star className="absolute bottom-2 right-16 w-2.5 h-2.5 text-white/25 fill-white/25" />
-            <Star className="absolute top-2 left-2 w-2 h-2 text-white/20 fill-white/20" />
-            <Star className="absolute bottom-1 left-16 w-3 h-3 text-white/25 fill-white/25" />
-            <div className="flex items-center justify-between relative z-10">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
-                  <Star className="w-5 h-5 text-white fill-white" />
-                </div>
-                <div>
-                  <p className="text-white font-bold">
-                    {(likesReceived as any).count} {(likesReceived as any).count === 1 ? 'person likes you!' : 'people like you!'}
-                  </p>
-                  <p className="text-white/80 text-sm">Swipe right to match</p>
-                </div>
-              </div>
-              <Sparkles className="w-6 h-6 text-white animate-pulse" />
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Card Stack */}
       <div className="relative w-full max-w-md mx-auto h-[65vh] px-4 mt-2">
@@ -373,12 +346,6 @@ export default function SwipePage() {
         </div>
       )}
 
-      {/* Super Like Counter */}
-      {(superLikeStatus as any)?.remaining !== undefined && (
-        <p className="text-center text-sm text-muted-foreground mt-2">
-          {(superLikeStatus as any).remaining} Super Likes remaining today
-        </p>
-      )}
 
       {/* Match Overlay Animation with Heart Cascade */}
       <MatchHeartCascade isActive={matchAnimation} duration={3000} />
