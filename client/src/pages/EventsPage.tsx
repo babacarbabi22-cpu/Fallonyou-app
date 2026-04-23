@@ -457,10 +457,19 @@ export default function EventsPage() {
     },
   });
 
+  // Convert a local datetime string ("YYYY-MM-DDTHH:mm") to a proper UTC ISO string
+  // so the server stores the correct UTC value regardless of timezone offset.
+  const localToUtcIso = (localStr: string) => {
+    if (!localStr) return localStr;
+    const d = new Date(localStr); // browser treats as local time
+    return isNaN(d.getTime()) ? localStr : d.toISOString();
+  };
+
   const createEventMutation = useMutation({
     mutationFn: async (eventData: EventFormData) => {
       const res = await apiRequest("POST", "/api/events", {
         ...eventData,
+        startsAt: localToUtcIso(eventData.startsAt),
         capacity: eventData.capacity ? parseInt(eventData.capacity) : null,
         imageUrl: eventData.imageUrl || null,
       });
@@ -477,6 +486,7 @@ export default function EventsPage() {
     mutationFn: async ({ id, data }: { id: number; data: EventFormData }) => {
       const res = await apiRequest("PATCH", `/api/events/${id}`, {
         ...data,
+        startsAt: localToUtcIso(data.startsAt),
         capacity: data.capacity ? parseInt(data.capacity) : null,
         imageUrl: data.imageUrl || null,
       });
