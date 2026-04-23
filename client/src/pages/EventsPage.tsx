@@ -343,12 +343,30 @@ function EventForm({
       </div>
       <div>
         <label className="text-sm font-medium">When</label>
-        <Input
-          type="datetime-local"
-          value={formData.startsAt}
-          onChange={(e) => setFormData({ ...formData, startsAt: e.target.value })}
-          data-testid="input-event-date"
-        />
+        <div className="flex gap-2">
+          <Input
+            type="date"
+            value={formData.startsAt ? formData.startsAt.split("T")[0] : ""}
+            onChange={(e) => {
+              const date = e.target.value;
+              const time = formData.startsAt ? formData.startsAt.split("T")[1] : "12:00";
+              setFormData({ ...formData, startsAt: date && time ? `${date}T${time}` : date ? `${date}T12:00` : "" });
+            }}
+            className="flex-1"
+            data-testid="input-event-date"
+          />
+          <Input
+            type="time"
+            value={formData.startsAt ? formData.startsAt.split("T")[1] ?? "" : ""}
+            onChange={(e) => {
+              const time = e.target.value;
+              const date = formData.startsAt ? formData.startsAt.split("T")[0] : "";
+              setFormData({ ...formData, startsAt: date && time ? `${date}T${time}` : "" });
+            }}
+            className="w-32"
+            data-testid="input-event-time"
+          />
+        </div>
       </div>
       <div>
         <label className="text-sm font-medium">Max participants (optional)</label>
