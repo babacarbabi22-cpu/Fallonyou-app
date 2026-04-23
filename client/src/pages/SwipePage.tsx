@@ -264,6 +264,31 @@ export default function SwipePage() {
         </div>
       </div>
 
+      {/* Who Liked You Banner — informational only, no payment */}
+      {(likesReceived as any)?.count > 0 && (
+        <div className="px-4 mb-3">
+          <div className="bg-gradient-to-r from-amber-500 to-yellow-500 rounded-xl p-3 shadow-lg relative overflow-hidden">
+            <Star className="absolute top-1 right-12 w-3 h-3 text-white/30 fill-white/30" />
+            <Star className="absolute top-3 right-20 w-2 h-2 text-white/20 fill-white/20" />
+            <Star className="absolute bottom-2 right-16 w-2.5 h-2.5 text-white/25 fill-white/25" />
+            <Star className="absolute top-2 left-2 w-2 h-2 text-white/20 fill-white/20" />
+            <Star className="absolute bottom-1 left-16 w-3 h-3 text-white/25 fill-white/25" />
+            <div className="flex items-center gap-3 relative z-10">
+              <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center shrink-0">
+                <Star className="w-5 h-5 text-white fill-white" />
+              </div>
+              <div>
+                <p className="text-white font-bold text-sm">
+                  {(likesReceived as any).count === 1
+                    ? '¡1 persona está interesada en ti!'
+                    : `¡${(likesReceived as any).count} personas están interesadas en ti!`}
+                </p>
+                <p className="text-white/80 text-xs">Sigue deslizando para hacer match</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Card Stack */}
       <div className="relative w-full max-w-md mx-auto h-[65vh] px-4 mt-2">
