@@ -548,6 +548,19 @@ export default function ProfilePage() {
             </Link>
           )}
         </section>
+
+        {/* Hidden delete account — visible only if you scroll to the very bottom */}
+        <div className="pt-4 pb-2 flex justify-center">
+          <Link href="/delete-account">
+            <button
+              className="text-[11px] text-muted-foreground/40 hover:text-destructive/70 transition-colors flex items-center gap-1 py-2 px-3"
+              data-testid="button-delete-account-hidden"
+            >
+              <Trash2 className="w-3 h-3" />
+              Eliminar mi cuenta
+            </button>
+          </Link>
+        </div>
       </div>
 
       <BottomNav />
