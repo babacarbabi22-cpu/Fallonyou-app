@@ -494,6 +494,82 @@ export async function sendReferralEmail(
   }
 }
 
+export async function sendIncompleteOnboardingEmail(to: string, firstName: string): Promise<boolean> {
+  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) return false;
+
+  const name = firstName || 'viajero';
+  const appUrl = process.env.APP_URL || 'https://fallonyou.replit.app';
+
+  try {
+    await transporter.sendMail({
+      from: `"FallonYou" <${process.env.EMAIL_USER}>`,
+      to,
+      subject: `${name}, tu perfil en FallonYou te está esperando ✈️`,
+      html: `
+<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /></head>
+<body style="margin:0;padding:0;background:#f9f6f0;font-family:Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9f6f0;padding:32px 0;">
+    <tr><td align="center">
+      <table width="500" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:20px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.08);">
+        <tr>
+          <td style="background:linear-gradient(135deg,#1a1a1a 0%,#2d2d2d 100%);padding:32px;text-align:center;">
+            <p style="color:#f59e0b;font-size:13px;letter-spacing:3px;text-transform:uppercase;margin:0 0 8px;">FallonYou</p>
+            <h1 style="color:#fde68a;font-size:26px;margin:0;font-style:italic;">¡Hola, ${name}! 👋</h1>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:32px;">
+            <p style="color:#374151;font-size:16px;line-height:1.6;margin:0 0 20px;">
+              Te registraste en FallonYou pero tu perfil todavía está incompleto.
+              <strong>Hay personas buscando conectar ahora mismo</strong> — y con un perfil completo
+              tus posibilidades se multiplican.
+            </p>
+
+            <div style="background:#fef3c7;border-left:4px solid #f59e0b;border-radius:8px;padding:16px;margin:0 0 24px;">
+              <p style="color:#92400e;font-size:14px;margin:0;font-weight:600;">
+                ⏱️ Solo tardas 2 minutos en completarlo
+              </p>
+            </div>
+
+            <p style="color:#6b7280;font-size:14px;margin:0 0 8px;font-weight:600;">¿Qué te falta?</p>
+            <table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 28px;">
+              <tr><td style="padding:6px 0;color:#374151;font-size:14px;">📸 &nbsp;Añadir tu foto de perfil</td></tr>
+              <tr><td style="padding:6px 0;color:#374151;font-size:14px;">✍️ &nbsp;Escribir una bio corta</td></tr>
+              <tr><td style="padding:6px 0;color:#374151;font-size:14px;">🎯 &nbsp;Elegir tus intereses</td></tr>
+            </table>
+
+            <div style="text-align:center;">
+              <a href="${appUrl}/onboarding" style="display:inline-block;background:linear-gradient(135deg,#f59e0b,#d97706);color:#ffffff;text-decoration:none;padding:14px 36px;border-radius:12px;font-weight:700;font-size:15px;letter-spacing:0.5px;">
+                Completar mi perfil →
+              </a>
+            </div>
+
+            <p style="color:#9ca3af;font-size:12px;text-align:center;margin:28px 0 0;">
+              Si no quieres recibir estos emails, simplemente ignóralo.
+            </p>
+          </td>
+        </tr>
+        <tr>
+          <td style="background:#f9f6f0;padding:16px;text-align:center;">
+            <p style="color:#9ca3af;font-size:11px;margin:0;">© 2025 FallonYou · Connecting people worldwide</p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`,
+    });
+    console.log(`[Email] Onboarding reminder sent to ${to}`);
+    return true;
+  } catch (err) {
+    console.error(`[Email] Onboarding reminder failed for ${to}:`, err);
+    return false;
+  }
+}
+
 export async function verifyEmailConnection(): Promise<boolean> {
   try {
     await transporter.verify();

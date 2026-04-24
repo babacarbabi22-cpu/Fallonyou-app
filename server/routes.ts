@@ -5,7 +5,7 @@ import { setupAuth } from "./auth";
 import { storage } from "./storage";
 import { db } from "./db";
 import { users, profiles, photos, events, eventParticipants, eventComments, eventRatings, matches, preferences, referrals } from "@shared/schema";
-import { eq, and, desc, ilike, gte, inArray, or } from "drizzle-orm";
+import { eq, and, desc, ilike, gte, inArray, or, sql } from "drizzle-orm";
 import { api } from "@shared/routes";
 import { z } from "zod";
 import multer from "multer";
@@ -1554,6 +1554,19 @@ export async function registerRoutes(
       .where(eq(users.id, req.params.userId));
 
     res.json({ success: true });
+  });
+
+  // ============ PUBLIC STATS (no auth required) ============
+  app.get('/api/stats/users', async (_req, res) => {
+    try {
+      const [result] = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(users)
+        .innerJoin(photos, eq(photos.userId, users.id));
+      res.json({ activeUsers: Number(result?.count ?? 0) });
+    } catch {
+      res.json({ activeUsers: 0 });
+    }
   });
 
   // ============ PUSH NOTIFICATIONS ============

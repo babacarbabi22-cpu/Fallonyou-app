@@ -222,6 +222,47 @@ export default function ProfilePage() {
 
       <div className="mt-20 px-4 space-y-6">
 
+        {/* Profile completion bar */}
+        {(() => {
+          const checks = [
+            { done: !!(user.profileImageUrl || user.photos?.[0]?.url), label: 'Foto de perfil' },
+            { done: !!formState.displayName, label: 'Nombre' },
+            { done: !!formState.bio, label: 'Bio' },
+            { done: !!(formState.age && formState.age > 0), label: 'Edad' },
+            { done: (user.photos?.length ?? 0) >= 3, label: '3 fotos' },
+          ];
+          const completed = checks.filter(c => c.done).length;
+          const pct = Math.round((completed / checks.length) * 100);
+          if (pct === 100) return null;
+          const missing = checks.filter(c => !c.done).map(c => c.label);
+          return (
+            <div className="bg-card border rounded-2xl p-4 shadow-sm">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-amber-500" />
+                  <span className="text-sm font-semibold">Perfil {pct}% completo</span>
+                </div>
+                <span className="text-xs text-muted-foreground">{completed}/{checks.length}</span>
+              </div>
+              <div className="w-full h-2 bg-muted rounded-full overflow-hidden mb-3">
+                <div
+                  className="h-full rounded-full transition-all duration-500"
+                  style={{
+                    width: `${pct}%`,
+                    background: pct < 40 ? '#ef4444' : pct < 70 ? '#f59e0b' : '#22c55e',
+                  }}
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Falta: <span className="text-foreground font-medium">{missing.join(', ')}</span>
+              </p>
+              <p className="text-xs text-amber-600 mt-1 font-medium">
+                Los perfiles completos reciben el doble de conexiones
+              </p>
+            </div>
+          );
+        })()}
+
         {/* Ver perfil preview */}
         <Button
           variant="outline"

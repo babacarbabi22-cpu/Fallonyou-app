@@ -8,8 +8,8 @@ import { useTranslation } from "@/lib/i18n";
 import { useUpdateProfile, useCurrentUser } from "@/hooks/use-danceme";
 import { useUpload } from "@/hooks/use-upload";
 import { useLocation } from "wouter";
-import { Camera, Upload, Check, ArrowRight, User, Heart, Shield, Sparkles, Loader2, Plane, Users, Bell, BellOff } from "lucide-react";
-import { useMutation } from "@tanstack/react-query";
+import { Camera, Upload, Check, ArrowRight, User, Heart, Shield, Sparkles, Loader2, Plane, Users, Bell, BellOff, MapPin } from "lucide-react";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { usePushNotifications } from "@/hooks/use-push-notifications";
 
@@ -79,6 +79,22 @@ export default function OnboardingPage() {
   const [selectedActivities, setSelectedActivities] = useState<string[]>([]);
   const [currentCity, setCurrentCity] = useState("");
   const [destination, setDestination] = useState("");
+
+  const [showWelcome, setShowWelcome] = useState(true);
+
+  const { data: statsData } = useQuery<{ activeUsers: number }>({
+    queryKey: ['/api/stats/users'],
+    queryFn: async () => {
+      const res = await fetch('/api/stats/users');
+      return res.json();
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const activeUsers = statsData?.activeUsers ?? 0;
+  const displayCount = activeUsers > 10
+    ? `${activeUsers.toLocaleString('es-ES')}+`
+    : '100+';
 
   const steps: OnboardingStep[] = ["journey", "profile", "preferences", "verification", "notifications", "complete"];
   const currentStepIndex = steps.indexOf(step);
@@ -204,6 +220,104 @@ export default function OnboardingPage() {
   };
 
   
+  // ── Welcome / FOMO splash screen ──────────────────────────────────
+  if (showWelcome) {
+    const blurredAvatars = [
+      { color: 'from-rose-400 to-pink-600', size: 'w-16 h-16', top: '18%', left: '8%', delay: '0s' },
+      { color: 'from-amber-400 to-orange-500', size: 'w-14 h-14', top: '12%', left: '62%', delay: '0.3s' },
+      { color: 'from-sky-400 to-blue-600', size: 'w-12 h-12', top: '30%', left: '80%', delay: '0.6s' },
+      { color: 'from-violet-400 to-purple-600', size: 'w-18 h-18 w-[72px] h-[72px]', top: '22%', left: '38%', delay: '0.2s' },
+      { color: 'from-emerald-400 to-teal-600', size: 'w-10 h-10', top: '8%', left: '28%', delay: '0.5s' },
+      { color: 'from-fuchsia-400 to-pink-600', size: 'w-12 h-12', top: '35%', left: '5%', delay: '0.8s' },
+    ];
+
+    return (
+      <div className="min-h-screen flex flex-col" style={{ background: 'linear-gradient(160deg, #0f0f0f 0%, #1a1208 50%, #0f0f0f 100%)' }}>
+        {/* Blurred avatar cloud */}
+        <div className="relative h-56 overflow-hidden">
+          {blurredAvatars.map((av, i) => (
+            <div
+              key={i}
+              className={`absolute ${av.size} rounded-full bg-gradient-to-br ${av.color} blur-sm opacity-60`}
+              style={{ top: av.top, left: av.left, animationDelay: av.delay }}
+            >
+              <div className="w-full h-full rounded-full flex items-center justify-center">
+                <User className="w-5 h-5 text-white/40" />
+              </div>
+            </div>
+          ))}
+          {/* Overlay gradient */}
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#0f0f0f]" />
+          {/* Lock icon overlay center */}
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="bg-black/60 backdrop-blur-sm rounded-2xl px-6 py-3 border border-amber-500/30">
+              <p className="text-amber-400 text-sm font-semibold text-center">
+                🔒 Completa tu perfil para desbloquear
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 flex flex-col items-center justify-center px-6 pb-10 -mt-4">
+          {/* User count badge */}
+          <div className="flex items-center gap-2 bg-amber-500/15 border border-amber-500/30 rounded-full px-4 py-1.5 mb-6">
+            <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+            <span className="text-amber-300 text-sm font-medium">
+              {displayCount} personas activas ahora
+            </span>
+          </div>
+
+          {/* Headline */}
+          <h1 className="text-white text-3xl font-black text-center leading-tight mb-3">
+            Conecta con viajeros<br />
+            <span style={{
+              background: 'linear-gradient(135deg, #fde68a, #f59e0b)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+            }}>
+              de todo el mundo
+            </span>
+          </h1>
+          <p className="text-zinc-400 text-center text-sm leading-relaxed mb-8 max-w-xs">
+            Planes, aventuras y conexiones reales. Tu próxima experiencia empieza aquí.
+          </p>
+
+          {/* Feature pills */}
+          <div className="flex flex-wrap justify-center gap-2 mb-8">
+            {[
+              { icon: '✈️', text: 'Compañeros de viaje' },
+              { icon: '🎉', text: 'Actividades locales' },
+              { icon: '❤️', text: 'Conexiones reales' },
+            ].map(({ icon, text }) => (
+              <div key={text} className="flex items-center gap-1.5 bg-white/5 border border-white/10 rounded-full px-3 py-1.5 text-xs text-zinc-300">
+                <span>{icon}</span>
+                <span>{text}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* CTA */}
+          <Button
+            className="w-full max-w-xs h-14 text-base font-bold rounded-2xl text-black"
+            style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)' }}
+            onClick={() => setShowWelcome(false)}
+            data-testid="button-start-onboarding"
+          >
+            Crear mi perfil gratis
+            <ArrowRight className="w-5 h-5 ml-2" />
+          </Button>
+
+          <p className="text-zinc-600 text-xs mt-4 text-center">
+            Solo tardas 2 minutos · Gratis para siempre
+          </p>
+        </div>
+      </div>
+    );
+  }
+  // ── End welcome screen ─────────────────────────────────────────────
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Progress header */}

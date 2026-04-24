@@ -1,9 +1,9 @@
 import cron from 'node-cron';
 import { db } from './db';
 import { users, profiles, photos, events as eventsTable, eventParticipants, pushSubscriptions } from '@shared/schema';
-import { eq, sql, and, gte, lte, isNull } from 'drizzle-orm';
+import { eq, sql, and, gte, lte, isNull, lt } from 'drizzle-orm';
 import { sendPushNotification } from './pushService';
-import { sendPhotoReminderEmail } from './emailService';
+import { sendPhotoReminderEmail, sendIncompleteOnboardingEmail } from './emailService';
 
 const weeklyMessages = [
   {
@@ -262,6 +262,40 @@ export async function sendPhotoReminderEmails(): Promise<{ sent: number; failed:
   return { sent, failed };
 }
 
+export async function sendIncompleteOnboardingReminderEmails() {
+  console.log('[Onboarding Reminder] Checking for users without photos registered 24-72h ago...');
+
+  const now = new Date();
+  const h24ago = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+  const h72ago = new Date(now.getTime() - 72 * 60 * 60 * 1000);
+
+  // Users registered between 24h and 72h ago, with no profile photo
+  const targets = await db
+    .select({ id: users.id, email: users.email, firstName: users.firstName })
+    .from(users)
+    .where(
+      and(
+        isNull(users.profileImageUrl),
+        lt(users.createdAt, h24ago),
+        gte(users.createdAt, h72ago),
+      )
+    );
+
+  console.log(`[Onboarding Reminder] Found ${targets.length} users to remind`);
+
+  let sent = 0;
+  let failed = 0;
+  for (const user of targets) {
+    if (!user.email) { failed++; continue; }
+    const ok = await sendIncompleteOnboardingEmail(user.email, user.firstName || '');
+    if (ok) sent++; else failed++;
+    await new Promise(r => setTimeout(r, 300));
+  }
+
+  console.log(`[Onboarding Reminder] Done — sent: ${sent}, failed: ${failed}`);
+  return { sent, failed };
+}
+
 export function startWeeklyNotificationScheduler() {
   // Every Monday at 10:00 AM — push notifications
   cron.schedule('0 10 * * 1', async () => {
@@ -283,5 +317,10 @@ export function startWeeklyNotificationScheduler() {
     await sendIncompleteProfileNotifications();
   }, { timezone: 'Europe/Madrid' });
 
-  console.log('[Weekly Notifications] Scheduler started — weekly Mondays + daily 24h reminders + Tue/Thu profile nudges (Europe/Madrid)');
+  // Every day at 12:00 PM — email users who registered 24-72h ago without completing profile
+  cron.schedule('0 12 * * *', async () => {
+    await sendIncompleteOnboardingReminderEmails();
+  }, { timezone: 'Europe/Madrid' });
+
+  console.log('[Weekly Notifications] Scheduler started — weekly Mondays + daily 24h reminders + Tue/Thu profile nudges + 24h onboarding reminders (Europe/Madrid)');
 }
