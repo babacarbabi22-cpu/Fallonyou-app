@@ -1,6 +1,7 @@
 import { useSwipeFeed, useSwipeRight, useCurrentUser, UserWithPhotos } from "@/hooks/use-danceme";
 import { SwipeCard } from "@/components/SwipeCard";
 import { BottomNav } from "@/components/BottomNav";
+import { SocialProofTicker } from "@/components/SocialProofTicker";
 import { ProfileDetailSheet } from "@/components/ProfileDetailSheet";
 import { MatchHeartCascade } from "@/components/HeartCascade";
 import { AnimatePresence, motion } from "framer-motion";
@@ -418,6 +419,7 @@ export default function SwipePage() {
         onOpenChange={setShowProfileDetail}
       />
 
+      <SocialProofTicker />
       <BottomNav />
     </div>
   );

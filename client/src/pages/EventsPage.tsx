@@ -12,6 +12,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Calendar, MapPin, Users, Plus, Clock, Loader2, Trash2, Pencil, ImagePlus, X, Search, MessageCircle, Image, Sparkles, Bell, ArrowRight } from "lucide-react";
 import { BottomNav } from "@/components/BottomNav";
 import { WelcomeTour } from "@/components/WelcomeTour";
+import { SocialProofTicker } from "@/components/SocialProofTicker";
 import { InviteFriends } from "@/components/InviteFriends";
 import { useCurrentUser } from "@/hooks/use-danceme";
 import { useUpload } from "@/hooks/use-upload";
@@ -933,6 +934,7 @@ export default function EventsPage() {
         </DialogContent>
       </Dialog>
 
+      <SocialProofTicker />
       <BottomNav />
     </div>
     </>
