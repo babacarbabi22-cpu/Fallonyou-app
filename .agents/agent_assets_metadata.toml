@@ -34,4 +34,10 @@ title = "Cartel lifestyle — calle mediterránea"
 id = "R1Wcw1G0jRIujjlum3-NR"
 uri = "file://attached_assets/poster_adventure_final.png"
 type = "image"
-title = "Cartel aventura — listo para imprimir"
+title = "Folleto — Cara delantera"
+
+[[outputs]]
+id = "eR46siGALel8Kalc5LMyb"
+uri = "file://attached_assets/folleto_reverso.png"
+type = "image"
+title = "Folleto — Reverso con QR"
