@@ -113,8 +113,11 @@ export default function PremiumPage() {
               </div>
               <div>
                 <p className="text-white font-bold text-base">Acceso de Fundador</p>
-                <p className="text-white/70 text-xs mt-0.5">
-                  Eres de los primeros en unirte a FallonYou. Gracias por confiar en nosotros desde el principio.
+                <p className="text-white/80 text-sm mt-0.5 leading-snug font-medium">
+                  Eres de las primeras 4.000 personas en FallonYou.
+                </p>
+                <p className="text-white/60 text-xs mt-1 leading-relaxed">
+                  Disfruta e invita a tus amigos antes de que seamos 10.000 y la app tenga coste. 🚀
                 </p>
               </div>
             </div>
