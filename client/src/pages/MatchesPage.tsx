@@ -2,10 +2,76 @@ import { useMatches, useCurrentUser } from "@/hooks/use-danceme";
 import { BottomNav } from "@/components/BottomNav";
 import { MatchRatingModal } from "@/components/MatchRatingModal";
 import { useState } from "react";
-import { Loader2, MessageCircle, Star, Shield, Heart, Camera, ArrowRight, CalendarDays, Users, Sparkles, MapPin, Plane } from "lucide-react";
+import { Loader2, MessageCircle, Star, Shield, Heart, Camera, ArrowRight, CalendarDays, Users, Sparkles, MapPin, Plane, Store, Tag, ExternalLink } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/lib/i18n";
+
+// ── Recommendation cards shown between matches ──────────────────────────────
+const RECO_CARDS = [
+  {
+    key: "local",
+    icon: Store,
+    badge: "🏪 Oferta local",
+    title: "Descuentos exclusivos para la comunidad",
+    desc: "FallonYou colabora con locales cerca de ti. ¡Menciona que eres usuario y disfruta ventajas especiales!",
+    cta: "Ver más en Premium",
+    href: "/premium",
+    style: { background: "linear-gradient(135deg,rgba(245,158,11,0.10),rgba(245,158,11,0.03))", border: "1px solid rgba(245,158,11,0.22)" },
+    ctaStyle: { color: "#D97706" },
+  },
+  {
+    key: "plan",
+    icon: CalendarDays,
+    badge: "💡 Sugerencia",
+    title: "¿Quedáis en persona?",
+    desc: "Propón un plan a tus matches — cenar, tomar algo, hacer deporte... Aquí somos todos amigos.",
+    cta: "Crear un plan",
+    href: "/events",
+    style: { background: "rgba(99,102,241,0.05)", border: "1px solid rgba(99,102,241,0.15)" },
+    ctaStyle: { color: "#6366f1" },
+  },
+  {
+    key: "partner",
+    icon: Tag,
+    badge: "🤝 ¿Tienes un local?",
+    title: "Lleva tu negocio a FallonYou",
+    desc: "Contacta con nosotros y te enviamos usuarios. Ellos obtienen descuentos, tú más clientes.",
+    cta: "fallonyouapp@hotmail.com",
+    href: "mailto:fallonyouapp@hotmail.com?subject=Colaboración%20local%20FallonYou",
+    style: { background: "rgba(34,197,94,0.05)", border: "1px solid rgba(34,197,94,0.18)" },
+    ctaStyle: { color: "#16a34a" },
+  },
+];
+
+function RecommendationCard({ index }: { index: number }) {
+  const card = RECO_CARDS[index % RECO_CARDS.length];
+  const Icon = card.icon;
+  const isExternal = card.href.startsWith("mailto");
+  return (
+    <a
+      href={isExternal ? card.href : undefined}
+      onClick={!isExternal ? (e) => { e.preventDefault(); window.location.href = card.href; } : undefined}
+      className="block rounded-2xl p-4 transition-opacity hover:opacity-90 cursor-pointer"
+      style={card.style}
+      data-testid={`reco-card-${card.key}`}
+    >
+      <div className="flex items-start gap-3">
+        <div className="w-9 h-9 rounded-xl bg-white/60 dark:bg-white/10 flex items-center justify-center shrink-0">
+          <Icon className="w-4 h-4 text-amber-600" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <span className="text-xs font-semibold text-muted-foreground">{card.badge}</span>
+          <p className="text-sm font-bold text-foreground leading-snug mt-0.5">{card.title}</p>
+          <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{card.desc}</p>
+          <p className="text-xs font-semibold mt-2 flex items-center gap-1" style={card.ctaStyle}>
+            {card.cta} <ExternalLink className="w-3 h-3" />
+          </p>
+        </div>
+      </div>
+    </a>
+  );
+}
 
 // ── Engagement cards shown below the matches list ──────────────────────────
 function EngagementCards({ matchCount }: { matchCount: number }) {
@@ -210,53 +276,60 @@ export default function MatchesPage() {
         <EmptyState />
       ) : (
         <>
-          {/* Matches list */}
+          {/* Matches list with recommendation cards every 2 matches */}
           <div className="space-y-3">
-            {matches?.map((match) => (
-              <div
-                key={match.id}
-                className="group relative bg-card p-4 rounded-2xl border shadow-sm hover:shadow-lg transition-all flex items-center gap-4"
-                data-testid={`match-card-${match.id}`}
-              >
-                <div className="relative">
-                  <img
-                    src={match.otherUser.photos?.[0]?.url || match.otherUser.profileImageUrl || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=60"}
-                    alt={match.otherUser.firstName || "Match"}
-                    className="w-16 h-16 rounded-full object-cover border-2 border-white shadow-md"
-                  />
-                  <div className="absolute bottom-0 right-0 w-4 h-4 bg-green-500 border-2 border-white rounded-full" />
-                </div>
+            {matches?.flatMap((match, idx) => {
+              const items = [];
+              if (idx > 0 && idx % 2 === 0) {
+                items.push(<RecommendationCard key={`reco-${idx}`} index={Math.floor(idx / 2) - 1} />);
+              }
+              items.push(
+                <div
+                  key={match.id}
+                  className="group relative bg-card p-4 rounded-2xl border shadow-sm hover:shadow-lg transition-all flex items-center gap-4"
+                  data-testid={`match-card-${match.id}`}
+                >
+                  <div className="relative">
+                    <img
+                      src={match.otherUser.photos?.[0]?.url || match.otherUser.profileImageUrl || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=60"}
+                      alt={match.otherUser.firstName || "Match"}
+                      className="w-16 h-16 rounded-full object-cover border-2 border-white shadow-md"
+                    />
+                    <div className="absolute bottom-0 right-0 w-4 h-4 bg-green-500 border-2 border-white rounded-full" />
+                  </div>
 
-                <div className="flex-1 min-w-0">
-                  <h3 className="text-lg font-bold font-display truncate flex items-center gap-1">
-                    {match.otherUser.firstName || "Alguien"}
-                    {match.otherUser.isVerified === "true" && (
-                      <Shield className="w-4 h-4 text-blue-500" />
-                    )}
-                  </h3>
-                  <p className="text-sm text-muted-foreground truncate">
-                    {match.otherUser.profile?.bio || "¡Di hola y rompe el hielo!"}
-                  </p>
-                </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-lg font-bold font-display truncate flex items-center gap-1">
+                      {match.otherUser.firstName || "Alguien"}
+                      {match.otherUser.isVerified === "true" && (
+                        <Shield className="w-4 h-4 text-blue-500" />
+                      )}
+                    </h3>
+                    <p className="text-sm text-muted-foreground truncate">
+                      {match.otherUser.profile?.bio || "¡Di hola y rompe el hielo!"}
+                    </p>
+                  </div>
 
-                <div className="flex gap-2">
-                  <Link href={`/chat/${match.id}`}>
-                    <Button variant="default" size="icon" className="rounded-full" data-testid={`button-chat-${match.id}`}>
-                      <MessageCircle className="w-5 h-5" />
+                  <div className="flex gap-2">
+                    <Link href={`/chat/${match.id}`}>
+                      <Button variant="default" size="icon" className="rounded-full" data-testid={`button-chat-${match.id}`}>
+                        <MessageCircle className="w-5 h-5" />
+                      </Button>
+                    </Link>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="rounded-full"
+                      onClick={() => setSelectedMatch({ id: match.id, user: match.otherUser })}
+                      data-testid={`button-rate-${match.id}`}
+                    >
+                      <Star className="w-5 h-5" />
                     </Button>
-                  </Link>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="rounded-full"
-                    onClick={() => setSelectedMatch({ id: match.id, user: match.otherUser })}
-                    data-testid={`button-rate-${match.id}`}
-                  >
-                    <Star className="w-5 h-5" />
-                  </Button>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+              return items;
+            })}
           </div>
 
           {/* Engagement cards below matches */}

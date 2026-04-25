@@ -3,7 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { BottomNav } from "@/components/BottomNav";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
-import { Loader2, Crown, Heart, Eye, Sparkles, Check, Shield, Star, HelpCircle, Rocket, Users, Zap } from "lucide-react";
+import { Loader2, Crown, Heart, Eye, Sparkles, Check, Shield, Star, HelpCircle, Rocket, Users, Zap, Store, Mail, Tag } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
@@ -224,6 +224,59 @@ export default function PremiumPage() {
             <p className="text-xs text-muted-foreground">Tus datos están protegidos según la normativa europea. Sin anuncios. Sin venta de datos.</p>
           </div>
         </div>
+
+        {/* ── Negocios locales ── */}
+        <motion.section initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
+          <div
+            className="rounded-2xl overflow-hidden"
+            style={{ border: "1px solid rgba(245,158,11,0.25)" }}
+          >
+            {/* Header */}
+            <div
+              className="px-5 py-4 flex items-center gap-3"
+              style={{ background: "linear-gradient(135deg,rgba(245,158,11,0.12),rgba(245,158,11,0.04))" }}
+            >
+              <div className="w-10 h-10 rounded-xl bg-amber-500/15 flex items-center justify-center shrink-0">
+                <Store className="w-5 h-5 text-amber-500" />
+              </div>
+              <div>
+                <p className="font-bold text-base">¿Tienes un local? 🏪</p>
+                <p className="text-xs text-muted-foreground">Colabora con FallonYou y llega a tu público</p>
+              </div>
+            </div>
+
+            {/* Body */}
+            <div className="px-5 py-4 space-y-3 bg-card">
+              {[
+                { icon: Users,  text: "Enviamos nuestros usuarios a tu local — personas reales buscando planes y experiencias." },
+                { icon: Tag,    text: "Tus clientes obtienen descuentos exclusivos por ser de la comunidad FallonYou." },
+                { icon: Rocket, text: "Tu negocio gana visibilidad dentro de la app ante miles de usuarios activos." },
+              ].map((item, i) => (
+                <div key={i} className="flex items-start gap-3">
+                  <div className="w-7 h-7 rounded-lg bg-amber-500/10 flex items-center justify-center shrink-0 mt-0.5">
+                    <item.icon className="w-4 h-4 text-amber-500" />
+                  </div>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{item.text}</p>
+                </div>
+              ))}
+
+              <a
+                href="mailto:fallonyouapp@hotmail.com?subject=Colaboración%20local%20FallonYou"
+                className="block mt-2"
+                data-testid="button-contact-business"
+              >
+                <div
+                  className="w-full rounded-xl py-3 px-4 flex items-center justify-center gap-2 font-semibold text-sm transition-opacity hover:opacity-90"
+                  style={{ background: "linear-gradient(90deg,#D97706,#F59E0B)", color: "#000" }}
+                >
+                  <Mail className="w-4 h-4" />
+                  Contactar con nosotros
+                </div>
+              </a>
+              <p className="text-xs text-center text-muted-foreground">fallonyouapp@hotmail.com</p>
+            </div>
+          </div>
+        </motion.section>
 
         {/* ── FAQ ── */}
         <section className="space-y-3">
