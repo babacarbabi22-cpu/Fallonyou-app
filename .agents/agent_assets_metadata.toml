@@ -12,6 +12,12 @@ uri = "file://attached_assets/poster_fallonyou_warm.png"
 type = "image"
 title = "warm travel lifestyle poster"
 
+[[generated]]
+id = "aUC93kV4iQ7RfCKJuY7uE"
+uri = "file://attached_assets/poster_adventure_base.png"
+type = "image"
+title = "adventure beach group poster"
+
 [[outputs]]
 id = "0Ko7QF5xas7_n14GgocyH"
 uri = "file://attached_assets/poster_fallonyou_dark.png"
@@ -23,3 +29,9 @@ id = "-mfHW-5daRHdfQst7DCw5"
 uri = "file://attached_assets/poster_fallonyou_warm.png"
 type = "image"
 title = "Cartel lifestyle — calle mediterránea"
+
+[[outputs]]
+id = "R1Wcw1G0jRIujjlum3-NR"
+uri = "file://attached_assets/poster_adventure_final.png"
+type = "image"
+title = "Cartel aventura — listo para imprimir"
