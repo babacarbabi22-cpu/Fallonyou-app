@@ -1,42 +1,48 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { BottomNav } from "@/components/BottomNav";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
-import { Loader2, Crown, Heart, Eye, Sparkles, Check, Gift, Shield, Star, CreditCard, HelpCircle } from "lucide-react";
-import { SiStripe } from "react-icons/si";
+import { Loader2, Crown, Heart, Eye, Sparkles, Check, Shield, Star, HelpCircle, Rocket, Users, Zap } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
-import { useTranslation } from "@/lib/i18n";
 
-const STRIPE_MONTHLY_LINK = "https://buy.stripe.com/4gMcMY2wsdUS462gpSfw400";
-const STRIPE_YEARLY_LINK = "https://buy.stripe.com/5kQ7sE9YUg30cCy7Tmfw401";
+const benefits = [
+  { icon: Heart,    title: "Likes ilimitados",          desc: "Sin límite diario, conecta con quien quieras" },
+  { icon: Eye,      title: "Ver quién te dio like",     desc: "Descubre quién está interesado en ti antes de decidir" },
+  { icon: Sparkles, title: "Visibilidad prioritaria",   desc: "Tu perfil aparece primero en Discover" },
+  { icon: Star,     title: "Filtros avanzados",         desc: "Encuentra personas con intereses exactos" },
+  { icon: Zap,      title: "Eventos exclusivos",        desc: "Acceso anticipado a planes y experiencias VIP" },
+  { icon: Users,    title: "Comunidad de fundadores",   desc: "Sé parte del grupo que da forma a FallonYou" },
+];
 
-const PLANS = {
-  monthly: { label: "Mensual", price: "7,99 €", period: "/mes", hint: "Cancela cuando quieras" },
-  yearly:  { label: "Anual",   price: "59,99 €", period: "/año", hint: "Ahorra un 37% · mejor valor" },
-};
+const faqs = [
+  {
+    q: "¿Cuánto cuesta la app?",
+    a: "FallonYou es completamente gratuita en este momento. Estamos en fase de lanzamiento y queremos que todo el mundo pueda disfrutarla sin coste. ¡Aprovéchalo!",
+  },
+  {
+    q: "¿Habrá un plan de pago en el futuro?",
+    a: "En algún momento lanzaremos funciones premium opcionales, pero todas las funcionalidades actuales seguirán siendo gratuitas para los usuarios que se unan ahora.",
+  },
+  {
+    q: "¿Mis datos están seguros?",
+    a: "Sí. Usamos cifrado de extremo a extremo y cumplimos con el RGPD europeo. Tus datos nunca se venden a terceros.",
+  },
+  {
+    q: "¿Necesito una tarjeta de crédito?",
+    a: "No. La app es gratis y no te pediremos ningún dato de pago.",
+  },
+  {
+    q: "¿Necesitas ayuda?",
+    a: "Escríbenos a fallonyouapp@hotmail.com — respondemos en menos de 24h.",
+  },
+];
 
 export default function PremiumPage() {
   const { toast } = useToast();
-  const t = useTranslation();
-  const [plan, setPlan] = useState<"monthly" | "yearly" | null>(null);
-  const [showPlans, setShowPlans] = useState(false);
-  const searchParams = new URLSearchParams(window.location.search);
-  const success = searchParams.get("success");
-  const canceled = searchParams.get("canceled");
-
-  useEffect(() => {
-    if (success) {
-      toast({ title: "¡Bienvenido a Premium!", description: "Tu suscripción ya está activa. ¡Disfruta de todos los beneficios!" });
-      window.history.replaceState({}, "", "/premium");
-    }
-    if (canceled) {
-      toast({ title: "Pago cancelado", description: "Sin problema, puedes suscribirte cuando quieras.", variant: "destructive" });
-      window.history.replaceState({}, "", "/premium");
-    }
-  }, [success, canceled]);
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
 
   interface PremiumStatus { isPremium: boolean; trialEndsAt?: string; premiumExpiresAt?: string; }
   interface LikedByData { count: number; users: any[]; isPremium: boolean; }
@@ -44,26 +50,10 @@ export default function PremiumPage() {
   const { data: premiumStatus, isLoading } = useQuery<PremiumStatus>({ queryKey: ["/api/premium/status"] });
   const { data: likedByData } = useQuery<LikedByData>({ queryKey: ["/api/premium/liked-by"] });
 
-  const trialMutation = useMutation({
-    mutationFn: async () => { const res = await apiRequest("POST", "/api/premium/trial", {}); return res.json(); },
-    onSuccess: () => {
-      toast({ title: "¡Prueba iniciada!", description: "7 días gratis de Premium. ¡Disfrútalos!" });
-      queryClient.invalidateQueries({ queryKey: ["/api/premium/status"] });
-    },
-    onError: () => { toast({ title: "Prueba no disponible", description: "Ya usaste tu prueba gratuita.", variant: "destructive" }); },
-  });
-
   const portalMutation = useMutation({
     mutationFn: async () => { const res = await apiRequest("POST", "/api/premium/portal", {}); return res.json(); },
     onSuccess: (data) => { if (data.url) window.location.href = data.url; },
   });
-
-  const benefits = [
-    { icon: Heart,    title: "Likes ilimitados",       desc: "Sin límite diario de likes" },
-    { icon: Eye,      title: "Ver quién te dio like",  desc: "Descubre quién está interesado en ti" },
-    { icon: Sparkles, title: "Visibilidad prioritaria", desc: "Aparece antes que otros perfiles" },
-    { icon: Star,     title: "Filtros avanzados",       desc: "Encuentra exactamente lo que buscas" },
-  ];
 
   if (isLoading) return (
     <div className="h-screen flex items-center justify-center">
@@ -74,245 +64,197 @@ export default function PremiumPage() {
   const isPremium = premiumStatus?.isPremium;
 
   return (
-    <div className="min-h-screen bg-background pb-24">
+    <div className="min-h-screen bg-background pb-28">
 
-      {/* Hero */}
+      {/* ── Hero ── */}
       <div className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-amber-400/20 via-orange-500/20 to-yellow-500/20" />
-        <div className="relative px-6 py-12 text-center">
-          <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", duration: 0.6 }}
-            className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 shadow-lg shadow-orange-500/30 mb-6">
+        <div className="absolute inset-0 bg-gradient-to-br from-amber-400/20 via-orange-500/10 to-yellow-400/20" />
+        <div className="relative px-6 pt-12 pb-8 text-center">
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ type: "spring", duration: 0.6 }}
+            className="inline-flex items-center justify-center w-20 h-20 rounded-full shadow-lg shadow-amber-500/30 mb-5"
+            style={{ background: "linear-gradient(135deg,#F59E0B,#D97706)" }}
+          >
             <Crown className="w-10 h-10 text-white" />
           </motion.div>
-          <h1 className="text-3xl font-bold mb-2" data-testid="text-premium-title">FallonYou Premium</h1>
-          <p className="text-muted-foreground">Desbloquea la experiencia completa</p>
+
+          {/* FREE badge */}
+          <div className="inline-flex items-center gap-1.5 bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-full mb-4 shadow shadow-green-500/30">
+            <Rocket className="w-3 h-3" />
+            COMPLETAMENTE GRATIS
+          </div>
+
+          <h1 className="text-3xl font-bold mb-2" data-testid="text-premium-title">
+            FallonYou Premium
+          </h1>
+          <p className="text-muted-foreground max-w-xs mx-auto leading-relaxed">
+            Durante el lanzamiento, todas las funciones premium son gratuitas para todos los usuarios.
+          </p>
         </div>
       </div>
 
-      <div className="px-6 space-y-8">
+      <div className="px-5 space-y-7">
 
-        {/* === USUARIO YA PREMIUM === */}
-        {isPremium ? (
-          <Card className="border-amber-500/50 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Crown className="w-5 h-5 text-amber-500" /> ¡Eres miembro Premium!
-              </CardTitle>
-              <CardDescription>
-                {premiumStatus?.trialEndsAt
-                  ? `Prueba hasta: ${new Date(premiumStatus.trialEndsAt).toLocaleDateString("es-ES")}`
-                  : premiumStatus?.premiumExpiresAt
-                  ? `Renueva el: ${new Date(premiumStatus.premiumExpiresAt).toLocaleDateString("es-ES")}`
-                  : "Disfruta de todos los beneficios"}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-3">
-                {benefits.map((b, i) => (
-                  <div key={i} className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-                      <Check className="w-4 h-4 text-green-600" />
-                    </div>
-                    <span className="font-medium">{b.title}</span>
-                  </div>
-                ))}
+        {/* ── Early access card ── */}
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
+          <div
+            className="rounded-2xl p-5"
+            style={{
+              background: "linear-gradient(135deg,#78350f,#92400e,#b45309)",
+              boxShadow: "0 8px 32px rgba(180,83,9,0.35)",
+            }}
+            data-testid="card-early-access"
+          >
+            <div className="flex items-start gap-3 mb-4">
+              <div className="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center shrink-0">
+                <Rocket className="w-5 h-5 text-white" />
               </div>
-            </CardContent>
-            <CardFooter>
-              <Button variant="outline" className="w-full" onClick={() => portalMutation.mutate()}
-                disabled={portalMutation.isPending} data-testid="button-manage-subscription">
-                {portalMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <CreditCard className="w-4 h-4 mr-2" />}
-                Gestionar suscripción
-              </Button>
-            </CardFooter>
-          </Card>
-        ) : (
-          <>
-            {/* Prueba gratis */}
-            {!premiumStatus?.trialEndsAt && (
-              <Card className="border-amber-500/50 bg-gradient-to-br from-amber-500/5 to-yellow-500/5">
-                <CardHeader className="text-center">
-                  <Gift className="w-12 h-12 mx-auto text-primary mb-2" />
-                  <CardTitle>Prueba Premium gratis 7 días</CardTitle>
-                  <CardDescription>Todas las funciones, sin compromiso</CardDescription>
-                </CardHeader>
-                <CardFooter>
-                  <Button className="w-full bg-gradient-to-r from-amber-500 to-amber-600"
-                    onClick={() => trialMutation.mutate()} disabled={trialMutation.isPending}
-                    data-testid="button-start-trial">
-                    {trialMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Gift className="w-4 h-4 mr-2" />}
-                    Empezar prueba gratis
-                  </Button>
-                </CardFooter>
-              </Card>
-            )}
-
-            {/* Beneficios */}
-            <section>
-              <h2 className="text-xl font-bold mb-4">Beneficios Premium</h2>
-              <div className="grid gap-3">
-                {benefits.map((b, i) => (
-                  <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }}>
-                    <Card>
-                      <CardContent className="flex items-center gap-4 p-4">
-                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-400/20 to-orange-500/20 flex items-center justify-center">
-                          <b.icon className="w-6 h-6 text-amber-600" />
-                        </div>
-                        <div>
-                          <h3 className="font-semibold">{b.title}</h3>
-                          <p className="text-sm text-muted-foreground">{b.desc}</p>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-                ))}
+              <div>
+                <p className="text-white font-bold text-base">Acceso de Fundador</p>
+                <p className="text-white/70 text-xs mt-0.5">
+                  Eres de los primeros en unirte a FallonYou. Gracias por confiar en nosotros desde el principio.
+                </p>
               </div>
-            </section>
+            </div>
+            <div className="grid grid-cols-3 gap-2 text-center">
+              {[
+                { label: "Likes", value: "∞" },
+                { label: "Coste", value: "0€" },
+                { label: "Funciones", value: "100%" },
+              ].map((stat) => (
+                <div key={stat.label} className="bg-white/10 rounded-xl py-2 px-1">
+                  <p className="text-white font-extrabold text-xl">{stat.value}</p>
+                  <p className="text-white/60 text-xs">{stat.label}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </motion.div>
 
-            {/* ===== SECCIÓN DE PAGO ===== */}
-            <section>
-              <h2 className="text-xl font-bold mb-4">Hazte Premium</h2>
-
-              {!showPlans ? (
-                /* CTA inicial — sin precios visibles */
-                <Button
-                  onClick={() => setShowPlans(true)}
-                  className="w-full h-14 text-lg font-bold bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white rounded-2xl shadow-lg shadow-amber-500/30"
-                  data-testid="button-show-plans"
-                >
-                  <Crown className="w-5 h-5 mr-2" />
-                  Ver planes y precios
-                </Button>
-              ) : (
-                <motion.div
-                  initial={{ opacity: 0, y: 12 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3 }}
-                  className="space-y-4"
-                >
-                  {/* Selector mensual / anual */}
-                  <div className="flex gap-3">
-                    {(["monthly", "yearly"] as const).map((p) => (
-                      <button key={p} onClick={() => setPlan(p)}
-                        className={`flex-1 rounded-2xl border-2 p-4 text-left transition-all ${
-                          plan === p
-                            ? "border-amber-500 bg-amber-50 dark:bg-amber-950/30"
-                            : "border-muted bg-card hover:border-amber-300"
-                        }`}
-                        data-testid={`button-plan-${p}`}>
-                        {p === "yearly" && (
-                          <div className="text-xs font-bold text-amber-600 mb-1 uppercase tracking-wide">Mejor valor</div>
-                        )}
-                        <div className="font-bold text-base">{PLANS[p].label}</div>
-                        <div className="text-2xl font-extrabold text-amber-600 leading-tight">
-                          {PLANS[p].price}<span className="text-sm font-normal text-muted-foreground">{PLANS[p].period}</span>
-                        </div>
-                        <div className="text-xs text-muted-foreground mt-1">{PLANS[p].hint}</div>
-                      </button>
-                    ))}
-                  </div>
-
-                  {/* Botón de pago — solo visible si eligió plan */}
-                  {plan ? (
-                    <a
-                      href={plan === "monthly" ? STRIPE_MONTHLY_LINK : STRIPE_YEARLY_LINK}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      data-testid="button-pay-stripe"
+        {/* ── Beneficios ── */}
+        <section>
+          <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+            <Sparkles className="w-5 h-5 text-amber-500" />
+            Todo incluido gratis
+          </h2>
+          <div className="grid gap-3">
+            {benefits.map((b, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, x: -16 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: i * 0.07 }}
+              >
+                <Card className="border-0 bg-card/60" style={{ boxShadow: "0 1px 6px rgba(0,0,0,0.06)" }}>
+                  <CardContent className="flex items-center gap-4 p-4">
+                    <div
+                      className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0"
+                      style={{ background: "linear-gradient(135deg,rgba(245,158,11,0.15),rgba(245,158,11,0.05))" }}
                     >
-                      <Button className="w-full h-16 text-lg font-bold bg-[#635BFF] hover:bg-[#5046e5] text-white rounded-2xl flex items-center gap-3 shadow-lg shadow-indigo-500/30">
-                        <SiStripe className="w-7 h-7" />
-                        Suscribirse ahora
-                        <span className="ml-auto text-indigo-200 font-normal text-base">{PLANS[plan].price}</span>
-                      </Button>
-                    </a>
-                  ) : (
-                    <p className="text-center text-sm text-muted-foreground">Selecciona un plan para continuar</p>
-                  )}
+                      <b.icon className="w-5 h-5 text-amber-500" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-sm">{b.title}</h3>
+                      <p className="text-xs text-muted-foreground mt-0.5">{b.desc}</p>
+                    </div>
+                    <div className="w-6 h-6 rounded-full bg-green-500/15 flex items-center justify-center shrink-0">
+                      <Check className="w-3.5 h-3.5 text-green-600" />
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
+        </section>
 
-                  <div className="bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-xl p-3 text-xs text-center text-green-800 dark:text-green-300">
-                    🔒 Pago seguro con tarjeta — activación automática e instantánea
-                  </div>
-                </motion.div>
-              )}
-            </section>
-          </>
-        )}
-
-        {/* Quién te dio like */}
+        {/* ── Quién te dio like ── */}
         {likedByData && likedByData.count > 0 && (
           <section>
             <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-              <Heart className="w-5 h-5 text-red-500" />
-              {likedByData.count} personas te dieron like
+              <Heart className="w-5 h-5 text-red-500 fill-red-500" />
+              {likedByData.count} {likedByData.count === 1 ? "persona te dio like" : "personas te dieron like"}
             </h2>
             {isPremium ? (
               <div className="grid grid-cols-3 gap-3">
                 {likedByData.users?.map((user: any) => (
                   <Card key={user.id} className="overflow-hidden">
-                    <img src={user.photos?.[0]?.url || "/placeholder.jpg"} alt={user.firstName}
-                      className="w-full aspect-square object-cover" />
+                    <img
+                      src={user.photos?.[0]?.url || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&auto=format&fit=crop&q=60"}
+                      alt={user.firstName}
+                      className="w-full aspect-square object-cover"
+                    />
                     <CardContent className="p-2 text-center">
-                      <p className="font-medium text-sm truncate">{user.firstName || "Alguien"}</p>
+                      <p className="font-medium text-xs truncate">{user.firstName || "Alguien"}</p>
                     </CardContent>
                   </Card>
                 ))}
               </div>
             ) : (
-              <Card className="bg-gradient-to-br from-amber-50 to-yellow-50 dark:from-amber-950/20 dark:to-yellow-950/20">
+              <Card
+                style={{ background: "linear-gradient(135deg,rgba(245,158,11,0.08),rgba(245,158,11,0.03))", border: "1px solid rgba(245,158,11,0.2)" }}
+              >
                 <CardContent className="py-8 text-center">
-                  <div className="grid grid-cols-3 gap-2 mb-4">
-                    {[1, 2, 3].map((i) => <div key={i} className="aspect-square rounded-lg bg-muted blur-sm" />)}
+                  <div className="grid grid-cols-3 gap-2 mb-4 opacity-50">
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className="aspect-square rounded-lg bg-muted backdrop-blur-sm" />
+                    ))}
                   </div>
-                  <p className="text-muted-foreground mb-4">Hazte Premium para ver quién te dio like</p>
+                  <Crown className="w-7 h-7 text-amber-500 mx-auto mb-2" />
+                  <p className="text-sm text-muted-foreground">Función disponible próximamente</p>
                 </CardContent>
               </Card>
             )}
           </section>
         )}
 
-        {/* FAQ */}
-        <section className="space-y-4">
+        {/* ── Seguridad ── */}
+        <div
+          className="rounded-2xl p-4 flex items-center gap-3"
+          style={{ background: "rgba(34,197,94,0.06)", border: "1px solid rgba(34,197,94,0.2)" }}
+          data-testid="card-security"
+        >
+          <Shield className="w-8 h-8 text-green-600 shrink-0" />
+          <div>
+            <p className="font-semibold text-sm">Cumplimos con el RGPD</p>
+            <p className="text-xs text-muted-foreground">Tus datos están protegidos según la normativa europea. Sin anuncios. Sin venta de datos.</p>
+          </div>
+        </div>
+
+        {/* ── FAQ ── */}
+        <section className="space-y-3">
           <h2 className="text-xl font-bold flex items-center gap-2">
             <HelpCircle className="w-5 h-5" /> Preguntas frecuentes
           </h2>
-          <Card>
-            <CardContent className="space-y-4 p-4">
-              <div>
-                <h3 className="font-semibold mb-1">¿Cómo funciona el pago?</h3>
-                <p className="text-sm text-muted-foreground">
-                  Al pulsar "Suscribirse ahora" irás a la página de pago seguro de Stripe. Una vez confirmado, tu cuenta Premium se activa de forma automática e instantánea.
-                </p>
-              </div>
-              <div>
-                <h3 className="font-semibold mb-1">¿Es seguro?</h3>
-                <p className="text-sm text-muted-foreground">
-                  Sí. Usamos Stripe, el procesador de pagos más usado del mundo. Tus datos de tarjeta nunca se almacenan en nuestros servidores.
-                </p>
-              </div>
-              <div>
-                <h3 className="font-semibold mb-1">¿Cómo cancelo?</h3>
-                <p className="text-sm text-muted-foreground">
-                  Puedes cancelar en cualquier momento desde tu perfil → Gestionar suscripción. Sin permanencia.
-                </p>
-              </div>
-              <div>
-                <h3 className="font-semibold mb-1">¿Necesitas ayuda?</h3>
-                <p className="text-sm text-muted-foreground">
-                  Escríbenos a <strong>fallonyouapp@hotmail.com</strong>
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="flex items-center gap-3 p-4">
-              <Shield className="w-8 h-8 text-green-600" />
-              <div>
-                <h3 className="font-semibold">Cumple con el RGPD</h3>
-                <p className="text-sm text-muted-foreground">Tus datos están protegidos según la normativa europea</p>
-              </div>
-            </CardContent>
-          </Card>
+          {faqs.map((faq, i) => (
+            <button
+              key={i}
+              className="w-full text-left"
+              onClick={() => setOpenFaq(openFaq === i ? null : i)}
+              data-testid={`faq-${i}`}
+            >
+              <Card className="transition-colors hover:bg-accent/30">
+                <CardContent className="p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <p className="font-semibold text-sm">{faq.q}</p>
+                    <span className="text-muted-foreground text-lg leading-none shrink-0">
+                      {openFaq === i ? "−" : "+"}
+                    </span>
+                  </div>
+                  {openFaq === i && (
+                    <motion.p
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      className="text-sm text-muted-foreground mt-2 leading-relaxed"
+                    >
+                      {faq.a}
+                    </motion.p>
+                  )}
+                </CardContent>
+              </Card>
+            </button>
+          ))}
         </section>
       </div>
 

@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { MessageCircle, User as UserIcon, Calendar, Star } from "lucide-react";
+import { MessageCircle, User as UserIcon, Calendar, Crown, Search } from "lucide-react";
 import { clsx } from "clsx";
 import { useTranslation } from "@/lib/i18n";
 
@@ -8,10 +8,11 @@ export function BottomNav() {
   const t = useTranslation();
 
   const navItems = [
-    { href: "/", icon: Calendar, label: t.nav.events || "Activities" },
-    { href: "/discover", icon: Star, label: t.nav.discover },
-    { href: "/matches", icon: MessageCircle, label: t.nav.matches },
-    { href: "/profile", icon: UserIcon, label: t.nav.profile },
+    { href: "/discover", icon: Search,         label: t.nav.discover },
+    { href: "/",         icon: Calendar,        label: t.nav.events || "Planes" },
+    { href: "/matches",  icon: MessageCircle,   label: t.nav.matches },
+    { href: "/premium",  icon: Crown,           label: "Premium" },
+    { href: "/profile",  icon: UserIcon,        label: t.nav.profile },
   ];
 
   return (
@@ -20,14 +21,28 @@ export function BottomNav() {
         <nav className="glass-panel flex items-center justify-around p-2 rounded-full shadow-lg shadow-black/5 touch-manipulation">
           {navItems.map(({ href, icon: Icon, label }) => {
             const isActive = location === href;
+            const isPremiumTab = href === "/premium";
             return (
-              <Link key={href} href={href} className={clsx(
-                "flex flex-col items-center justify-center w-14 h-14 rounded-full transition-all duration-300",
-                isActive 
-                  ? "bg-primary text-primary-foreground shadow-lg shadow-primary/30 -translate-y-2 scale-110" 
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
-              )}>
-                <Icon className={clsx("w-6 h-6", isActive && "fill-current")} />
+              <Link
+                key={href}
+                href={href}
+                data-testid={`nav-${href.replace("/", "") || "events"}`}
+                className={clsx(
+                  "flex flex-col items-center justify-center w-14 h-14 rounded-full transition-all duration-300",
+                  isActive
+                    ? "bg-primary text-primary-foreground shadow-lg shadow-primary/30 -translate-y-2 scale-110"
+                    : isPremiumTab
+                    ? "text-amber-500 hover:bg-amber-500/10"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                )}
+              >
+                <Icon
+                  className={clsx(
+                    "w-6 h-6",
+                    isActive && "fill-current",
+                    isPremiumTab && !isActive && "drop-shadow-[0_0_5px_rgba(251,191,36,0.6)]"
+                  )}
+                />
               </Link>
             );
           })}
