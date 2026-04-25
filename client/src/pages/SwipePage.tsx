@@ -5,9 +5,9 @@ import { SocialProofTicker } from "@/components/SocialProofTicker";
 import { ProfileDetailSheet } from "@/components/ProfileDetailSheet";
 import { MatchHeartCascade } from "@/components/HeartCascade";
 import { AnimatePresence, motion } from "framer-motion";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Loader2, Sparkles, SlidersHorizontal, Star, X, Heart, Plane, Camera } from "lucide-react";
+import { Loader2, Sparkles, SlidersHorizontal, Star, X, Heart, Plane, Camera, MapPin, CalendarDays } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Slider } from "@/components/ui/slider";
@@ -15,6 +15,100 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useLocation } from "wouter";
+import posterImg from "@assets/poster_adventure_base.png";
+
+// ─── Promo Card ──────────────────────────────────────────────────────────────
+function PromoCard({ onDismiss, onCTA }: { onDismiss: () => void; onCTA: () => void }) {
+  const dragX = useRef(0);
+
+  return (
+    <motion.div
+      key="promo-card"
+      initial={{ opacity: 0, scale: 0.92, y: 20 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.88, y: -30 }}
+      transition={{ type: "spring", stiffness: 300, damping: 28 }}
+      drag="x"
+      dragConstraints={{ left: -160, right: 160 }}
+      onDrag={(_, info) => { dragX.current = info.offset.x; }}
+      onDragEnd={(_, info) => {
+        if (Math.abs(info.offset.x) > 100) onDismiss();
+      }}
+      className="absolute inset-0 rounded-3xl overflow-hidden shadow-2xl cursor-grab active:cursor-grabbing select-none"
+      style={{ zIndex: 50, touchAction: "none" }}
+      data-testid="promo-card"
+    >
+      {/* Background image */}
+      <img
+        src={posterImg}
+        alt="FallonYou planes"
+        className="w-full h-full object-cover object-top pointer-events-none"
+        draggable={false}
+      />
+
+      {/* Top gradient + brand */}
+      <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-transparent to-black/85" />
+
+      {/* Top: brand name */}
+      <div className="absolute top-5 left-0 right-0 flex flex-col items-center gap-0.5">
+        <span className="font-display font-black text-3xl italic"
+          style={{ background: "linear-gradient(90deg,#F59E0B,#FCD34D,#F59E0B)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+          FallonYou
+        </span>
+        <span className="text-white/70 text-xs tracking-[4px] font-light uppercase">
+          Planes · Viajes · Conexiones
+        </span>
+      </div>
+
+      {/* Dismiss button */}
+      <button
+        onClick={onDismiss}
+        className="absolute top-4 right-4 w-8 h-8 rounded-full bg-black/40 flex items-center justify-center text-white/80 hover:bg-black/60 transition-colors z-10"
+        data-testid="promo-card-dismiss"
+      >
+        <X className="w-4 h-4" />
+      </button>
+
+      {/* Bottom: text + CTA */}
+      <div className="absolute bottom-0 left-0 right-0 p-6 flex flex-col gap-3">
+        <div>
+          <p className="text-white font-bold text-2xl leading-tight font-display italic">
+            ¿Y si el plan perfecto
+          </p>
+          <p className="text-amber-400 font-bold text-2xl leading-tight font-display italic">
+            eres tú?
+          </p>
+          <p className="text-white/75 text-sm mt-1.5 leading-relaxed">
+            Únete a planes, conoce gente y vive aventuras reales cerca de ti.
+          </p>
+        </div>
+
+        <div className="flex gap-2 mt-1">
+          <Button
+            className="flex-1 bg-amber-500 hover:bg-amber-400 text-black font-bold rounded-xl h-11 shadow-lg shadow-amber-900/40"
+            onClick={onCTA}
+            data-testid="promo-card-cta"
+          >
+            <CalendarDays className="w-4 h-4 mr-1.5" />
+            Ver planes
+          </Button>
+          <Button
+            variant="outline"
+            className="border-white/30 text-white bg-white/10 hover:bg-white/20 rounded-xl h-11 px-4"
+            onClick={onDismiss}
+            data-testid="promo-card-skip"
+          >
+            Seguir
+          </Button>
+        </div>
+
+        {/* Swipe hint */}
+        <p className="text-white/40 text-xs text-center">Desliza para cerrar</p>
+      </div>
+    </motion.div>
+  );
+}
 
 // Preload images for faster display
 function preloadImages(urls: string[]) {
@@ -24,17 +118,23 @@ function preloadImages(urls: string[]) {
   });
 }
 
+// How many swipes between promo card appearances
+const PROMO_EVERY = 5;
+
 export default function SwipePage() {
   const { data: currentUser, isLoading: isAuthLoading } = useCurrentUser();
   const { data: users, isLoading: isUsersLoading, refetch } = useSwipeFeed();
   const { mutate: swipeRight } = useSwipeRight();
   const { toast } = useToast();
+  const [, navigate] = useLocation();
   
   const [activeUsers, setActiveUsers] = useState<typeof users>([]);
   const [matchAnimation, setMatchAnimation] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserWithPhotos | null>(null);
   const [showProfileDetail, setShowProfileDetail] = useState(false);
+  const [swipeCount, setSwipeCount] = useState(0);
+  const [showPromoCard, setShowPromoCard] = useState(false);
   
   // Preload all user photos when feed is loaded
   useEffect(() => {
@@ -160,14 +260,18 @@ export default function SwipePage() {
   }
 
   const handleSwipe = (userId: number, direction: "left" | "right") => {
-    // Remove user from active stack
     setActiveUsers((prev) => prev?.filter((u) => u.id !== userId));
+
+    const nextCount = swipeCount + 1;
+    setSwipeCount(nextCount);
+    if (nextCount % PROMO_EVERY === 0) {
+      setShowPromoCard(true);
+    }
 
     if (direction === "right") {
       swipeRight(userId, {
         onSuccess: (data) => {
           if (data) {
-            // It's a match!
             setMatchAnimation(true);
             setTimeout(() => setMatchAnimation(false), 2000);
           }
@@ -294,7 +398,16 @@ export default function SwipePage() {
       {/* Card Stack */}
       <div className="relative w-full max-w-md mx-auto h-[65vh] px-4 mt-2">
         <AnimatePresence>
-          {activeUsers && activeUsers.length > 0 ? (
+          {/* Promotional card — appears every PROMO_EVERY swipes */}
+          {showPromoCard && (
+            <PromoCard
+              key="promo"
+              onDismiss={() => setShowPromoCard(false)}
+              onCTA={() => { setShowPromoCard(false); navigate("/events"); }}
+            />
+          )}
+
+          {!showPromoCard && activeUsers && activeUsers.length > 0 ? (
             activeUsers.map((user, index) => {
               if (index > activeUsers.length - 3) {
                  return (
@@ -312,7 +425,7 @@ export default function SwipePage() {
               }
               return null;
             })
-          ) : (
+          ) : !showPromoCard ? (
              <div className="h-full flex flex-col items-center justify-center text-center p-8 bg-card rounded-3xl border border-dashed">
                 <div className="w-20 h-20 bg-muted rounded-full flex items-center justify-center mb-4">
                   <Sparkles className="w-10 h-10 text-muted-foreground" />
@@ -323,12 +436,12 @@ export default function SwipePage() {
                   Refresh
                 </Button>
              </div>
-          )}
+          ) : null}
         </AnimatePresence>
       </div>
 
       {/* Action Buttons */}
-      {activeUsers && activeUsers.length > 0 && (
+      {!showPromoCard && activeUsers && activeUsers.length > 0 && (
         <div className="flex justify-center gap-6 mt-4">
           <Button
             variant="outline"
