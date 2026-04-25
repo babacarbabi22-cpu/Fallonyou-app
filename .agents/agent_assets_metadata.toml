@@ -1,0 +1,25 @@
+uploads = []
+
+[[generated]]
+id = "eUfGw5Tm6VhrVPpfqcXGp"
+uri = "file://attached_assets/poster_fallonyou_dark.png"
+type = "image"
+title = "luxury dark gold poster"
+
+[[generated]]
+id = "1f3yHxCjO6cVlX_lwUZ5t"
+uri = "file://attached_assets/poster_fallonyou_warm.png"
+type = "image"
+title = "warm travel lifestyle poster"
+
+[[outputs]]
+id = "0Ko7QF5xas7_n14GgocyH"
+uri = "file://attached_assets/poster_fallonyou_dark.png"
+type = "image"
+title = "Cartel premium — negro y dorado"
+
+[[outputs]]
+id = "-mfHW-5daRHdfQst7DCw5"
+uri = "file://attached_assets/poster_fallonyou_warm.png"
+type = "image"
+title = "Cartel lifestyle — calle mediterránea"
