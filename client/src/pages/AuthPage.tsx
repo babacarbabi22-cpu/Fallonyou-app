@@ -2,12 +2,24 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Mail, Lock, User, Eye, EyeOff, Loader2 } from "lucide-react";
+import { Mail, Lock, User, Eye, EyeOff, Loader2, Heart, Star, Plane } from "lucide-react";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { useTranslation } from "@/lib/i18n";
 import { Link, useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import posterBg from "@assets/poster_adventure_base.png";
+
+const fallingIcons = [
+  { delay: 0,   duration: 12, left: 5,  size: 16, color: "text-amber-400", type: "heart" },
+  { delay: 2,   duration: 15, left: 20, size: 13, color: "text-yellow-300", type: "star"  },
+  { delay: 4,   duration: 10, left: 35, size: 18, color: "text-amber-500", type: "heart" },
+  { delay: 1,   duration: 14, left: 50, size: 11, color: "text-white",     type: "star"  },
+  { delay: 3,   duration: 16, left: 65, size: 14, color: "text-amber-400", type: "plane" },
+  { delay: 5,   duration: 11, left: 80, size: 15, color: "text-yellow-400", type: "star" },
+  { delay: 2.5, duration: 13, left: 92, size: 10, color: "text-white",     type: "heart" },
+  { delay: 6,   duration: 14, left: 12, size: 12, color: "text-amber-300", type: "plane" },
+  { delay: 0.8, duration: 17, left: 73, size: 13, color: "text-yellow-300", type: "heart"},
+];
 
 export default function AuthPage() {
   const t = useTranslation();
@@ -82,6 +94,36 @@ export default function AuthPage() {
 
       {/* Subtle gold vignette */}
       <div className="absolute inset-0 bg-gradient-to-br from-amber-900/10 via-transparent to-amber-900/10" />
+
+      {/* Falling icons */}
+      <style>{`
+        @keyframes fall {
+          0%   { transform: translateY(-30px) rotate(0deg);   opacity: 0; }
+          8%   { opacity: 0.55; }
+          92%  { opacity: 0.45; }
+          100% { transform: translateY(105vh) rotate(360deg); opacity: 0; }
+        }
+      `}</style>
+      <div className="absolute inset-0 overflow-hidden pointer-events-none z-10">
+        {fallingIcons.map((icon, i) => {
+          const IconComponent = icon.type === "heart" ? Heart : icon.type === "plane" ? Plane : Star;
+          return (
+            <IconComponent
+              key={i}
+              className={`absolute ${icon.color} fill-current`}
+              style={{
+                width: `${icon.size}px`,
+                height: `${icon.size}px`,
+                left: `${icon.left}%`,
+                top: "-30px",
+                animation: `fall ${icon.duration}s linear infinite`,
+                animationDelay: `${icon.delay}s`,
+                filter: "drop-shadow(0 0 4px rgba(251,191,36,0.5))",
+              }}
+            />
+          );
+        })}
+      </div>
 
       {/* Language selector */}
       <div className="absolute top-4 right-4 z-20">
