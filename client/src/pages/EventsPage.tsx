@@ -375,7 +375,7 @@ function EventForm({
           type="number"
           value={formData.capacity}
           onChange={(e) => setFormData({ ...formData, capacity: e.target.value })}
-          placeholder="No limit"
+          placeholder="Sin límite"
           min={2}
           data-testid="input-event-capacity"
         />

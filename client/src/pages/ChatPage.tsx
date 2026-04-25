@@ -213,13 +213,13 @@ export default function ChatPage() {
       <main className="flex-1 overflow-y-auto p-4 space-y-3">
         {isLoading ? (
           <div className="flex items-center justify-center h-full">
-            <p className="text-muted-foreground">Loading messages...</p>
+            <p className="text-muted-foreground">Cargando mensajes...</p>
           </div>
         ) : messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center">
-            <p className="text-muted-foreground mb-2">No messages yet</p>
+            <p className="text-muted-foreground mb-2">Aún no hay mensajes</p>
             <p className="text-sm text-muted-foreground">
-              Say hi to {otherUser?.firstName || "your match"}!
+              ¡Di hola a {otherUser?.firstName || "tu match"}!
             </p>
           </div>
         ) : (
@@ -268,7 +268,7 @@ export default function ChatPage() {
           <Input
             value={message}
             onChange={(e) => setMessage(e.target.value)}
-            placeholder="Type a message..."
+            placeholder="Escribe un mensaje..."
             className="flex-1"
             data-testid="input-message"
           />

@@ -205,8 +205,8 @@ export default function SwipePage() {
     },
     onError: () => {
       toast({
-        title: "No super likes left",
-        description: "You've used all your super likes for today.",
+        title: "Sin super likes disponibles",
+        description: "Has usado todos tus super likes de hoy.",
         variant: "destructive",
       });
     }
@@ -302,11 +302,11 @@ export default function SwipePage() {
             </SheetTrigger>
             <SheetContent>
               <SheetHeader>
-                <SheetTitle>Discovery Preferences</SheetTitle>
+                <SheetTitle>Preferencias de descubrimiento</SheetTitle>
               </SheetHeader>
               <div className="mt-6 space-y-6">
                 <div className="space-y-3">
-                  <Label>Age Range: {localPrefs.minAge} - {localPrefs.maxAge}</Label>
+                  <Label>Edad: {localPrefs.minAge} - {localPrefs.maxAge} años</Label>
                   <Slider
                     value={[localPrefs.minAge, localPrefs.maxAge]}
                     min={18}
@@ -322,7 +322,7 @@ export default function SwipePage() {
                   />
                 </div>
                 <div className="space-y-3">
-                  <Label>Maximum Distance: {localPrefs.maxDistance} km</Label>
+                  <Label>Distancia máxima: {localPrefs.maxDistance} km</Label>
                   <Slider
                     value={[localPrefs.maxDistance]}
                     min={5}
@@ -338,7 +338,7 @@ export default function SwipePage() {
                   />
                 </div>
                 <div className="space-y-3">
-                  <Label>Show Me</Label>
+                  <Label>Mostrar</Label>
                   <Select
                     value={localPrefs.showMe}
                     onValueChange={(value) => {
@@ -347,12 +347,12 @@ export default function SwipePage() {
                     }}
                   >
                     <SelectTrigger data-testid="select-show-me">
-                      <SelectValue placeholder="Select preference" />
+                      <SelectValue placeholder="Elige una opción" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="everyone">Everyone</SelectItem>
-                      <SelectItem value="men">Men</SelectItem>
-                      <SelectItem value="women">Women</SelectItem>
+                      <SelectItem value="everyone">Todos</SelectItem>
+                      <SelectItem value="men">Hombres</SelectItem>
+                      <SelectItem value="women">Mujeres</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -430,10 +430,10 @@ export default function SwipePage() {
                 <div className="w-20 h-20 bg-muted rounded-full flex items-center justify-center mb-4">
                   <Sparkles className="w-10 h-10 text-muted-foreground" />
                 </div>
-                <h3 className="text-xl font-bold">No more profiles</h3>
-                <p className="text-muted-foreground mt-2 mb-6">Come back later for more recommendations.</p>
+                <h3 className="text-xl font-bold">Sin más perfiles</h3>
+                <p className="text-muted-foreground mt-2 mb-6">Vuelve pronto para ver más personas cerca de ti.</p>
                 <Button onClick={() => refetch()} variant="outline" data-testid="button-refresh">
-                  Refresh
+                  Actualizar
                 </Button>
              </div>
           ) : null}
@@ -518,7 +518,7 @@ export default function SwipePage() {
                 transition={{ delay: 0.4 }}
                 className="text-white/80 text-lg mt-4"
               >
-                Start a conversation now!
+                ¡Empieza a chatear ahora!
               </motion.p>
             </div>
           </motion.div>

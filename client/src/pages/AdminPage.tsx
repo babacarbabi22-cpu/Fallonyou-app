@@ -294,7 +294,7 @@ export default function AdminPage() {
             </div>
 
             {usersLoading ? (
-              <div className="text-center py-8 text-muted-foreground">Loading...</div>
+              <div className="text-center py-8 text-muted-foreground">Cargando...</div>
             ) : (
               <div className="space-y-3">
                 {filteredUsers?.map((user) => (
@@ -415,7 +415,7 @@ export default function AdminPage() {
         {activeTab === "reports" && (
           <>
             {reportsLoading ? (
-              <div className="text-center py-8 text-muted-foreground">Loading...</div>
+              <div className="text-center py-8 text-muted-foreground">Cargando...</div>
             ) : reports && reports.length > 0 ? (
               <div className="space-y-3">
                 {reports.map((report) => (
