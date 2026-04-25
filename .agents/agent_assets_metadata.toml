@@ -41,3 +41,9 @@ id = "eR46siGALel8Kalc5LMyb"
 uri = "file://attached_assets/folleto_reverso.png"
 type = "image"
 title = "Folleto — Reverso con QR"
+
+[[outputs]]
+id = "-k698cXnaEcor3pFP2FLA"
+uri = "file://attached_assets/pegatina_redonda.png"
+type = "image"
+title = "Pegatina redonda — lista para Vistaprint"
