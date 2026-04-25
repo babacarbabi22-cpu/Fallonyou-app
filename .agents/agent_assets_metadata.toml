@@ -47,3 +47,15 @@ id = "-k698cXnaEcor3pFP2FLA"
 uri = "file://attached_assets/pegatina_redonda.png"
 type = "image"
 title = "Pegatina redonda — lista para Vistaprint"
+
+[[outputs]]
+id = "Adco5JBtqwn-LSEyHcHBj"
+uri = "file://attached_assets/folleto_reverso_bilingue.png"
+type = "image"
+title = "Reverso folleto — Bilingüe ES/EN"
+
+[[outputs]]
+id = "ksth3dZK_KJknkk7Up_hi"
+uri = "file://attached_assets/pegatina_bilingue.png"
+type = "image"
+title = "Pegatina redonda — Bilingüe ES/EN/FR"
