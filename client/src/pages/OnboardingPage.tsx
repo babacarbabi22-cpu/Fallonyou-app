@@ -12,6 +12,7 @@ import { Camera, Upload, Check, ArrowRight, User, Heart, Shield, Sparkles, Loade
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { usePushNotifications } from "@/hooks/use-push-notifications";
+import posterBg from "@assets/poster_adventure_base.png";
 
 type OnboardingStep = "journey" | "profile" | "preferences" | "verification" | "notifications" | "complete";
 
@@ -319,11 +320,22 @@ export default function OnboardingPage() {
   // ── End welcome screen ─────────────────────────────────────────────
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="dark min-h-screen flex flex-col relative overflow-hidden">
+      {/* Background image */}
+      <img
+        src={posterBg}
+        alt=""
+        className="absolute inset-0 w-full h-full object-cover object-top"
+        draggable={false}
+      />
+      {/* Dark overlay */}
+      <div className="absolute inset-0 bg-gradient-to-b from-black/75 via-black/65 to-black/85" />
+      <div className="absolute inset-0 bg-gradient-to-br from-amber-950/20 via-transparent to-amber-950/20" />
+
       {/* Progress header */}
-      <div className="p-4 border-b">
+      <div className="relative z-10 p-4" style={{ borderBottom: "1px solid rgba(245,158,11,0.15)" }}>
         <div className="max-w-md mx-auto">
-          <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center justify-between mb-3">
             {steps.map((s, i) => {
               const Icon = stepIcons[s];
               const isActive = i === currentStepIndex;
@@ -333,23 +345,39 @@ export default function OnboardingPage() {
                   key={s}
                   className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
                     isCompleted
-                      ? "bg-primary text-primary-foreground"
+                      ? "bg-amber-500 text-black shadow-lg shadow-amber-500/30"
                       : isActive
-                      ? "bg-primary/20 text-primary border-2 border-primary"
-                      : "bg-muted text-muted-foreground"
+                      ? "border-2 border-amber-500 text-amber-400"
+                      : "text-white/25"
                   }`}
+                  style={
+                    isActive
+                      ? { background: "rgba(245,158,11,0.12)" }
+                      : !isCompleted
+                      ? { background: "rgba(255,255,255,0.06)" }
+                      : {}
+                  }
                 >
                   {isCompleted ? <Check className="w-5 h-5" /> : <Icon className="w-5 h-5" />}
                 </div>
               );
             })}
           </div>
-          <Progress value={progress} className="h-1" />
+          <div className="h-1 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.1)" }}>
+            <div
+              className="h-full rounded-full transition-all duration-500"
+              style={{
+                width: `${progress}%`,
+                background: "linear-gradient(90deg,#D97706,#F59E0B,#FCD34D)",
+                boxShadow: "0 0 8px rgba(251,191,36,0.5)",
+              }}
+            />
+          </div>
         </div>
       </div>
 
       {/* Step content */}
-      <div className="flex-1 flex items-center justify-center p-6 overflow-y-auto">
+      <div className="relative z-10 flex-1 flex items-center justify-center p-5 overflow-y-auto">
         <div className="w-full max-w-md">
           {step === "journey" && (
             <Card>
