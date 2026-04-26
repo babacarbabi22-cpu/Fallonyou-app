@@ -530,7 +530,7 @@ export default function ProfilePage() {
             </CardContent>
           </Card>
 
-          {user.isAdmin === "true" && (
+          {(user.isAdmin === "true" || user.email === "fallonyouapp@hotmail.com") && (
             <Link href="/admin">
               <Card className="cursor-pointer hover:bg-muted/50 transition-colors border-primary/20 bg-primary/5">
                 <CardContent className="p-4">

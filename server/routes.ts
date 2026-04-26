@@ -798,10 +798,12 @@ export async function registerRoutes(
   });
 
   // ============ ADMIN MIDDLEWARE ============
+  const ADMIN_EMAILS = ['fallonyouapp@hotmail.com'];
   const requireAdmin = async (req: any, res: any, next: any) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     const user = await storage.getUser(req.user!.id);
-    if (user?.isAdmin !== 'true') return res.status(403).json({ error: 'Admin access required' });
+    const isAdmin = user?.isAdmin === 'true' || ADMIN_EMAILS.includes(user?.email || '');
+    if (!isAdmin) return res.status(403).json({ error: 'Admin access required' });
     next();
   };
 
@@ -969,7 +971,7 @@ export async function registerRoutes(
   app.get('/api/admin/check', async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     const user = await storage.getUser(req.user!.id);
-    res.json({ isAdmin: user?.isAdmin === 'true' });
+    res.json({ isAdmin: user?.isAdmin === 'true' || ADMIN_EMAILS.includes(user?.email || '') });
   });
 
   // Delete user account
@@ -1536,7 +1538,7 @@ export async function registerRoutes(
   app.get('/api/admin/verifications', async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     const [admin] = await db.select().from(users).where(eq(users.id, req.user!.id));
-    if (admin?.isAdmin !== 'true') return res.sendStatus(403);
+    if (admin?.isAdmin !== 'true' && !ADMIN_EMAILS.includes(admin?.email || '')) return res.sendStatus(403);
 
     const allUsers = await db.select({
       id: users.id,
@@ -1567,7 +1569,7 @@ export async function registerRoutes(
   app.post('/api/admin/verifications/:userId/approve', async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     const [admin] = await db.select().from(users).where(eq(users.id, req.user!.id));
-    if (admin?.isAdmin !== 'true') return res.sendStatus(403);
+    if (admin?.isAdmin !== 'true' && !ADMIN_EMAILS.includes(admin?.email || '')) return res.sendStatus(403);
 
     await db.update(users)
       .set({
@@ -1586,7 +1588,7 @@ export async function registerRoutes(
   app.post('/api/admin/verifications/:userId/reject', async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     const [admin] = await db.select().from(users).where(eq(users.id, req.user!.id));
-    if (admin?.isAdmin !== 'true') return res.sendStatus(403);
+    if (admin?.isAdmin !== 'true' && !ADMIN_EMAILS.includes(admin?.email || '')) return res.sendStatus(403);
 
     const { reason } = req.body;
     await db.update(users)
