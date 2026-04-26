@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { MessageCircle, User as UserIcon, Calendar, Crown, Search } from "lucide-react";
+import { MessageCircle, User as UserIcon, Calendar, Crown, Plane } from "lucide-react";
 import { clsx } from "clsx";
 import { useTranslation } from "@/lib/i18n";
 
@@ -8,8 +8,8 @@ export function BottomNav() {
   const t = useTranslation();
 
   const navItems = [
-    { href: "/discover", icon: Search,         label: t.nav.discover },
     { href: "/",         icon: Calendar,        label: t.nav.events || "Planes" },
+    { href: "/discover", icon: Plane,           label: t.nav.discover },
     { href: "/matches",  icon: MessageCircle,   label: t.nav.matches },
     { href: "/premium",  icon: Crown,           label: "Premium" },
     { href: "/profile",  icon: UserIcon,        label: t.nav.profile },
