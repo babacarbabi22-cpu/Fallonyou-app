@@ -303,3 +303,102 @@ export const referrals = pgTable("referrals", {
 });
 
 export type Referral = typeof referrals.$inferSelect;
+
+// ─── Profile Views ───────────────────────────────────────────────────────────
+export const profileViews = pgTable("profile_views", {
+  id: serial("id").primaryKey(),
+  viewerId: varchar("viewer_id").notNull().references(() => users.id),
+  viewedId: varchar("viewed_id").notNull().references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+export type ProfileView = typeof profileViews.$inferSelect;
+
+// ─── Stories (24h) ───────────────────────────────────────────────────────────
+export const stories = pgTable("stories", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  mediaUrl: text("media_url").notNull(),
+  caption: text("caption"),
+  expiresAt: timestamp("expires_at").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+export type Story = typeof stories.$inferSelect;
+export const insertStorySchema = createInsertSchema(stories).omit({ id: true, createdAt: true });
+export type InsertStory = z.infer<typeof insertStorySchema>;
+
+// ─── Business Partners ───────────────────────────────────────────────────────
+export const businessPartners = pgTable("business_partners", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  city: text("city").notNull(),
+  category: text("category").notNull(),
+  contactEmail: text("contact_email").notNull(),
+  logoUrl: text("logo_url"),
+  website: text("website"),
+  status: text("status").default("pending"), // pending | active | inactive
+  createdAt: timestamp("created_at").defaultNow(),
+});
+export type BusinessPartner = typeof businessPartners.$inferSelect;
+export const insertBusinessPartnerSchema = createInsertSchema(businessPartners).omit({ id: true, createdAt: true });
+export type InsertBusinessPartner = z.infer<typeof insertBusinessPartnerSchema>;
+
+// ─── Local Offers ────────────────────────────────────────────────────────────
+export const localOffers = pgTable("local_offers", {
+  id: serial("id").primaryKey(),
+  partnerId: integer("partner_id").notNull().references(() => businessPartners.id),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  discount: text("discount"),
+  code: text("code"),
+  validUntil: timestamp("valid_until"),
+  active: boolean("active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+export type LocalOffer = typeof localOffers.$inferSelect;
+export const insertLocalOfferSchema = createInsertSchema(localOffers).omit({ id: true, createdAt: true });
+export type InsertLocalOffer = z.infer<typeof insertLocalOfferSchema>;
+
+// ─── In-app Notifications ────────────────────────────────────────────────────
+export const notifications = pgTable("notifications", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  type: text("type").notNull(), // match | message | like | view | event | offer | system
+  title: text("title").notNull(),
+  body: text("body"),
+  link: text("link"),
+  read: boolean("read").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+export type Notification = typeof notifications.$inferSelect;
+export const insertNotificationSchema = createInsertSchema(notifications).omit({ id: true, createdAt: true });
+export type InsertNotification = z.infer<typeof insertNotificationSchema>;
+
+// ─── Swipes ──────────────────────────────────────────────────────────────────
+export const swipes = pgTable("swipes", {
+  id: serial("id").primaryKey(),
+  swiperId: varchar("swiper_id").notNull().references(() => users.id),
+  swipedId: varchar("swiped_id").notNull().references(() => users.id),
+  direction: text("direction").notNull(), // like | pass | superlike
+  createdAt: timestamp("created_at").defaultNow(),
+});
+export type Swipe = typeof swipes.$inferSelect;
+export const insertSwipeSchema = createInsertSchema(swipes).omit({ id: true, createdAt: true });
+export type InsertSwipe = z.infer<typeof insertSwipeSchema>;
+
+// ─── Ambassador Applications ─────────────────────────────────────────────────
+export const ambassadorApplications = pgTable("ambassador_applications", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").references(() => users.id),
+  name: text("name").notNull(),
+  email: text("email").notNull(),
+  city: text("city").notNull(),
+  instagram: text("instagram"),
+  motivation: text("motivation").notNull(),
+  followers: text("followers"),
+  status: text("status").default("pending"), // pending | approved | rejected
+  createdAt: timestamp("created_at").defaultNow(),
+});
+export type AmbassadorApplication = typeof ambassadorApplications.$inferSelect;
+export const insertAmbassadorApplicationSchema = createInsertSchema(ambassadorApplications).omit({ id: true, createdAt: true, status: true });
+export type InsertAmbassadorApplication = z.infer<typeof insertAmbassadorApplicationSchema>;

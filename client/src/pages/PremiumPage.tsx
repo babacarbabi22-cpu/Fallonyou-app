@@ -3,10 +3,11 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { BottomNav } from "@/components/BottomNav";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
-import { Loader2, Crown, Heart, Eye, Sparkles, Check, Shield, Star, HelpCircle, Rocket, Users, Zap, Store, Mail, Tag } from "lucide-react";
+import { Loader2, Crown, Heart, Eye, Sparkles, Check, Shield, Star, HelpCircle, Rocket, Users, Zap, Store, Mail, Tag, ArrowRight } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
+import { useLocation } from "wouter";
 
 const benefits = [
   { icon: Heart,    title: "Likes ilimitados",          desc: "Sin límite diario, conecta con quien quieras" },
@@ -40,15 +41,19 @@ const faqs = [
   },
 ];
 
+interface ProfileViewersData { count: number; viewers: any[]; }
+
 export default function PremiumPage() {
   const { toast } = useToast();
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [, navigate] = useLocation();
 
   interface PremiumStatus { isPremium: boolean; trialEndsAt?: string; premiumExpiresAt?: string; }
   interface LikedByData { count: number; users: any[]; isPremium: boolean; }
 
   const { data: premiumStatus, isLoading } = useQuery<PremiumStatus>({ queryKey: ["/api/premium/status"] });
   const { data: likedByData } = useQuery<LikedByData>({ queryKey: ["/api/premium/liked-by"] });
+  const { data: viewersData } = useQuery<ProfileViewersData>({ queryKey: ["/api/profile-views/viewers"] });
 
   const portalMutation = useMutation({
     mutationFn: async () => { const res = await apiRequest("POST", "/api/premium/portal", {}); return res.json(); },
@@ -211,6 +216,65 @@ export default function PremiumPage() {
             )}
           </section>
         )}
+
+        {/* ── Quién vio tu perfil ── */}
+        {(viewersData?.count ?? 0) > 0 && (
+          <section>
+            <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+              <Eye className="w-5 h-5 text-amber-500" />
+              {viewersData!.count} {viewersData!.count === 1 ? "persona vio tu perfil" : "personas vieron tu perfil"}
+            </h2>
+            {isPremium && viewersData!.viewers.length > 0 ? (
+              <div className="grid grid-cols-3 gap-3">
+                {viewersData!.viewers.map((user: any) => (
+                  <Card key={user.id} className="overflow-hidden">
+                    <img
+                      src={user.photos?.[0]?.url || user.profileImageUrl || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&auto=format&fit=crop&q=60"}
+                      alt={user.firstName}
+                      className="w-full aspect-square object-cover"
+                    />
+                    <CardContent className="p-2 text-center">
+                      <p className="font-medium text-xs truncate">{user.firstName || "Alguien"}</p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <Card style={{ background: "linear-gradient(135deg,rgba(245,158,11,0.08),rgba(245,158,11,0.03))", border: "1px solid rgba(245,158,11,0.2)" }}>
+                <CardContent className="py-8 text-center">
+                  <div className="grid grid-cols-3 gap-2 mb-4 opacity-40">
+                    {[1, 2, 3].map(i => <div key={i} className="aspect-square rounded-lg bg-muted" />)}
+                  </div>
+                  <Eye className="w-7 h-7 text-amber-500 mx-auto mb-2" />
+                  <p className="text-sm text-muted-foreground">Función disponible próximamente</p>
+                </CardContent>
+              </Card>
+            )}
+          </section>
+        )}
+
+        {/* ── Programa Embajador ── */}
+        <div
+          className="rounded-2xl overflow-hidden cursor-pointer group"
+          style={{ background: "linear-gradient(135deg,#1e1b4b,#312e81,#4338ca)", boxShadow: "0 8px 32px rgba(67,56,202,0.3)" }}
+          onClick={() => navigate("/ambassador")}
+          data-testid="card-ambassador-cta"
+        >
+          <div className="p-5 flex items-center gap-4">
+            <div className="w-12 h-12 rounded-2xl bg-white/15 flex items-center justify-center shrink-0">
+              <Rocket className="w-6 h-6 text-white" />
+            </div>
+            <div className="flex-1">
+              <p className="text-white font-bold text-base">Programa Embajador 🚀</p>
+              <p className="text-white/65 text-xs mt-0.5 leading-relaxed">
+                Representa a FallonYou en tu ciudad y consigue beneficios exclusivos.
+              </p>
+            </div>
+            <div className="w-8 h-8 rounded-full bg-white/15 flex items-center justify-center shrink-0 group-hover:bg-white/25 transition-colors">
+              <ArrowRight className="w-4 h-4 text-white" />
+            </div>
+          </div>
+        </div>
 
         {/* ── Seguridad ── */}
         <div

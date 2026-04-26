@@ -4,8 +4,8 @@ import type { Server } from "http";
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
 import { db } from "./db";
-import { users, profiles, photos, events, eventParticipants, eventComments, eventRatings, matches, preferences, referrals } from "@shared/schema";
-import { eq, and, desc, ilike, gte, inArray, or, sql } from "drizzle-orm";
+import { users, profiles, photos, events, eventParticipants, eventComments, eventRatings, matches, preferences, referrals, profileViews, stories, businessPartners, localOffers, notifications, swipes, ambassadorApplications } from "@shared/schema";
+import { eq, and, desc, ilike, gte, inArray, or, sql, lt, ne, count } from "drizzle-orm";
 import { api } from "@shared/routes";
 import { z } from "zod";
 import multer from "multer";
@@ -1591,6 +1591,304 @@ export async function registerRoutes(
       await removeSubscription(endpoint);
     }
     res.json({ success: true });
+  });
+
+  // ───────────────────────────────────────────────────────────────────────────
+  // PROFILE VIEWS
+  // ───────────────────────────────────────────────────────────────────────────
+  // Record a profile view (called when opening a profile card)
+  app.post('/api/profile-views/:viewedId', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const viewerId = req.user!.id;
+    const { viewedId } = req.params;
+    if (viewerId === viewedId) return res.json({ ok: true }); // don't track self-views
+    try {
+      // Avoid duplicate in the last 24h
+      const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+      const [existing] = await db.select().from(profileViews)
+        .where(and(
+          eq(profileViews.viewerId, viewerId),
+          eq(profileViews.viewedId, viewedId),
+          gte(profileViews.createdAt, oneDayAgo)
+        ));
+      if (!existing) {
+        await db.insert(profileViews).values({ viewerId, viewedId });
+        // Notify the viewed user (if they're premium they'll see who)
+        await db.insert(notifications).values({
+          userId: viewedId,
+          type: "view",
+          title: "Alguien vio tu perfil",
+          body: "Una persona ha visitado tu perfil hoy.",
+          link: "/premium",
+          read: false,
+        });
+      }
+      res.json({ ok: true });
+    } catch { res.json({ ok: true }); }
+  });
+
+  // Get my profile viewers (last 30 days) - returns count + users if premium
+  app.get('/api/profile-views/viewers', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const userId = req.user!.id;
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const views = await db.select().from(profileViews)
+      .where(and(eq(profileViews.viewedId, userId), gte(profileViews.createdAt, thirtyDaysAgo)))
+      .orderBy(desc(profileViews.createdAt));
+    const uniqueViewerIds = [...new Set(views.map(v => v.viewerId))];
+    const isPremium = req.user!.isPremium === 'true';
+    if (!isPremium) {
+      return res.json({ count: uniqueViewerIds.length, viewers: [] });
+    }
+    const viewerUsers = uniqueViewerIds.length > 0
+      ? await db.select().from(users).where(inArray(users.id, uniqueViewerIds.slice(0, 20)))
+      : [];
+    const [allProfiles, allPhotos] = await Promise.all([
+      viewerUsers.length > 0 ? db.select().from(profiles).where(inArray(profiles.userId, viewerUsers.map(u => u.id))) : [],
+      viewerUsers.length > 0 ? db.select().from(photos).where(inArray(photos.userId, viewerUsers.map(u => u.id))) : [],
+    ]);
+    const enriched = viewerUsers.map(u => ({
+      ...u,
+      profile: allProfiles.find(p => p.userId === u.id),
+      photos: allPhotos.filter(p => p.userId === u.id),
+    }));
+    res.json({ count: uniqueViewerIds.length, viewers: enriched });
+  });
+
+  // ───────────────────────────────────────────────────────────────────────────
+  // STORIES (24h)
+  // ───────────────────────────────────────────────────────────────────────────
+  // Get active stories of users I follow or all users (discover)
+  app.get('/api/stories', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const now = new Date();
+    const activeStories = await db.select({
+      id: stories.id,
+      userId: stories.userId,
+      mediaUrl: stories.mediaUrl,
+      caption: stories.caption,
+      expiresAt: stories.expiresAt,
+      createdAt: stories.createdAt,
+    }).from(stories)
+      .where(gte(stories.expiresAt, now))
+      .orderBy(desc(stories.createdAt));
+    if (activeStories.length === 0) return res.json([]);
+    const userIds = [...new Set(activeStories.map(s => s.userId))];
+    const [storyUsers, storyPhotos] = await Promise.all([
+      db.select().from(users).where(inArray(users.id, userIds)),
+      db.select().from(photos).where(inArray(photos.userId, userIds)),
+    ]);
+    // Group stories by user
+    const grouped = userIds.map(uid => {
+      const user = storyUsers.find(u => u.id === uid);
+      const photo = storyPhotos.find(p => p.userId === uid);
+      return {
+        userId: uid,
+        userName: user?.firstName || "Alguien",
+        userPhoto: photo?.url || user?.profileImageUrl || null,
+        stories: activeStories.filter(s => s.userId === uid),
+      };
+    });
+    res.json(grouped);
+  });
+
+  // Create a story
+  app.post('/api/stories', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const { mediaUrl, caption } = req.body;
+    if (!mediaUrl) return res.status(400).json({ error: "mediaUrl required" });
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    const [story] = await db.insert(stories).values({
+      userId: req.user!.id, mediaUrl, caption, expiresAt,
+    }).returning();
+    res.json(story);
+  });
+
+  // Delete my story
+  app.delete('/api/stories/:id', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    await db.delete(stories).where(
+      and(eq(stories.id, parseInt(req.params.id)), eq(stories.userId, req.user!.id))
+    );
+    res.json({ ok: true });
+  });
+
+  // ───────────────────────────────────────────────────────────────────────────
+  // IN-APP NOTIFICATIONS
+  // ───────────────────────────────────────────────────────────────────────────
+  app.get('/api/notifications', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const myNotifs = await db.select().from(notifications)
+      .where(eq(notifications.userId, req.user!.id))
+      .orderBy(desc(notifications.createdAt))
+      .limit(50);
+    res.json(myNotifs);
+  });
+
+  app.get('/api/notifications/unread-count', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const [result] = await db.select({ count: count() }).from(notifications)
+      .where(and(eq(notifications.userId, req.user!.id), eq(notifications.read, false)));
+    res.json({ count: result?.count ?? 0 });
+  });
+
+  app.post('/api/notifications/:id/read', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    await db.update(notifications)
+      .set({ read: true })
+      .where(and(eq(notifications.id, parseInt(req.params.id)), eq(notifications.userId, req.user!.id)));
+    res.json({ ok: true });
+  });
+
+  app.post('/api/notifications/read-all', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    await db.update(notifications)
+      .set({ read: true })
+      .where(eq(notifications.userId, req.user!.id));
+    res.json({ ok: true });
+  });
+
+  // ───────────────────────────────────────────────────────────────────────────
+  // BUSINESS PARTNERS & LOCAL OFFERS
+  // ───────────────────────────────────────────────────────────────────────────
+  // Public: list active offers
+  app.get('/api/offers', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const now = new Date();
+    const activeOffers = await db.select({
+      id: localOffers.id,
+      title: localOffers.title,
+      description: localOffers.description,
+      discount: localOffers.discount,
+      code: localOffers.code,
+      validUntil: localOffers.validUntil,
+      partnerName: businessPartners.name,
+      partnerCity: businessPartners.city,
+      partnerCategory: businessPartners.category,
+      partnerLogo: businessPartners.logoUrl,
+    }).from(localOffers)
+      .innerJoin(businessPartners, eq(localOffers.partnerId, businessPartners.id))
+      .where(and(
+        eq(localOffers.active, true),
+        eq(businessPartners.status, 'active'),
+        or(sql`${localOffers.validUntil} IS NULL`, gte(localOffers.validUntil, now))
+      ))
+      .orderBy(desc(localOffers.createdAt));
+    res.json(activeOffers);
+  });
+
+  // Admin: list all partners
+  app.get('/api/admin/partners', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    if (req.user!.email !== 'fallonyouapp@hotmail.com') return res.sendStatus(403);
+    const partners = await db.select().from(businessPartners).orderBy(desc(businessPartners.createdAt));
+    res.json(partners);
+  });
+
+  // Admin: create partner
+  app.post('/api/admin/partners', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    if (req.user!.email !== 'fallonyouapp@hotmail.com') return res.sendStatus(403);
+    const { name, description, city, category, contactEmail, logoUrl, website, status } = req.body;
+    if (!name || !city || !category || !contactEmail) return res.status(400).json({ error: "Missing fields" });
+    const [partner] = await db.insert(businessPartners).values({ name, description, city, category, contactEmail, logoUrl, website, status: status || 'active' }).returning();
+    res.json(partner);
+  });
+
+  // Admin: update partner status
+  app.patch('/api/admin/partners/:id', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    if (req.user!.email !== 'fallonyouapp@hotmail.com') return res.sendStatus(403);
+    const [partner] = await db.update(businessPartners)
+      .set(req.body)
+      .where(eq(businessPartners.id, parseInt(req.params.id)))
+      .returning();
+    res.json(partner);
+  });
+
+  // Admin: create offer for a partner
+  app.post('/api/admin/offers', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    if (req.user!.email !== 'fallonyouapp@hotmail.com') return res.sendStatus(403);
+    const { partnerId, title, description, discount, code, validUntil } = req.body;
+    if (!partnerId || !title || !description) return res.status(400).json({ error: "Missing fields" });
+    const [offer] = await db.insert(localOffers).values({
+      partnerId: parseInt(partnerId), title, description, discount, code,
+      validUntil: validUntil ? new Date(validUntil) : null,
+    }).returning();
+    res.json(offer);
+  });
+
+  // Admin: list all offers
+  app.get('/api/admin/offers', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    if (req.user!.email !== 'fallonyouapp@hotmail.com') return res.sendStatus(403);
+    const offers = await db.select({
+      id: localOffers.id,
+      title: localOffers.title,
+      description: localOffers.description,
+      discount: localOffers.discount,
+      code: localOffers.code,
+      validUntil: localOffers.validUntil,
+      active: localOffers.active,
+      partnerName: businessPartners.name,
+      partnerCity: businessPartners.city,
+    }).from(localOffers)
+      .innerJoin(businessPartners, eq(localOffers.partnerId, businessPartners.id))
+      .orderBy(desc(localOffers.createdAt));
+    res.json(offers);
+  });
+
+  app.patch('/api/admin/offers/:id', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    if (req.user!.email !== 'fallonyouapp@hotmail.com') return res.sendStatus(403);
+    const [offer] = await db.update(localOffers)
+      .set(req.body)
+      .where(eq(localOffers.id, parseInt(req.params.id)))
+      .returning();
+    res.json(offer);
+  });
+
+  // ───────────────────────────────────────────────────────────────────────────
+  // AMBASSADOR APPLICATIONS
+  // ───────────────────────────────────────────────────────────────────────────
+  app.post('/api/ambassador/apply', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const { name, email, city, instagram, motivation, followers } = req.body;
+    if (!name || !email || !city || !motivation) {
+      return res.status(400).json({ error: "name, email, city, motivation are required" });
+    }
+    const [application] = await db.insert(ambassadorApplications).values({
+      userId: req.user!.id, name, email, city, instagram, motivation, followers,
+    }).returning();
+    // Notify admin
+    await db.insert(notifications).values({
+      userId: req.user!.id,
+      type: "system",
+      title: "¡Solicitud de embajador enviada!",
+      body: "Revisaremos tu solicitud y te contactaremos pronto.",
+      link: "/profile",
+      read: false,
+    });
+    res.json(application);
+  });
+
+  // Admin: list ambassador applications
+  app.get('/api/admin/ambassadors', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    if (req.user!.email !== 'fallonyouapp@hotmail.com') return res.sendStatus(403);
+    const apps = await db.select().from(ambassadorApplications).orderBy(desc(ambassadorApplications.createdAt));
+    res.json(apps);
+  });
+
+  app.patch('/api/admin/ambassadors/:id', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    if (req.user!.email !== 'fallonyouapp@hotmail.com') return res.sendStatus(403);
+    const [app2] = await db.update(ambassadorApplications)
+      .set({ status: req.body.status })
+      .where(eq(ambassadorApplications.id, parseInt(req.params.id)))
+      .returning();
+    res.json(app2);
   });
 
   return httpServer;

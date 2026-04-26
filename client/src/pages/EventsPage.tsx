@@ -11,6 +11,8 @@ import { Badge } from "@/components/ui/badge";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Calendar, MapPin, Users, Plus, Clock, Loader2, Trash2, Pencil, ImagePlus, X, Search, MessageCircle, Image, Sparkles, Bell, ArrowRight } from "lucide-react";
 import { BottomNav } from "@/components/BottomNav";
+import { NotificationBell } from "@/components/NotificationBell";
+import { StoriesRow } from "@/components/StoriesRow";
 import { WelcomeTour } from "@/components/WelcomeTour";
 import { SocialProofTicker } from "@/components/SocialProofTicker";
 import { InviteFriends } from "@/components/InviteFriends";
@@ -576,6 +578,7 @@ export default function EventsPage() {
         <div className="flex items-center justify-between mb-3">
           <h1 className="text-2xl font-bold">Activities</h1>
           <div className="flex items-center gap-2">
+            <NotificationBell />
             <Button
               variant="outline"
               size="sm"
@@ -653,6 +656,11 @@ export default function EventsPage() {
             </Button>
           ))}
         </div>
+      </div>
+
+      {/* Stories row */}
+      <div className="px-4 pt-3 pb-1">
+        <StoriesRow />
       </div>
 
       {currentUser && !currentUser.profileImageUrl && (

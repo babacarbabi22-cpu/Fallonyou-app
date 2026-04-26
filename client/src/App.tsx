@@ -22,6 +22,7 @@ import ResetPasswordPage from "@/pages/ResetPasswordPage";
 import EventsPage from "@/pages/EventsPage";
 import EventDetailPage from "@/pages/EventDetailPage";
 import AmbassadorsPage from "@/pages/AmbassadorsPage";
+import AmbassadorPage from "@/pages/AmbassadorPage";
 import HowItWorksPage from "@/pages/HowItWorksPage";
 import { useCurrentUser } from "@/hooks/use-danceme";
 import { useAuth } from "@/hooks/use-auth";
@@ -167,6 +168,9 @@ function Router() {
       </Route>
       <Route path="/ambassadors">
         {() => <ProtectedRoute component={AmbassadorsPage} />}
+      </Route>
+      <Route path="/ambassador">
+        {() => <ProtectedRoute component={AmbassadorPage} />}
       </Route>
       <Route path="/how-it-works">
         {() => <ProtectedRoute component={HowItWorksPage} />}
