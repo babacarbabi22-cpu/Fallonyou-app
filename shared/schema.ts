@@ -1,5 +1,5 @@
 
-import { pgTable, text, serial, integer, boolean, timestamp, varchar, real } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, varchar, real, uniqueIndex } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -387,6 +387,14 @@ export const insertSwipeSchema = createInsertSchema(swipes).omit({ id: true, cre
 export type InsertSwipe = z.infer<typeof insertSwipeSchema>;
 
 // ─── Ambassador Applications ─────────────────────────────────────────────────
+export const appSessions = pgTable("app_sessions", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").references(() => users.id),
+  date: varchar("date", { length: 10 }).notNull(), // YYYY-MM-DD
+  createdAt: timestamp("created_at").defaultNow(),
+}, (t) => [uniqueIndex("app_sessions_user_date_idx").on(t.userId, t.date)]);
+export type AppSession = typeof appSessions.$inferSelect;
+
 export const ambassadorApplications = pgTable("ambassador_applications", {
   id: serial("id").primaryKey(),
   userId: varchar("user_id").references(() => users.id),

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Switch, Route, Redirect } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -81,6 +81,13 @@ function AgeConfirmationModal() {
   );
 }
 
+function SessionPing() {
+  useEffect(() => {
+    fetch("/api/sessions/ping", { method: "POST", credentials: "include" }).catch(() => {});
+  }, []);
+  return null;
+}
+
 function ProtectedRoute({ component: Component, skipOnboarding = false }: { component: React.ComponentType; skipOnboarding?: boolean }) {
   const { data: user, isLoading } = useCurrentUser();
   const { ageConfirmed, termsAccepted } = useAuth();
@@ -122,7 +129,12 @@ function ProtectedRoute({ component: Component, skipOnboarding = false }: { comp
     return <Redirect to="/onboarding" />;
   }
 
-  return <Component />;
+  return (
+    <>
+      <SessionPing />
+      <Component />
+    </>
+  );
 }
 
 function Router() {

@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { BottomNav } from "@/components/BottomNav";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
-import { ArrowLeft, Search, Ban, UserCheck, AlertTriangle, Flag, Shield, Users, FileWarning, Mail, Camera, Crown, CheckCircle2, XCircle, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Search, Ban, UserCheck, AlertTriangle, Flag, Shield, Users, FileWarning, Mail, Camera, Crown, CheckCircle2, XCircle, ShieldCheck, TrendingUp, MessageSquare, Heart, Activity } from "lucide-react";
 import { Link } from "wouter";
 
 interface UserWithProfile {
@@ -82,6 +82,10 @@ export default function AdminPage() {
   const { data: verifications, isLoading: verificationsLoading } = useQuery<VerificationRequest[]>({
     queryKey: ["/api/admin/verifications"],
   });
+
+  interface DailyRow { date: string; count: number; }
+  interface AdminStats { daily: DailyRow[]; totals: { total_users: number; new_users_7d: number; total_matches: number; total_messages: number; active_today: number; }; }
+  const { data: stats } = useQuery<AdminStats>({ queryKey: ["/api/admin/stats"] });
 
   const approveVerificationMutation = useMutation({
     mutationFn: async (userId: string) => {
@@ -194,6 +198,69 @@ export default function AdminPage() {
       </header>
 
       <div className="p-4 space-y-4">
+
+        {/* ── Dashboard: métricas clave ── */}
+        {stats && (
+          <>
+            <div className="grid grid-cols-2 gap-3">
+              {[
+                { icon: Activity, label: "Activos hoy", value: stats.totals.active_today, color: "text-green-500" },
+                { icon: Users, label: "Usuarios totales", value: stats.totals.total_users, color: "text-blue-500" },
+                { icon: TrendingUp, label: "Nuevos (7d)", value: stats.totals.new_users_7d, color: "text-amber-500" },
+                { icon: Heart, label: "Matches totales", value: stats.totals.total_matches, color: "text-rose-500" },
+                { icon: MessageSquare, label: "Mensajes totales", value: stats.totals.total_messages, color: "text-purple-500" },
+              ].map(({ icon: Icon, label, value, color }) => (
+                <Card key={label} className="overflow-hidden">
+                  <CardContent className="p-3 flex items-center gap-3">
+                    <div className={`w-9 h-9 rounded-xl bg-muted flex items-center justify-center shrink-0 ${color}`}>
+                      <Icon className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <p className="text-xl font-bold leading-none">{value ?? 0}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{label}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            {/* Mini bar chart — usuarios activos por día (últimos 30d) */}
+            {stats.daily.length > 0 && (() => {
+              const maxCount = Math.max(...stats.daily.map(d => d.count), 1);
+              // Show last 14 days max to fit in screen
+              const days = stats.daily.slice(-14);
+              return (
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <TrendingUp className="w-4 h-4 text-amber-500" />
+                      Usuarios activos por día (últimos {days.length}d)
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-end gap-1 h-24">
+                      {days.map(d => {
+                        const pct = Math.round((d.count / maxCount) * 100);
+                        const label = d.date.slice(5); // MM-DD
+                        return (
+                          <div key={d.date} className="flex-1 flex flex-col items-center gap-1">
+                            <span className="text-[9px] text-muted-foreground font-mono leading-none">{d.count}</span>
+                            <div
+                              className="w-full rounded-t-sm bg-amber-500/80 transition-all"
+                              style={{ height: `${Math.max(pct, 4)}%` }}
+                              title={`${d.date}: ${d.count}`}
+                            />
+                            <span className="text-[8px] text-muted-foreground rotate-45 origin-left translate-y-2 whitespace-nowrap">{label}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })()}
+          </>
+        )}
 
         {/* Herramientas de email */}
         <Card>

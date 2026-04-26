@@ -4,7 +4,7 @@ import type { Server } from "http";
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
 import { db } from "./db";
-import { users, profiles, photos, events, eventParticipants, eventComments, eventRatings, matches, preferences, referrals, profileViews, stories, businessPartners, localOffers, notifications, swipes, ambassadorApplications } from "@shared/schema";
+import { users, profiles, photos, events, eventParticipants, eventComments, eventRatings, matches, preferences, referrals, profileViews, stories, businessPartners, localOffers, notifications, swipes, ambassadorApplications, appSessions } from "@shared/schema";
 import { eq, and, desc, ilike, gte, inArray, or, sql, lt, ne, count } from "drizzle-orm";
 import { api } from "@shared/routes";
 import { z } from "zod";
@@ -797,15 +797,60 @@ export async function registerRoutes(
     });
   });
 
-  // ============ ADMIN ROUTES ============
-  
-  // Middleware to check admin status
+  // ============ ADMIN MIDDLEWARE ============
   const requireAdmin = async (req: any, res: any, next: any) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     const user = await storage.getUser(req.user!.id);
     if (user?.isAdmin !== 'true') return res.status(403).json({ error: 'Admin access required' });
     next();
   };
+
+  // ============ SESSION TRACKING ============
+
+  // Ping to record a daily session (called once when user opens the app)
+  app.post('/api/sessions/ping', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const userId = req.user!.id;
+    const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+    try {
+      await db.execute(sql`
+        INSERT INTO app_sessions (user_id, date)
+        VALUES (${userId}, ${today})
+        ON CONFLICT (user_id, date) DO NOTHING
+      `);
+    } catch (_) { /* ignore duplicate */ }
+    res.json({ ok: true });
+  });
+
+  // Admin: get daily stats
+  app.get('/api/admin/stats', requireAdmin, async (req, res) => {
+    // Daily active users for the last 30 days
+    const daily = await db.execute(sql`
+      SELECT date, COUNT(DISTINCT user_id)::int AS count
+      FROM app_sessions
+      WHERE date >= to_char(NOW() - INTERVAL '29 days', 'YYYY-MM-DD')
+      GROUP BY date
+      ORDER BY date ASC
+    `);
+
+    // Total users
+    const [{ total_users }] = (await db.execute(sql`SELECT COUNT(*)::int AS total_users FROM users`)).rows as any[];
+    // New users last 7 days
+    const [{ new_users_7d }] = (await db.execute(sql`SELECT COUNT(*)::int AS new_users_7d FROM users WHERE created_at >= NOW() - INTERVAL '7 days'`)).rows as any[];
+    // Total matches
+    const [{ total_matches }] = (await db.execute(sql`SELECT COUNT(*)::int AS total_matches FROM matches`)).rows as any[];
+    // Total messages
+    const [{ total_messages }] = (await db.execute(sql`SELECT COUNT(*)::int AS total_messages FROM messages`)).rows as any[];
+    // Active today
+    const [{ active_today }] = (await db.execute(sql`SELECT COUNT(DISTINCT user_id)::int AS active_today FROM app_sessions WHERE date = to_char(NOW(), 'YYYY-MM-DD')`)).rows as any[];
+
+    res.json({
+      daily: daily.rows,
+      totals: { total_users, new_users_7d, total_matches, total_messages, active_today },
+    });
+  });
+
+  // ============ ADMIN ROUTES ============
 
   // Get all users (admin only)
   app.get('/api/admin/users', requireAdmin, async (req, res) => {
