@@ -1283,11 +1283,42 @@ export async function registerRoutes(
       status: 'going',
     });
 
-    const creatorName = req.user!.firstName || 'Someone';
-    const categoryIcon = { dining: '🍽️', nightlife: '🎉', outdoor: '🏔️', culture: '🎭', sports: '⚽', travel: '✈️', music: '🎵', other: '📌' }[category] || '📌';
+    const creatorName = req.user!.firstName || 'Alguien';
+    const categoryIcon: Record<string, string> = { dining: '🍽️', nightlife: '🎉', outdoor: '🏔️', culture: '🎭', sports: '⚽', travel: '✈️', music: '🎵', other: '📌' };
+    const icon = categoryIcon[category] || '📌';
+
+    // Find users in the same city (currentCity or homeCity)
+    const nearbyUsers = await db.select({ id: users.id })
+      .from(users)
+      .where(
+        and(
+          ne(users.id, req.user!.id),
+          or(
+            ilike(users.currentCity, city),
+            ilike(users.homeCity, city)
+          )
+        )
+      );
+
+    // Create in-app notifications for nearby users
+    if (nearbyUsers.length > 0) {
+      const notifValues = nearbyUsers.map(u => ({
+        userId: u.id,
+        type: 'new_event',
+        title: `${icon} Nueva actividad en ${city}`,
+        body: `${creatorName} creó "${title}" — ¡únete ahora!`,
+        link: `/events`,
+        read: false,
+      }));
+      await db.insert(notifications).values(notifValues).catch(err =>
+        console.error('Error creating event notifications:', err)
+      );
+    }
+
+    // Push notifications to all users (wider reach)
     sendPushToAllExcept(req.user!.id, {
-      title: `${categoryIcon} New Activity in ${city}!`,
-      body: `${creatorName} created "${title}" — check it out and join!`,
+      title: `${icon} Nueva actividad en ${city}`,
+      body: `${creatorName} creó "${title}" — ¡únete!`,
       url: '/',
     }).catch(err => console.error('Push notification error:', err));
     
