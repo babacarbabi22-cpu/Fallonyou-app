@@ -108,7 +108,7 @@ export function NotificationBell() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -8, scale: 0.95 }}
             transition={{ duration: 0.15 }}
-            className="absolute right-0 top-12 w-80 rounded-2xl shadow-xl border bg-card z-50 overflow-hidden"
+            className="absolute right-0 top-12 w-[92vw] max-w-sm rounded-2xl shadow-xl border bg-card z-50 overflow-hidden"
             data-testid="panel-notifications"
           >
             {/* Header */}
@@ -131,7 +131,7 @@ export function NotificationBell() {
             </div>
 
             {/* List */}
-            <div className="max-h-96 overflow-y-auto divide-y">
+            <div className="max-h-[70vh] overflow-y-auto divide-y">
               {notifs.length === 0 ? (
                 <div className="py-10 text-center text-muted-foreground text-sm">
                   <Bell className="w-8 h-8 mx-auto mb-2 opacity-30" />
@@ -151,8 +151,8 @@ export function NotificationBell() {
                         <Icon className={`w-4 h-4 ${color}`} />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className={`text-sm leading-tight ${!n.read ? "font-semibold" : "font-medium"}`}>{n.title}</p>
-                        {n.body && <p className="text-xs text-muted-foreground mt-0.5 truncate">{n.body}</p>}
+                        <p className={`text-sm leading-snug ${!n.read ? "font-semibold" : "font-medium"}`}>{n.title}</p>
+                        {n.body && <p className="text-xs text-muted-foreground mt-1 leading-relaxed line-clamp-4 whitespace-pre-wrap break-words">{n.body}</p>}
                         <p className="text-xs text-muted-foreground mt-1">{timeAgo(n.createdAt)}</p>
                       </div>
                       {!n.read && <div className="w-2 h-2 rounded-full bg-amber-500 shrink-0 mt-2" />}
