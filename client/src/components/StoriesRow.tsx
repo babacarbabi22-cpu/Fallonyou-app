@@ -192,7 +192,7 @@ export function StoriesRow() {
             <div className="w-16 h-16 rounded-full border-2 border-dashed border-amber-400/50 flex items-center justify-center bg-amber-500/5">
               <Plus className="w-6 h-6 text-amber-500" />
             </div>
-            <span className="text-xs text-muted-foreground w-16 truncate text-center">Añadir</span>
+            <span className="text-xs text-muted-foreground text-center leading-tight" style={{width:"72px"}}>Añade tu estado o historia</span>
             <input
               type="file"
               accept="image/*"
