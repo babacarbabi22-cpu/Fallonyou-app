@@ -70,6 +70,9 @@ export default function AdminPage() {
   const [showRejectDialog, setShowRejectDialog] = useState(false);
   const [rejectTarget, setRejectTarget] = useState<VerificationRequest | null>(null);
   const [rejectReason, setRejectReason] = useState("");
+  const [showMessageDialog, setShowMessageDialog] = useState(false);
+  const [messageTarget, setMessageTarget] = useState<UserWithProfile | null>(null);
+  const [messageText, setMessageText] = useState("");
 
   const { data: users, isLoading: usersLoading } = useQuery<UserWithProfile[]>({
     queryKey: ["/api/admin/users"],
@@ -153,6 +156,21 @@ export default function AdminPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/reports"] });
       toast({ title: t.admin.reportResolved });
+    },
+  });
+
+  const sendMessageMutation = useMutation({
+    mutationFn: async ({ userId, message }: { userId: string; message: string }) => {
+      return apiRequest("POST", "/api/admin/send-user-message", { userId, message });
+    },
+    onSuccess: () => {
+      toast({ title: "✅ Mensaje enviado", description: "El usuario lo recibirá en sus notificaciones" });
+      setShowMessageDialog(false);
+      setMessageTarget(null);
+      setMessageText("");
+    },
+    onError: () => {
+      toast({ title: "Error al enviar el mensaje", variant: "destructive" });
     },
   });
 
@@ -433,6 +451,21 @@ export default function AdminPage() {
                               Dar Premium
                             </Button>
                           )}
+                          {/* Send message */}
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="border-blue-400 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/30"
+                            onClick={() => {
+                              setMessageTarget(user);
+                              setMessageText("");
+                              setShowMessageDialog(true);
+                            }}
+                            data-testid={`button-message-${user.id}`}
+                          >
+                            <MessageSquare className="w-4 h-4 mr-1" />
+                            Mensaje
+                          </Button>
                           {/* Ban toggle */}
                           {user.isBanned === "true" ? (
                             <Button
@@ -686,6 +719,39 @@ export default function AdminPage() {
               data-testid="button-confirm-ban"
             >
               {t.admin.confirmBan}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Send Message Dialog */}
+      <Dialog open={showMessageDialog} onOpenChange={setShowMessageDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <MessageSquare className="w-5 h-5 text-blue-500" />
+              Mensaje a {messageTarget?.profile?.displayName || messageTarget?.firstName || "usuario"}
+            </DialogTitle>
+            <DialogDescription>
+              El mensaje llegará como notificación dentro de la app. El usuario lo verá en su campana de notificaciones.
+            </DialogDescription>
+          </DialogHeader>
+          <Textarea
+            placeholder="Escribe tu mensaje aquí... (ej: Hola, tu perfil ha sido revisado y necesitamos que actualices tu foto de verificación.)"
+            value={messageText}
+            onChange={(e) => setMessageText(e.target.value)}
+            className="min-h-[120px]"
+            data-testid="input-admin-message"
+          />
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setShowMessageDialog(false)}>Cancelar</Button>
+            <Button
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+              onClick={() => messageTarget && sendMessageMutation.mutate({ userId: messageTarget.id, message: messageText })}
+              disabled={!messageText.trim() || sendMessageMutation.isPending}
+              data-testid="button-send-admin-message"
+            >
+              {sendMessageMutation.isPending ? "Enviando..." : "Enviar mensaje"}
             </Button>
           </DialogFooter>
         </DialogContent>

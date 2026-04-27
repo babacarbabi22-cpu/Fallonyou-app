@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Bell, X, Check, Eye, Heart, MessageCircle, CalendarDays, Tag, Sparkles, ChevronRight } from "lucide-react";
+import { Bell, X, Check, Eye, Heart, MessageCircle, CalendarDays, Tag, Sparkles, ChevronRight, ShieldCheck } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
@@ -22,7 +22,8 @@ const typeIcon: Record<string, any> = {
   view:    { Icon: Eye,            color: "text-amber-500",  bg: "bg-amber-500/10" },
   event:   { Icon: CalendarDays,   color: "text-green-600",  bg: "bg-green-500/10" },
   offer:   { Icon: Tag,            color: "text-amber-600",  bg: "bg-amber-500/10" },
-  system:  { Icon: Sparkles,       color: "text-purple-500", bg: "bg-purple-500/10" },
+  system:       { Icon: Sparkles,    color: "text-purple-500", bg: "bg-purple-500/10" },
+  admin_message:{ Icon: ShieldCheck, color: "text-blue-600",   bg: "bg-blue-600/10" },
 };
 
 function timeAgo(dateStr: string): string {

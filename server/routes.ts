@@ -854,6 +854,19 @@ export async function registerRoutes(
 
   // ============ ADMIN ROUTES ============
 
+  // Send a direct message/notification from admin to a specific user
+  app.post('/api/admin/send-user-message', requireAdmin, async (req, res) => {
+    const { userId, message } = req.body;
+    if (!userId || !message?.trim()) return res.status(400).json({ error: 'userId and message required' });
+    const [targetUser] = await db.select().from(users).where(eq(users.id, userId));
+    if (!targetUser) return res.status(404).json({ error: 'User not found' });
+    await db.execute(sql`
+      INSERT INTO notifications (user_id, type, title, body, link)
+      VALUES (${userId}, 'admin_message', ${'Mensaje del equipo FallonYou'}, ${message.trim()}, ${'/'})
+    `);
+    res.json({ success: true });
+  });
+
   // Get all users (admin only)
   app.get('/api/admin/users', requireAdmin, async (req, res) => {
     const allUsers = await db.select().from(users);
