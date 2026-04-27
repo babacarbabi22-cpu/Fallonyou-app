@@ -282,7 +282,7 @@ export default function OnboardingPage() {
             </span>
           </h1>
           <p className="text-zinc-400 text-center text-sm leading-relaxed mb-8 max-w-xs">
-            Planes, aventuras y conexiones reales. Tu próxima experiencia empieza aquí.
+            Actividades, aventuras y conexiones reales. Tu próxima experiencia empieza aquí.
           </p>
 
           {/* Feature pills */}

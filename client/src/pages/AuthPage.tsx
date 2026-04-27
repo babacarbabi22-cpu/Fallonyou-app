@@ -145,7 +145,7 @@ export default function AuthPage() {
             FallonYou
           </h1>
           <p className="text-white/60 text-sm font-light tracking-[3px] uppercase mt-1">
-            Planes · Viajes · Conexiones
+            Actividades · Viajes · Conexiones
           </p>
         </div>
 
