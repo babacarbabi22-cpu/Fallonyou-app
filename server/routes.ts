@@ -1753,10 +1753,17 @@ export async function registerRoutes(
   });
 
   // Create a story
-  app.post('/api/stories', async (req, res) => {
+  app.post('/api/stories', upload.single('media'), async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
-    const { mediaUrl, caption } = req.body;
-    if (!mediaUrl) return res.status(400).json({ error: "mediaUrl required" });
+    let mediaUrl: string;
+    if (req.file) {
+      mediaUrl = `/uploads/${req.file.filename}`;
+    } else if (req.body?.mediaUrl) {
+      mediaUrl = req.body.mediaUrl; // fallback for direct URL
+    } else {
+      return res.status(400).json({ error: "media file required" });
+    }
+    const caption = req.body?.caption || null;
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
     const [story] = await db.insert(stories).values({
       userId: req.user!.id, mediaUrl, caption, expiresAt,

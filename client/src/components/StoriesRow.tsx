@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Plus, X, ChevronLeft, ChevronRight } from "lucide-react";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { Plus, X, Loader2 } from "lucide-react";
+import { queryClient } from "@/lib/queryClient";
 import { useCurrentUser } from "@/hooks/use-danceme";
 import { motion, AnimatePresence } from "framer-motion";
+import { useToast } from "@/hooks/use-toast";
 
 interface StoryGroup {
   userId: string;
@@ -31,7 +32,7 @@ function StoryAvatar({
         className="w-16 h-16 rounded-full p-[2px]"
         style={{
           background: isOwn
-            ? "rgba(245,158,11,0.3)"
+            ? "linear-gradient(135deg,#F59E0B,#fde68a)"
             : "linear-gradient(135deg,#F59E0B,#EF4444,#8B5CF6)",
         }}
       >
@@ -40,13 +41,13 @@ function StoryAvatar({
             <img src={group.userPhoto} alt={group.userName} className="w-full h-full object-cover" />
           ) : (
             <div className="w-full h-full bg-muted flex items-center justify-center text-lg font-bold">
-              {group.userName[0]}
+              {group.userName?.[0] ?? "?"}
             </div>
           )}
         </div>
       </div>
       <span className="text-xs text-center text-foreground/70 w-16 truncate leading-tight">
-        {isOwn ? "Tu story" : group.userName}
+        {isOwn ? "Tu historia" : group.userName}
       </span>
     </button>
   );
@@ -67,7 +68,10 @@ function StoryViewer({
   const { data: currentUser } = useCurrentUser();
 
   const deleteMutation = useMutation({
-    mutationFn: (id: number) => apiRequest("DELETE", `/api/stories/${id}`, {}),
+    mutationFn: async (id: number) => {
+      const res = await fetch(`/api/stories/${id}`, { method: "DELETE", credentials: "include" });
+      if (!res.ok) throw new Error("Error al borrar historia");
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/stories"] });
       onClose();
@@ -113,8 +117,8 @@ function StoryViewer({
         {group.stories.map((_, i) => (
           <div key={i} className="flex-1 h-0.5 rounded-full bg-white/30">
             <div
-              className="h-full rounded-full bg-white transition-all duration-300"
-              style={{ width: i < storyIdx ? "100%" : i === storyIdx ? "50%" : "0%" }}
+              className="h-full rounded-full bg-white"
+              style={{ width: i < storyIdx ? "100%" : i === storyIdx ? "60%" : "0%" }}
             />
           </div>
         ))}
@@ -125,12 +129,12 @@ function StoryViewer({
         <div className="w-9 h-9 rounded-full overflow-hidden border border-white/30">
           {group.userPhoto
             ? <img src={group.userPhoto} alt="" className="w-full h-full object-cover" />
-            : <div className="w-full h-full bg-white/20 flex items-center justify-center text-white font-bold">{group.userName[0]}</div>
+            : <div className="w-full h-full bg-white/20 flex items-center justify-center text-white font-bold">{group.userName?.[0] ?? "?"}</div>
           }
         </div>
         <div className="flex-1">
           <p className="text-white font-semibold text-sm">{group.userName}</p>
-          <p className="text-white/60 text-xs">{new Date(story.expiresAt).getHours() > 0 ? "Caduca hoy" : ""}</p>
+          <p className="text-white/60 text-xs">Caduca en 24h</p>
         </div>
         {isOwn && (
           <button
@@ -141,14 +145,19 @@ function StoryViewer({
             <X className="w-5 h-5" />
           </button>
         )}
-        <button onClick={onClose} className="text-white/80 hover:text-white">
+        <button onClick={onClose} className="text-white/80 hover:text-white" data-testid="button-close-story">
           <X className="w-6 h-6" />
         </button>
       </div>
 
       {/* Media */}
-      <div className="flex-1 relative">
-        <img src={story.mediaUrl} alt="" className="w-full h-full object-contain" />
+      <div className="flex-1 relative bg-black">
+        <img
+          src={story.mediaUrl}
+          alt=""
+          className="w-full h-full object-contain"
+          onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+        />
         {story.caption && (
           <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/70">
             <p className="text-white text-sm text-center">{story.caption}</p>
@@ -164,6 +173,9 @@ function StoryViewer({
 
 export function StoriesRow() {
   const { data: currentUser } = useCurrentUser();
+  const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
   const [viewerState, setViewerState] = useState<{ open: boolean; groupIdx: number }>({ open: false, groupIdx: 0 });
 
   const { data: storyGroups = [], isLoading } = useQuery<StoryGroup[]>({
@@ -171,51 +183,81 @@ export function StoriesRow() {
     refetchInterval: 60000,
   });
 
-  if (isLoading) return null;
-
-  // Check if current user has a story
   const myGroup = storyGroups.find(g => g.userId === currentUser?.id);
   const othersGroups = storyGroups.filter(g => g.userId !== currentUser?.id);
   const allGroups = myGroup ? [myGroup, ...othersGroups] : othersGroups;
 
-  if (allGroups.length === 0 && !currentUser) return null;
+  async function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("media", file);
+      formData.append("caption", "");
+      const res = await fetch("/api/stories", {
+        method: "POST",
+        body: formData,
+        credentials: "include",
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Error al subir historia");
+      }
+      await queryClient.invalidateQueries({ queryKey: ["/api/stories"] });
+      toast({ title: "✅ Historia publicada", description: "Visible durante 24 horas" });
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  }
+
+  // Always show the row if user is logged in
+  if (!currentUser) return null;
 
   return (
     <>
-      <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-hide" data-testid="stories-row">
-        {/* Add story button — always visible */}
-        {currentUser && !myGroup && (
-          <label
-            className="flex flex-col items-center gap-1 shrink-0 cursor-pointer"
+      <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide" data-testid="stories-row">
+
+        {/* Add story button — always visible (even if user has one) */}
+        <div className="flex flex-col items-center gap-1 shrink-0">
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading}
+            className="w-16 h-16 rounded-full border-2 border-dashed border-amber-400/60 flex items-center justify-center bg-amber-500/5 hover:bg-amber-500/10 transition-colors active:scale-95"
             data-testid="button-add-story"
           >
-            <div className="w-16 h-16 rounded-full border-2 border-dashed border-amber-400/50 flex items-center justify-center bg-amber-500/5">
-              <Plus className="w-6 h-6 text-amber-500" />
-            </div>
-            <span className="text-xs text-muted-foreground text-center leading-tight" style={{width:"72px"}}>Añade tu estado o historia</span>
-            <input
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={async (e) => {
-                const file = e.target.files?.[0];
-                if (!file) return;
-                // Convert to base64 for quick upload (limited to photos already uploaded via object storage)
-                // For now, prompt user to use their profile photo
-                const reader = new FileReader();
-                reader.onload = async (ev) => {
-                  const dataUrl = ev.target?.result as string;
-                  await apiRequest("POST", "/api/stories", { mediaUrl: dataUrl, caption: "" });
-                  queryClient.invalidateQueries({ queryKey: ["/api/stories"] });
-                };
-                reader.readAsDataURL(file);
-              }}
-            />
-          </label>
-        )}
+            {uploading
+              ? <Loader2 className="w-6 h-6 text-amber-500 animate-spin" />
+              : <Plus className="w-6 h-6 text-amber-500" />
+            }
+          </button>
+          <span className="text-xs text-muted-foreground text-center leading-tight" style={{ width: "72px" }}>
+            {uploading ? "Subiendo..." : "Añade tu estado o historia"}
+          </span>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*,video/*"
+            capture="environment"
+            className="hidden"
+            onChange={handleFileSelect}
+            data-testid="input-story-file"
+          />
+        </div>
+
+        {/* Loading skeletons */}
+        {isLoading && [1, 2, 3].map(i => (
+          <div key={i} className="flex flex-col items-center gap-1 shrink-0 animate-pulse">
+            <div className="w-16 h-16 rounded-full bg-muted" />
+            <div className="h-3 w-12 rounded bg-muted" />
+          </div>
+        ))}
 
         {/* Story groups */}
-        {allGroups.map((group, idx) => (
+        {!isLoading && allGroups.map((group, idx) => (
           <StoryAvatar
             key={group.userId}
             group={group}
@@ -226,10 +268,10 @@ export function StoriesRow() {
       </div>
 
       <AnimatePresence>
-        {viewerState.open && (
+        {viewerState.open && allGroups.length > 0 && (
           <StoryViewer
             groups={allGroups}
-            startGroupIdx={viewerState.groupIdx}
+            startGroupIdx={Math.min(viewerState.groupIdx, allGroups.length - 1)}
             onClose={() => setViewerState({ open: false, groupIdx: 0 })}
           />
         )}
