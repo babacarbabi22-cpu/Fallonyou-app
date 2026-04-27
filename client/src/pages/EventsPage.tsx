@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -148,12 +148,14 @@ function EventForm({
   onSubmit,
   isPending,
   submitLabel,
+  hideButton,
 }: {
   formData: EventFormData;
   setFormData: (data: EventFormData) => void;
   onSubmit: () => void;
   isPending: boolean;
   submitLabel: string;
+  hideButton?: boolean;
 }) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(formData.imageUrl || null);
@@ -392,14 +394,16 @@ function EventForm({
           data-testid="input-event-description"
         />
       </div>
-      <Button
-        onClick={onSubmit}
-        disabled={!formData.title.trim() || !formData.city.trim() || !formData.startsAt || isPending || isUploading}
-        className="w-full bg-amber-500 hover:bg-amber-600"
-        data-testid="button-submit-event"
-      >
-        {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : submitLabel}
-      </Button>
+      {!hideButton && (
+        <Button
+          onClick={onSubmit}
+          disabled={!formData.title.trim() || !formData.city.trim() || !formData.startsAt || isPending || isUploading}
+          className="w-full bg-amber-500 hover:bg-amber-600"
+          data-testid="button-submit-event"
+        >
+          {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : submitLabel}
+        </Button>
+      )}
     </div>
   );
 }
@@ -592,20 +596,32 @@ export default function EventsPage() {
             <DialogTrigger asChild>
               <Button className="bg-amber-500 hover:bg-amber-600" data-testid="button-create-event">
                 <Plus className="w-4 h-4 mr-2" />
-                Create
+                Crear
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>Create Activity</DialogTitle>
+            <DialogContent className="max-w-md flex flex-col p-0 gap-0 max-h-[92vh]">
+              <DialogHeader className="flex-shrink-0 flex flex-row items-center justify-between px-4 py-3 border-b">
+                <DialogTitle className="text-base">Nueva Actividad</DialogTitle>
+                <Button
+                  onClick={() => createEventMutation.mutate(newEvent)}
+                  disabled={!newEvent.title.trim() || !newEvent.city.trim() || !newEvent.startsAt || createEventMutation.isPending}
+                  size="sm"
+                  className="bg-amber-500 hover:bg-amber-600 rounded-full px-4 h-8 text-sm"
+                  data-testid="button-submit-event"
+                >
+                  {createEventMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Guardar"}
+                </Button>
               </DialogHeader>
-              <EventForm
-                formData={newEvent}
-                setFormData={setNewEvent}
-                onSubmit={() => createEventMutation.mutate(newEvent)}
-                isPending={createEventMutation.isPending}
-                submitLabel="Create Activity"
-              />
+              <div className="flex-1 overflow-y-auto px-4 py-4">
+                <EventForm
+                  formData={newEvent}
+                  setFormData={setNewEvent}
+                  onSubmit={() => createEventMutation.mutate(newEvent)}
+                  isPending={createEventMutation.isPending}
+                  submitLabel="Guardar"
+                  hideButton
+                />
+              </div>
             </DialogContent>
           </Dialog>
           </div>
@@ -928,17 +944,29 @@ export default function EventsPage() {
       </div>
 
       <Dialog open={!!editingEvent} onOpenChange={(open) => !open && setEditingEvent(null)}>
-        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Edit Activity</DialogTitle>
+        <DialogContent className="max-w-md flex flex-col p-0 gap-0 max-h-[92vh]">
+          <DialogHeader className="flex-shrink-0 flex flex-row items-center justify-between px-4 py-3 border-b">
+            <DialogTitle className="text-base">Editar Actividad</DialogTitle>
+            <Button
+              onClick={() => editingEvent && editEventMutation.mutate({ id: editingEvent.id, data: editForm })}
+              disabled={!editForm.title.trim() || !editForm.city.trim() || !editForm.startsAt || editEventMutation.isPending}
+              size="sm"
+              className="bg-amber-500 hover:bg-amber-600 rounded-full px-4 h-8 text-sm"
+              data-testid="button-submit-edit-event"
+            >
+              {editEventMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Guardar"}
+            </Button>
           </DialogHeader>
-          <EventForm
-            formData={editForm}
-            setFormData={setEditForm}
-            onSubmit={() => editingEvent && editEventMutation.mutate({ id: editingEvent.id, data: editForm })}
-            isPending={editEventMutation.isPending}
-            submitLabel="Save Changes"
-          />
+          <div className="flex-1 overflow-y-auto px-4 py-4">
+            <EventForm
+              formData={editForm}
+              setFormData={setEditForm}
+              onSubmit={() => editingEvent && editEventMutation.mutate({ id: editingEvent.id, data: editForm })}
+              isPending={editEventMutation.isPending}
+              submitLabel="Guardar"
+              hideButton
+            />
+          </div>
         </DialogContent>
       </Dialog>
 

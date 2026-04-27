@@ -1300,7 +1300,10 @@ export async function registerRoutes(
         )
       );
 
-    // Create in-app notifications for nearby users
+    // Respond immediately — send notifications in background (non-blocking)
+    res.json(newEvent);
+
+    // Fire-and-forget: in-app notifications for users in the same city
     if (nearbyUsers.length > 0) {
       const notifValues = nearbyUsers.map(u => ({
         userId: u.id,
@@ -1310,19 +1313,17 @@ export async function registerRoutes(
         link: `/events`,
         read: false,
       }));
-      await db.insert(notifications).values(notifValues).catch(err =>
+      db.insert(notifications).values(notifValues).catch(err =>
         console.error('Error creating event notifications:', err)
       );
     }
 
-    // Push notifications to all users (wider reach)
+    // Fire-and-forget: push notifications
     sendPushToAllExcept(req.user!.id, {
       title: `${icon} Nueva actividad en ${city}`,
       body: `${creatorName} creó "${title}" — ¡únete!`,
       url: '/',
     }).catch(err => console.error('Push notification error:', err));
-    
-    res.json(newEvent);
   });
 
   // Join event
