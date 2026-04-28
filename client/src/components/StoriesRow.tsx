@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Plus, X, Loader2 } from "lucide-react";
+import { Plus, X, Loader2, Camera, Images, Video } from "lucide-react";
 import { queryClient } from "@/lib/queryClient";
 import { useCurrentUser } from "@/hooks/use-danceme";
 import { motion, AnimatePresence } from "framer-motion";
@@ -174,8 +174,11 @@ function StoryViewer({
 export function StoriesRow() {
   const { data: currentUser } = useCurrentUser();
   const { toast } = useToast();
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraRef = useRef<HTMLInputElement>(null);
+  const libraryRef = useRef<HTMLInputElement>(null);
+  const videoRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+  const [sheetOpen, setSheetOpen] = useState(false);
   const [viewerState, setViewerState] = useState<{ open: boolean; groupIdx: number }>({ open: false, groupIdx: 0 });
 
   const { data: storyGroups = [], isLoading } = useQuery<StoryGroup[]>({
@@ -190,6 +193,7 @@ export function StoriesRow() {
   async function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
+    setSheetOpen(false);
     setUploading(true);
     try {
       const formData = new FormData();
@@ -210,7 +214,7 @@ export function StoriesRow() {
       toast({ title: "Error", description: err.message, variant: "destructive" });
     } finally {
       setUploading(false);
-      if (fileInputRef.current) fileInputRef.current.value = "";
+      [cameraRef, libraryRef, videoRef].forEach(r => { if (r.current) r.current.value = ""; });
     }
   }
 
@@ -221,10 +225,10 @@ export function StoriesRow() {
     <>
       <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide" data-testid="stories-row">
 
-        {/* Add story button — always visible (even if user has one) */}
+        {/* Add story button */}
         <div className="flex flex-col items-center gap-1 shrink-0">
           <button
-            onClick={() => fileInputRef.current?.click()}
+            onClick={() => setSheetOpen(true)}
             disabled={uploading}
             className="w-16 h-16 rounded-full border-2 border-dashed border-amber-400/60 flex items-center justify-center bg-amber-500/5 hover:bg-amber-500/10 transition-colors active:scale-95"
             data-testid="button-add-story"
@@ -237,15 +241,11 @@ export function StoriesRow() {
           <span className="text-xs text-muted-foreground text-center leading-tight" style={{ width: "72px" }}>
             {uploading ? "Subiendo..." : "Añade tu estado o historia"}
           </span>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*,video/*"
-            capture="environment"
-            className="hidden"
-            onChange={handleFileSelect}
-            data-testid="input-story-file"
-          />
+
+          {/* Hidden file inputs */}
+          <input ref={cameraRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleFileSelect} />
+          <input ref={libraryRef} type="file" accept="image/*,video/*" className="hidden" onChange={handleFileSelect} />
+          <input ref={videoRef} type="file" accept="video/*" capture="environment" className="hidden" onChange={handleFileSelect} />
         </div>
 
         {/* Loading skeletons */}
@@ -274,6 +274,84 @@ export function StoriesRow() {
             startGroupIdx={Math.min(viewerState.groupIdx, allGroups.length - 1)}
             onClose={() => setViewerState({ open: false, groupIdx: 0 })}
           />
+        )}
+      </AnimatePresence>
+
+      {/* Bottom sheet — source picker */}
+      <AnimatePresence>
+        {sheetOpen && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-40 bg-black/50"
+              onClick={() => setSheetOpen(false)}
+            />
+            {/* Sheet */}
+            <motion.div
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", damping: 28, stiffness: 300 }}
+              className="fixed bottom-0 left-0 right-0 z-50 bg-card rounded-t-2xl shadow-2xl pb-safe"
+            >
+              {/* Handle */}
+              <div className="flex justify-center pt-3 pb-1">
+                <div className="w-10 h-1 rounded-full bg-muted-foreground/30" />
+              </div>
+
+              <p className="text-center text-sm font-semibold text-foreground px-4 pt-2 pb-4">
+                Añadir a tu historia
+              </p>
+
+              <div className="grid grid-cols-3 gap-3 px-5 pb-5">
+                {/* Cámara */}
+                <button
+                  onClick={() => cameraRef.current?.click()}
+                  className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-amber-500/10 hover:bg-amber-500/20 active:scale-95 transition-all"
+                  data-testid="button-story-camera"
+                >
+                  <div className="w-12 h-12 rounded-full bg-amber-500/15 flex items-center justify-center">
+                    <Camera className="w-6 h-6 text-amber-500" />
+                  </div>
+                  <span className="text-xs font-medium text-foreground">Cámara</span>
+                </button>
+
+                {/* Galería / Fotocasa */}
+                <button
+                  onClick={() => libraryRef.current?.click()}
+                  className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-blue-500/10 hover:bg-blue-500/20 active:scale-95 transition-all"
+                  data-testid="button-story-library"
+                >
+                  <div className="w-12 h-12 rounded-full bg-blue-500/15 flex items-center justify-center">
+                    <Images className="w-6 h-6 text-blue-500" />
+                  </div>
+                  <span className="text-xs font-medium text-foreground">Galería</span>
+                </button>
+
+                {/* Vídeo */}
+                <button
+                  onClick={() => videoRef.current?.click()}
+                  className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-purple-500/10 hover:bg-purple-500/20 active:scale-95 transition-all"
+                  data-testid="button-story-video"
+                >
+                  <div className="w-12 h-12 rounded-full bg-purple-500/15 flex items-center justify-center">
+                    <Video className="w-6 h-6 text-purple-500" />
+                  </div>
+                  <span className="text-xs font-medium text-foreground">Vídeo</span>
+                </button>
+              </div>
+
+              <button
+                onClick={() => setSheetOpen(false)}
+                className="w-full py-3 text-sm text-muted-foreground font-medium border-t"
+              >
+                Cancelar
+              </button>
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
     </>
