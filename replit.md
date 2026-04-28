@@ -2,7 +2,14 @@
 
 ## Overview
 
-FallonYou is a Tinder-style dating application built with a React frontend and Express backend. The app enables users to discover potential matches through a swipe-based interface, chat with matches, and offers a premium subscription tier with additional features like unlimited likes and seeing who liked your profile.
+FallonYou is a luxury travel & social connection dating app built with React + Express + PostgreSQL. Black & gold palette, multi-language (ES/EN/FR), event creation, push notifications, admin panel, Ambassador/Referral program. Completely free during launch.
+
+### Engagement / Retention Features
+- **Spark del día** — A daily featured profile shown in SwipePage (deterministic per user+date seed, changes every 24h). Endpoint: `GET /api/daily-spark`
+- **Racha de conexión** — Login streak counter computed from `app_sessions` table. Shown in ProfilePage. Endpoint: `GET /api/streak`
+- **Vistas de perfil hoy** — Shows how many unique users viewed the profile today. Endpoint: `GET /api/profile-views/today`
+- **Countdown en actividades** — Live countdown timer (green/amber/red) on future event cards in EventsPage. Pure frontend with `useCountdown` custom hook + `EventCountdown` component.
+- **Sistema de logros/badges** — 10 achievement badges computed dynamically from user activity (Explorador, Organizador, Conectado, Favorito, En racha 7d, Constante 30d, Viajero, Veterano, Premium, Embajador). Shown in ProfilePage. Endpoint: `GET /api/my-badges`
 
 ## User Preferences
 

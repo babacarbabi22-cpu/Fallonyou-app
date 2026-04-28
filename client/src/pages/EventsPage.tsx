@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
@@ -62,6 +62,50 @@ interface Event {
     firstName: string | null;
     profileImageUrl: string | null;
   } | null;
+}
+
+// ── Countdown component ──────────────────────────────────────────────────────
+function useCountdown(targetDate: string) {
+  const getRemaining = useCallback(() => {
+    const diff = new Date(targetDate).getTime() - Date.now();
+    if (diff <= 0) return null;
+    const days = Math.floor(diff / 86400000);
+    const hours = Math.floor((diff % 86400000) / 3600000);
+    const mins = Math.floor((diff % 3600000) / 60000);
+    const secs = Math.floor((diff % 60000) / 1000);
+    return { days, hours, mins, secs, diff };
+  }, [targetDate]);
+
+  const [remaining, setRemaining] = useState<ReturnType<typeof getRemaining>>(getRemaining);
+  useEffect(() => {
+    const id = setInterval(() => setRemaining(getRemaining()), 1000);
+    return () => clearInterval(id);
+  }, [getRemaining]);
+  return remaining;
+}
+
+function EventCountdown({ startsAt }: { startsAt: string }) {
+  const r = useCountdown(startsAt);
+  if (!r) return null;
+  const urgent = r.diff < 3 * 3600000;
+  const soon = r.diff < 24 * 3600000;
+  const parts = r.days > 0
+    ? `${r.days}d ${r.hours}h`
+    : r.hours > 0
+      ? `${r.hours}h ${r.mins}m`
+      : `${r.mins}m ${r.secs}s`;
+  return (
+    <span
+      className={`inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full ${
+        urgent ? "bg-red-500/15 text-red-500"
+        : soon ? "bg-amber-500/15 text-amber-600 dark:text-amber-400"
+        : "bg-green-500/10 text-green-600 dark:text-green-400"
+      }`}
+      data-testid="event-countdown"
+    >
+      ⏳ {parts}
+    </span>
+  );
 }
 
 type EventFormData = {
@@ -855,11 +899,12 @@ export default function EventsPage() {
               </div>
               <CardContent className="p-4">
                 <h3 className="font-bold text-lg leading-tight">{event.title}</h3>
-                <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
-                  <div className="flex items-center gap-1">
+                <div className="flex items-center gap-2 mt-2 flex-wrap">
+                  <div className="flex items-center gap-1 text-sm text-muted-foreground">
                     <Calendar className="w-3.5 h-3.5" />
                     <span>{format(new Date(event.startsAt), "EEE, MMM d · h:mm a")}</span>
                   </div>
+                  {!isPastEvent(event.startsAt) && <EventCountdown startsAt={event.startsAt} />}
                 </div>
                 <div className="flex items-center gap-1 mt-1 text-sm text-muted-foreground">
                   <MapPin className="w-3.5 h-3.5" />

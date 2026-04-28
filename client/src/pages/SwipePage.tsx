@@ -7,7 +7,7 @@ import { MatchHeartCascade } from "@/components/HeartCascade";
 import { AnimatePresence, motion } from "framer-motion";
 import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Loader2, Sparkles, SlidersHorizontal, Star, X, Heart, Plane, Camera, MapPin, CalendarDays } from "lucide-react";
+import { Loader2, Sparkles, SlidersHorizontal, Star, X, Heart, Plane, Camera, MapPin, CalendarDays, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Slider } from "@/components/ui/slider";
@@ -135,6 +135,12 @@ export default function SwipePage() {
   const [showProfileDetail, setShowProfileDetail] = useState(false);
   const [swipeCount, setSwipeCount] = useState(0);
   const [showPromoCard, setShowPromoCard] = useState(false);
+  const [sparkDismissed, setSparkDismissed] = useState(false);
+
+  const { data: dailySpark } = useQuery<any>({
+    queryKey: ["/api/daily-spark"],
+    staleTime: 1000 * 60 * 60, // 1 hour
+  });
   
   // Preload all user photos when feed is loaded
   useEffect(() => {
@@ -392,6 +398,82 @@ export default function SwipePage() {
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* ── Spark del día ─────────────────────────────────────────────────── */}
+      {dailySpark && !sparkDismissed && (
+        <div className="px-4 mb-3">
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="relative rounded-2xl overflow-hidden shadow-lg"
+            style={{ background: "linear-gradient(135deg, #1a0a00 0%, #3d1f00 50%, #1a0a00 100%)" }}
+          >
+            {/* gold shimmer border */}
+            <div className="absolute inset-0 rounded-2xl pointer-events-none" style={{ boxShadow: "inset 0 0 0 1.5px rgba(245,158,11,0.4)" }} />
+
+            <div className="flex items-center gap-3 p-3 pr-2">
+              {/* Avatar */}
+              <div className="relative shrink-0">
+                <div className="w-14 h-14 rounded-xl overflow-hidden border-2 border-amber-400/60">
+                  <img
+                    src={dailySpark.photos?.[0]?.url || dailySpark.profileImageUrl || "https://images.unsplash.com/photo-1511367461989-f85a21fda167?w=100&q=80"}
+                    alt={dailySpark.firstName}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-amber-500 flex items-center justify-center shadow-lg">
+                  <Zap className="w-3 h-3 text-white fill-white" />
+                </div>
+              </div>
+
+              {/* Text */}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-1.5 mb-0.5">
+                  <span className="text-[10px] font-bold tracking-widest uppercase text-amber-400">⚡ Spark del día</span>
+                </div>
+                <p className="font-bold text-white text-sm leading-tight truncate">
+                  {dailySpark.firstName}{dailySpark.age ? `, ${dailySpark.age}` : ""}
+                </p>
+                {(dailySpark.occupation || dailySpark.currentCity) && (
+                  <p className="text-amber-200/70 text-xs truncate">
+                    {[dailySpark.occupation, dailySpark.currentCity].filter(Boolean).join(" · ")}
+                  </p>
+                )}
+              </div>
+
+              {/* CTA */}
+              <div className="flex items-center gap-1.5 shrink-0">
+                <button
+                  onClick={() => {
+                    const sparkUser = activeUsers?.find(u => u.id === dailySpark.id);
+                    if (sparkUser) {
+                      setSelectedUser(sparkUser);
+                      setShowProfileDetail(true);
+                    }
+                    setSparkDismissed(true);
+                  }}
+                  className="h-8 px-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-white text-xs font-bold transition-colors active:scale-95"
+                  data-testid="button-spark-view"
+                >
+                  Ver
+                </button>
+                <button
+                  onClick={() => setSparkDismissed(true)}
+                  className="w-7 h-7 rounded-full flex items-center justify-center text-white/40 hover:text-white/70 transition-colors"
+                  data-testid="button-spark-dismiss"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            {/* 24h countdown */}
+            <div className="px-3 pb-2 -mt-1">
+              <p className="text-[10px] text-amber-400/60 text-right">Se renueva en 24h ⏳</p>
+            </div>
+          </motion.div>
         </div>
       )}
 

@@ -6,8 +6,9 @@ import { useUpload } from "@/hooks/use-upload";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Camera, LogOut, Shield, User, Star, Plane, MapPin, Heart, Trash2, FileText, Mail, Briefcase, Eye, Sparkles, Lightbulb, ChevronRight } from "lucide-react";
+import { Loader2, Camera, LogOut, Shield, User, Star, Plane, MapPin, Heart, Trash2, FileText, Mail, Briefcase, Eye, Sparkles, Lightbulb, ChevronRight, Flame, Trophy } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { api } from "@shared/routes";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "@/lib/i18n";
@@ -26,6 +27,19 @@ export default function ProfilePage() {
   const { toast } = useToast();
   const { mutate: updateProfile, isPending: isUpdating } = useUpdateProfile();
   const { mutate: deletePhoto } = useDeletePhoto();
+
+  const { data: streakData } = useQuery<{ streak: number; longestStreak: number }>({
+    queryKey: ["/api/streak"],
+    enabled: !!user,
+  });
+  const { data: viewsToday } = useQuery<{ count: number }>({
+    queryKey: ["/api/profile-views/today"],
+    enabled: !!user,
+  });
+  const { data: badges } = useQuery<{ id: string; icon: string; label: string; description: string; earned: boolean }[]>({
+    queryKey: ["/api/my-badges"],
+    enabled: !!user,
+  });
 
   const { uploadFile, isUploading } = useUpload({
     onSuccess: async (response) => {
@@ -262,6 +276,83 @@ export default function ProfilePage() {
             </div>
           );
         })()}
+
+        {/* ── Racha + Vistas hoy ──────────────────────────────────────────── */}
+        <div className="grid grid-cols-2 gap-3">
+          {/* Racha de conexión */}
+          <div
+            className="bg-card border rounded-2xl p-4 shadow-sm relative overflow-hidden"
+            data-testid="card-streak"
+          >
+            <div className="absolute -top-3 -right-3 w-16 h-16 rounded-full bg-amber-500/10" />
+            <div className="relative">
+              <div className="flex items-center gap-1.5 mb-1">
+                <Flame className="w-4 h-4 text-amber-500" />
+                <span className="text-xs font-semibold text-muted-foreground">Racha</span>
+              </div>
+              <p className="text-3xl font-black text-amber-500 leading-none">
+                {streakData?.streak ?? 0}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                {streakData?.streak === 1 ? "día seguido" : "días seguidos"}
+              </p>
+              {(streakData?.longestStreak ?? 0) > 0 && (
+                <p className="text-[10px] text-amber-400/70 mt-0.5">
+                  Récord: {streakData!.longestStreak}d
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* Vistas hoy */}
+          <div
+            className="bg-card border rounded-2xl p-4 shadow-sm relative overflow-hidden"
+            data-testid="card-views-today"
+          >
+            <div className="absolute -top-3 -right-3 w-16 h-16 rounded-full bg-blue-500/10" />
+            <div className="relative">
+              <div className="flex items-center gap-1.5 mb-1">
+                <Eye className="w-4 h-4 text-blue-500" />
+                <span className="text-xs font-semibold text-muted-foreground">Vistas hoy</span>
+              </div>
+              <p className="text-3xl font-black text-blue-500 leading-none">
+                {viewsToday?.count ?? 0}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                {(viewsToday?.count ?? 0) === 1 ? "persona" : "personas"}
+              </p>
+              <p className="text-[10px] text-blue-400/70 mt-0.5">vieron tu perfil</p>
+            </div>
+          </div>
+        </div>
+
+        {/* ── Insignias / Logros ──────────────────────────────────────────── */}
+        {badges && badges.length > 0 && (
+          <div className="bg-card border rounded-2xl p-4 shadow-sm" data-testid="section-badges">
+            <div className="flex items-center gap-2 mb-3">
+              <Trophy className="w-4 h-4 text-amber-500" />
+              <span className="text-sm font-bold">Logros</span>
+              <span className="ml-auto text-xs text-muted-foreground">
+                {badges.filter(b => b.earned).length}/{badges.length}
+              </span>
+            </div>
+            <div className="grid grid-cols-5 gap-2">
+              {badges.map((badge) => (
+                <div
+                  key={badge.id}
+                  title={badge.earned ? badge.description : `🔒 ${badge.description}`}
+                  className={`flex flex-col items-center gap-1 p-1.5 rounded-xl transition-all ${badge.earned ? "opacity-100" : "opacity-30 grayscale"}`}
+                  data-testid={`badge-${badge.id}`}
+                >
+                  <span className="text-2xl">{badge.icon}</span>
+                  <span className="text-[9px] font-semibold text-center leading-tight text-foreground" style={{ maxWidth: "48px" }}>
+                    {badge.label}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Ver perfil preview */}
         <Button

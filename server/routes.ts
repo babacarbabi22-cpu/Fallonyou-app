@@ -1990,5 +1990,193 @@ export async function registerRoutes(
     res.json(app2);
   });
 
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ENGAGEMENT FEATURES
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  // ── 1. Login streak ────────────────────────────────────────────────────────
+  app.get('/api/streak', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const userId = req.user!.id;
+    try {
+      // Get all session dates for this user, ordered descending
+      const rows = await db.execute(sql`
+        SELECT date FROM app_sessions
+        WHERE user_id = ${userId}
+        ORDER BY date DESC
+      `);
+      const dates: string[] = (rows.rows as any[]).map((r: any) => r.date);
+      if (dates.length === 0) return res.json({ streak: 0, longestStreak: 0 });
+
+      const today = new Date().toISOString().slice(0, 10);
+      const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+
+      // Current streak: count consecutive days from today or yesterday
+      let streak = 0;
+      let expected = dates[0] === today ? today : (dates[0] === yesterday ? yesterday : null);
+      if (!expected) return res.json({ streak: 0, longestStreak: 1 });
+
+      for (const d of dates) {
+        if (d === expected) {
+          streak++;
+          const prev = new Date(new Date(expected).getTime() - 86400000).toISOString().slice(0, 10);
+          expected = prev;
+        } else break;
+      }
+
+      // Longest streak
+      let longest = 1, current = 1;
+      const sorted = [...dates].sort();
+      for (let i = 1; i < sorted.length; i++) {
+        const diff = (new Date(sorted[i]).getTime() - new Date(sorted[i - 1]).getTime()) / 86400000;
+        if (diff === 1) { current++; longest = Math.max(longest, current); }
+        else current = 1;
+      }
+
+      res.json({ streak, longestStreak: longest });
+    } catch {
+      res.json({ streak: 0, longestStreak: 0 });
+    }
+  });
+
+  // ── 2. Profile views today ─────────────────────────────────────────────────
+  app.get('/api/profile-views/today', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const userId = req.user!.id;
+    try {
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0);
+      const [{ cnt }] = (await db.execute(sql`
+        SELECT COUNT(DISTINCT viewer_id)::int AS cnt
+        FROM profile_views
+        WHERE viewed_id = ${userId} AND created_at >= ${todayStart.toISOString()}
+      `)).rows as any[];
+      res.json({ count: cnt ?? 0 });
+    } catch {
+      res.json({ count: 0 });
+    }
+  });
+
+  // ── 3. Daily Spark ─────────────────────────────────────────────────────────
+  // Returns a single featured profile per day (deterministic per user + date)
+  app.get('/api/daily-spark', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const userId = req.user!.id;
+    try {
+      const today = new Date().toISOString().slice(0, 10);
+      // Seed: hash(userId + date) mod N to pick a profile
+      const seedStr = userId + today;
+      let seed = 0;
+      for (let i = 0; i < seedStr.length; i++) seed = (seed * 31 + seedStr.charCodeAt(i)) >>> 0;
+
+      // Get users that this user hasn't swiped on yet, excluding self
+      const swipedIds = (await db.select({ id: swipes.swipedId })
+        .from(swipes).where(eq(swipes.swiperId, userId))).map(s => s.id);
+
+      const excludeIds = [userId, ...swipedIds];
+
+      const candidates = await db.select({
+        id: users.id,
+        firstName: users.firstName,
+        profileImageUrl: users.profileImageUrl,
+        bio: profiles.bio,
+        age: profiles.age,
+        occupation: profiles.occupation,
+        birthplace: profiles.birthplace,
+        currentCity: profiles.currentCity,
+      })
+        .from(users)
+        .leftJoin(profiles, eq(profiles.userId, users.id))
+        .where(and(
+          ne(users.id, userId),
+          excludeIds.length > 1 ? sql`${users.id} NOT IN (${sql.join(excludeIds.map(id => sql`${id}`), sql`, `)})` : sql`true`,
+          eq(users.isBanned, 'false'),
+        ))
+        .limit(100);
+
+      if (candidates.length === 0) return res.json(null);
+
+      const pick = candidates[seed % candidates.length];
+
+      // Get their photos
+      const sparkPhotos = await db.select().from(photos)
+        .where(eq(photos.userId, pick.id)).limit(3);
+
+      res.json({ ...pick, photos: sparkPhotos, date: today });
+    } catch (e) {
+      console.error('Daily spark error:', e);
+      res.json(null);
+    }
+  });
+
+  // ── 4. Achievement badges ──────────────────────────────────────────────────
+  app.get('/api/my-badges', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const userId = req.user!.id;
+    try {
+      const [
+        eventsCreated,
+        eventsJoined,
+        matchCount,
+        profileViewTotal,
+        streakRow,
+        ambassadorRow,
+        userRow,
+        profileRow,
+      ] = await Promise.all([
+        db.select({ c: count() }).from(events).where(eq(events.creatorId, userId)),
+        db.select({ c: count() }).from(eventParticipants).where(and(eq(eventParticipants.userId, userId), eq(eventParticipants.status, 'going'))),
+        db.select({ c: count() }).from(matches).where(or(eq(matches.user1Id, userId), eq(matches.user2Id, userId))),
+        db.execute(sql`SELECT COUNT(DISTINCT viewer_id)::int AS c FROM profile_views WHERE viewed_id = ${userId}`),
+        db.execute(sql`SELECT date FROM app_sessions WHERE user_id = ${userId} ORDER BY date DESC LIMIT 60`),
+        db.select().from(ambassadorApplications).where(and(eq(ambassadorApplications.userId, userId), eq(ambassadorApplications.status, 'approved'))).limit(1),
+        db.select().from(users).where(eq(users.id, userId)).limit(1),
+        db.select().from(profiles).where(eq(profiles.userId, userId)).limit(1),
+      ]);
+
+      // Compute streak
+      const dates: string[] = (streakRow.rows as any[]).map((r: any) => r.date);
+      let streak = 0;
+      const todayStr = new Date().toISOString().slice(0, 10);
+      const yesterdayStr = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+      let expected = dates[0] === todayStr ? todayStr : (dates[0] === yesterdayStr ? yesterdayStr : null);
+      if (expected) {
+        for (const d of dates) {
+          if (d === expected) { streak++; expected = new Date(new Date(expected).getTime() - 86400000).toISOString().slice(0, 10); }
+          else break;
+        }
+      }
+
+      const created = Number(eventsCreated[0]?.c ?? 0);
+      const joined = Number(eventsJoined[0]?.c ?? 0);
+      const matches_ = Number(matchCount[0]?.c ?? 0);
+      const views = Number((profileViewTotal.rows[0] as any)?.c ?? 0);
+      const isAmb = ambassadorRow.length > 0;
+      const isPrem = userRow[0]?.isPremium === 'true';
+      const traveler = profileRow[0]?.travelerMode === true;
+      const accountAgeDays = userRow[0]?.createdAt
+        ? Math.floor((Date.now() - new Date(userRow[0].createdAt).getTime()) / 86400000)
+        : 0;
+
+      const badges: { id: string; icon: string; label: string; description: string; earned: boolean }[] = [
+        { id: 'explorador', icon: '🌍', label: 'Explorador', description: 'Únete a tu primer plan', earned: joined >= 1 },
+        { id: 'organizador', icon: '🎯', label: 'Organizador', description: 'Crea tu primer plan', earned: created >= 1 },
+        { id: 'social', icon: '💬', label: 'Conectado', description: 'Consigue 3 conexiones', earned: matches_ >= 3 },
+        { id: 'favorito', icon: '👀', label: 'Favorito', description: 'Que 10 personas vean tu perfil', earned: views >= 10 },
+        { id: 'racha7', icon: '🔥', label: 'En racha', description: '7 días seguidos activo', earned: streak >= 7 },
+        { id: 'racha30', icon: '💎', label: 'Constante', description: '30 días seguidos activo', earned: streak >= 30 },
+        { id: 'viajero', icon: '✈️', label: 'Viajero', description: 'Activa el modo viajero', earned: traveler },
+        { id: 'veterano', icon: '👑', label: 'Veterano', description: 'Lleva 30 días en FallonYou', earned: accountAgeDays >= 30 },
+        { id: 'premium', icon: '⭐', label: 'Premium', description: 'Miembro Premium', earned: isPrem },
+        { id: 'embajador', icon: '🏅', label: 'Embajador', description: 'Embajador oficial', earned: isAmb },
+      ];
+
+      res.json(badges);
+    } catch (e) {
+      console.error('Badges error:', e);
+      res.json([]);
+    }
+  });
+
   return httpServer;
 }
