@@ -549,6 +549,13 @@ export async function registerRoutes(
     if (match.user1Id !== req.user!.id && match.user2Id !== req.user!.id) {
       return res.sendStatus(403);
     }
+
+    // Prevent messaging between blocked users
+    const recipientId = match.user1Id === req.user!.id ? match.user2Id : match.user1Id;
+    const blockedSet = await getBlockedIds(req.user!.id);
+    if (blockedSet.has(recipientId)) {
+      return res.status(403).json({ error: 'No puedes enviar mensajes a este usuario' });
+    }
     
     const { content } = req.body;
     if (!content?.trim()) return res.status(400).json({ error: 'Message content required' });
@@ -559,7 +566,6 @@ export async function registerRoutes(
       content: content.trim()
     });
 
-    const recipientId = match.user1Id === req.user!.id ? match.user2Id : match.user1Id;
     const senderProfile = await storage.getProfile(req.user!.id);
     const senderName = senderProfile?.displayName || 'Someone';
     sendPushNotification(recipientId, {
@@ -1181,6 +1187,9 @@ export async function registerRoutes(
     }
     
     const userId = req.user!.id;
+    // Remove events created by blocked users (bidirectional)
+    const blockedSet = await getBlockedIds(userId);
+    allEvents = allEvents.filter(e => !blockedSet.has(e.creatorId));
     // Enrich with participant count, creator info, and user participation status
     const enrichedEvents = await Promise.all(allEvents.map(async (event) => {
       const participants = await db.select().from(eventParticipants).where(eq(eventParticipants.eventId, event.id));
@@ -1211,16 +1220,20 @@ export async function registerRoutes(
     if (!req.isAuthenticated()) return res.sendStatus(401);
     const userId = req.user!.id;
 
-    const profile = await storage.getProfile(userId);
+    const [profile, blockedSet] = await Promise.all([
+      storage.getProfile(userId),
+      getBlockedIds(userId),
+    ]);
     const userCity = profile?.currentCity || profile?.homeCity;
 
     const allEvents = await db.select().from(events)
       .where(gte(events.startsAt, new Date()))
       .orderBy(desc(events.startsAt));
 
-    const candidates = userCity
+    const candidates = (userCity
       ? allEvents.filter(e => e.city.toLowerCase() === userCity.toLowerCase() && e.creatorId !== userId)
-      : allEvents.filter(e => e.creatorId !== userId);
+      : allEvents.filter(e => e.creatorId !== userId)
+    ).filter(e => !blockedSet.has(e.creatorId));
 
     const suggestions = await Promise.all(
       candidates.map(async (event) => {
@@ -1444,14 +1457,20 @@ export async function registerRoutes(
     const eventId = parseInt(req.params.id);
     if (isNaN(eventId)) return res.status(400).json({ error: 'Invalid event ID' });
 
-    const [event] = await db.select().from(events).where(eq(events.id, eventId));
+    const [[event], blockedSet] = await Promise.all([
+      db.select().from(events).where(eq(events.id, eventId)),
+      getBlockedIds(req.user!.id),
+    ]);
     if (!event) return res.status(404).json({ error: 'Event not found' });
 
     const comments = await db.select().from(eventComments)
       .where(eq(eventComments.eventId, eventId))
       .orderBy(desc(eventComments.createdAt));
 
-    const enriched = await Promise.all(comments.map(async (comment) => {
+    // Filter out comments from blocked users
+    const visibleComments = comments.filter(c => !blockedSet.has(c.userId));
+
+    const enriched = await Promise.all(visibleComments.map(async (comment) => {
       const user = await storage.getUser(comment.userId);
       return {
         ...comment,
@@ -1722,6 +1741,10 @@ export async function registerRoutes(
     const { viewedId } = req.params;
     if (viewerId === viewedId) return res.json({ ok: true }); // don't track self-views
     try {
+      // Don't record views between blocked users
+      const blockedSet = await getBlockedIds(viewerId);
+      if (blockedSet.has(viewedId)) return res.json({ ok: true });
+
       // Avoid duplicate in the last 24h
       const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
       const [existing] = await db.select().from(profileViews)
