@@ -220,6 +220,12 @@ export async function registerRoutes(
   app.post(api.matches.create.path, async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     const { targetUserId } = api.matches.create.input.parse(req.body);
+
+    // Prevent liking a blocked user (or being liked by a blocker)
+    const blockedSet = await getBlockedIds(req.user!.id);
+    if (blockedSet.has(targetUserId)) {
+      return res.status(403).json({ error: 'Action not allowed' });
+    }
     
     const likeStatus = await storage.canUserLike(req.user!.id);
     if (!likeStatus.canLike) {
@@ -315,6 +321,13 @@ export async function registerRoutes(
   app.post(api.ratings.create.path, async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     const input = api.ratings.create.input.parse(req.body);
+
+    // Silently ignore ratings between blocked users
+    const blockedSet = await getBlockedIds(req.user!.id);
+    if (blockedSet.has(input.ratedUserId)) {
+      return res.status(403).json({ error: 'Action not allowed' });
+    }
+
     const rating = await storage.createRating({
       ...input,
       raterId: req.user!.id
@@ -636,6 +649,12 @@ export async function registerRoutes(
     if (!req.isAuthenticated()) return res.sendStatus(401);
     const { toUserId } = req.body;
     if (!toUserId) return res.status(400).json({ error: 'Target user ID required' });
+
+    // Prevent super-liking a blocked user
+    const blockedSet = await getBlockedIds(req.user!.id);
+    if (blockedSet.has(toUserId)) {
+      return res.status(403).json({ error: 'Action not allowed' });
+    }
     
     const superLike = await storage.createSuperLike(req.user!.id, toUserId);
     if (!superLike) {
@@ -1343,19 +1362,23 @@ export async function registerRoutes(
     // Respond immediately — send notifications in background (non-blocking)
     res.json(newEvent);
 
-    // Fire-and-forget: in-app notifications for users in the same city
+    // Fire-and-forget: in-app notifications for users in the same city (skip blocked)
     if (nearbyUsers.length > 0) {
-      const notifValues = nearbyUsers.map(u => ({
-        userId: u.id,
-        type: 'new_event',
-        title: `${icon} Nueva actividad en ${city}`,
-        body: `${creatorName} creó "${title}" — ¡únete ahora!`,
-        link: `/events`,
-        read: false,
-      }));
-      db.insert(notifications).values(notifValues).catch(err =>
-        console.error('Error creating event notifications:', err)
-      );
+      const creatorBlockedSet = await getBlockedIds(req.user!.id);
+      const eligibleUsers = nearbyUsers.filter(u => !creatorBlockedSet.has(u.id));
+      if (eligibleUsers.length > 0) {
+        const notifValues = eligibleUsers.map(u => ({
+          userId: u.id,
+          type: 'new_event',
+          title: `${icon} Nueva actividad en ${city}`,
+          body: `${creatorName} creó "${title}" — ¡únete ahora!`,
+          link: `/events`,
+          read: false,
+        }));
+        db.insert(notifications).values(notifValues).catch(err =>
+          console.error('Error creating event notifications:', err)
+        );
+      }
     }
 
     // Fire-and-forget: push notifications
@@ -1506,14 +1529,17 @@ export async function registerRoutes(
 
     const user = await storage.getUser(req.user!.id);
 
-    // Notify event creator if someone else commented
+    // Notify event creator if someone else commented (skip if blocked)
     if (event.creatorId !== req.user!.id) {
-      sendPushNotification(event.creatorId, {
-        title: `💬 Nuevo comentario en "${event.title}"`,
-        body: `${user?.firstName || 'Alguien'}: ${content.trim().slice(0, 80)}`,
-        url: `/event/${eventId}`,
-        icon: '/favicon.png',
-      }).catch(() => {});
+      const creatorBlockedSet = await getBlockedIds(event.creatorId);
+      if (!creatorBlockedSet.has(req.user!.id)) {
+        sendPushNotification(event.creatorId, {
+          title: `💬 Nuevo comentario en "${event.title}"`,
+          body: `${user?.firstName || 'Alguien'}: ${content.trim().slice(0, 80)}`,
+          url: `/event/${eventId}`,
+          icon: '/favicon.png',
+        }).catch(() => {});
+      }
     }
 
     res.json({
