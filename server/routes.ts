@@ -4,7 +4,7 @@ import type { Server } from "http";
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
 import { db } from "./db";
-import { users, profiles, photos, events, eventParticipants, eventComments, eventRatings, matches, preferences, referrals, profileViews, stories, businessPartners, localOffers, notifications, swipes, ambassadorApplications, appSessions } from "@shared/schema";
+import { users, profiles, photos, events, eventParticipants, eventComments, eventRatings, matches, preferences, referrals, profileViews, stories, businessPartners, localOffers, notifications, swipes, ambassadorApplications, appSessions, blockedUsers } from "@shared/schema";
 import { eq, and, desc, ilike, gte, inArray, or, sql, lt, ne, count } from "drizzle-orm";
 import { api } from "@shared/routes";
 import { z } from "zod";
@@ -32,6 +32,16 @@ const upload = multer({ dest: "uploads/" });
 function safeUser(user: Record<string, any>) {
   const { password, passwordResetToken, passwordResetTokenExpiry, verificationSelfieUrl, ...safe } = user;
   return safe;
+}
+
+// Returns all user IDs that are blocked by OR blocking the given userId (bidirectional)
+async function getBlockedIds(userId: string): Promise<Set<string>> {
+  const rows = await db.execute(sql`
+    SELECT blocked_user_id AS other_id FROM blocked_users WHERE user_id = ${userId}
+    UNION
+    SELECT user_id AS other_id FROM blocked_users WHERE blocked_user_id = ${userId}
+  `);
+  return new Set((rows.rows as any[]).map((r: any) => r.other_id as string));
 }
 
 export async function registerRoutes(
@@ -78,11 +88,12 @@ export async function registerRoutes(
     if (!req.isAuthenticated()) return res.sendStatus(401);
     const currentUserId = req.user!.id;
 
-    // Fetch preferences + already swiped in parallel
-    const [[userPrefs], alreadySwiped, allUsers] = await Promise.all([
+    // Fetch preferences + already swiped + blocked IDs in parallel
+    const [[userPrefs], alreadySwiped, allUsers, blockedSet] = await Promise.all([
       db.select().from(preferences).where(eq(preferences.userId, currentUserId)),
       db.select({ id: matches.user2Id }).from(matches).where(eq(matches.user1Id, currentUserId)),
       storage.getPotentialMatches(currentUserId),
+      getBlockedIds(currentUserId),
     ]);
 
     const showMe = userPrefs?.showMe ?? 'everyone';
@@ -91,9 +102,10 @@ export async function registerRoutes(
     // Batch-enrich all users (3 queries instead of 1+2N)
     const enriched = await enrichUsers(allUsers);
 
-    // Filter by swiped + gender preference
+    // Filter by swiped + blocked + gender preference
     const filtered = enriched.filter(u => {
       if (swipedSet.has(u.id)) return false;
+      if (blockedSet.has(u.id)) return false;
       if (showMe === 'men') return u.profile?.gender === 'male';
       if (showMe === 'women') return u.profile?.gender === 'female';
       return true;
@@ -252,12 +264,21 @@ export async function registerRoutes(
   app.get(api.matches.list.path, async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     const currentUserId = req.user!.id;
-    const matchList = await storage.getMatches(currentUserId);
+    const [matchList, blockedSet] = await Promise.all([
+      storage.getMatches(currentUserId),
+      getBlockedIds(currentUserId),
+    ]);
 
-    if (matchList.length === 0) return res.json([]);
+    // Filter out matches with blocked users
+    const activeMatches = matchList.filter(m => {
+      const otherId = m.user1Id === currentUserId ? m.user2Id : m.user1Id;
+      return !blockedSet.has(otherId);
+    });
+
+    if (activeMatches.length === 0) return res.json([]);
 
     // Collect the other user IDs, then batch-fetch in 3 queries
-    const otherIds = matchList.map(m => m.user1Id === currentUserId ? m.user2Id : m.user1Id);
+    const otherIds = activeMatches.map(m => m.user1Id === currentUserId ? m.user2Id : m.user1Id);
     const uniqueOtherIds = [...new Set(otherIds)];
 
     const [otherUsers, otherProfiles, otherPhotos] = await Promise.all([
@@ -274,7 +295,7 @@ export async function registerRoutes(
       photosMap.get(p.userId)!.push(p);
     }
 
-    const enriched = matchList.map(m => {
+    const enriched = activeMatches.map(m => {
       const otherId = m.user1Id === currentUserId ? m.user2Id : m.user1Id;
       const otherUser = userMap.get(otherId);
       return {
@@ -446,14 +467,21 @@ export async function registerRoutes(
   app.get('/api/premium/liked-by', async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     
-    const user = await storage.getUser(req.user!.id);
+    const userId = req.user!.id;
+    const [user, blockedSet] = await Promise.all([
+      storage.getUser(userId),
+      getBlockedIds(userId),
+    ]);
     if (!user) return res.sendStatus(404);
     
     const isPremium = user.isPremium === 'true' || 
       (user.trialEndsAt && new Date(user.trialEndsAt) > new Date());
+
+    const allLikers = await storage.getUsersWhoLikedMe(userId);
+    // Filter out blocked users from likers
+    const likers = allLikers.filter(u => !blockedSet.has(u.id));
     
     if (!isPremium) {
-      const likers = await storage.getUsersWhoLikedMe(req.user!.id);
       return res.json({ 
         count: likers.length, 
         users: [],
@@ -461,7 +489,6 @@ export async function registerRoutes(
       });
     }
     
-    const likers = await storage.getUsersWhoLikedMe(req.user!.id);
     const enriched = await enrichUsers(likers);
     
     res.json({ 
@@ -1724,10 +1751,13 @@ export async function registerRoutes(
     if (!req.isAuthenticated()) return res.sendStatus(401);
     const userId = req.user!.id;
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-    const views = await db.select().from(profileViews)
-      .where(and(eq(profileViews.viewedId, userId), gte(profileViews.createdAt, thirtyDaysAgo)))
-      .orderBy(desc(profileViews.createdAt));
-    const uniqueViewerIds = [...new Set(views.map(v => v.viewerId))];
+    const [views, blockedSet] = await Promise.all([
+      db.select().from(profileViews)
+        .where(and(eq(profileViews.viewedId, userId), gte(profileViews.createdAt, thirtyDaysAgo)))
+        .orderBy(desc(profileViews.createdAt)),
+      getBlockedIds(userId),
+    ]);
+    const uniqueViewerIds = [...new Set(views.map(v => v.viewerId))].filter(id => !blockedSet.has(id));
     const isPremium = req.user!.isPremium === 'true';
     if (!isPremium) {
       return res.json({ count: uniqueViewerIds.length, viewers: [] });
@@ -1753,19 +1783,26 @@ export async function registerRoutes(
   // Get active stories of users I follow or all users (discover)
   app.get('/api/stories', async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
+    const currentUserId = req.user!.id;
     const now = new Date();
-    const activeStories = await db.select({
-      id: stories.id,
-      userId: stories.userId,
-      mediaUrl: stories.mediaUrl,
-      caption: stories.caption,
-      expiresAt: stories.expiresAt,
-      createdAt: stories.createdAt,
-    }).from(stories)
-      .where(gte(stories.expiresAt, now))
-      .orderBy(desc(stories.createdAt));
+    const [activeStories, blockedSet] = await Promise.all([
+      db.select({
+        id: stories.id,
+        userId: stories.userId,
+        mediaUrl: stories.mediaUrl,
+        caption: stories.caption,
+        expiresAt: stories.expiresAt,
+        createdAt: stories.createdAt,
+      }).from(stories)
+        .where(gte(stories.expiresAt, now))
+        .orderBy(desc(stories.createdAt)),
+      getBlockedIds(currentUserId),
+    ]);
     if (activeStories.length === 0) return res.json([]);
-    const userIds = [...new Set(activeStories.map(s => s.userId))];
+    // Filter out stories from blocked users (keep own stories)
+    const visibleStories = activeStories.filter(s => s.userId === currentUserId || !blockedSet.has(s.userId));
+    if (visibleStories.length === 0) return res.json([]);
+    const userIds = [...new Set(visibleStories.map(s => s.userId))];
     const [storyUsers, storyPhotos] = await Promise.all([
       db.select().from(users).where(inArray(users.id, userIds)),
       db.select().from(photos).where(inArray(photos.userId, userIds)),
@@ -1778,7 +1815,7 @@ export async function registerRoutes(
         userId: uid,
         userName: user?.firstName || "Alguien",
         userPhoto: photo?.url || user?.profileImageUrl || null,
-        stories: activeStories.filter(s => s.userId === uid),
+        stories: visibleStories.filter(s => s.userId === uid),
       };
     });
     res.json(grouped);
@@ -2069,11 +2106,13 @@ export async function registerRoutes(
       let seed = 0;
       for (let i = 0; i < seedStr.length; i++) seed = (seed * 31 + seedStr.charCodeAt(i)) >>> 0;
 
-      // Get users that this user hasn't swiped on yet, excluding self
-      const swipedIds = (await db.select({ id: swipes.swipedId })
-        .from(swipes).where(eq(swipes.swiperId, userId))).map(s => s.id);
-
-      const excludeIds = [userId, ...swipedIds];
+      // Get users that this user hasn't swiped on yet, excluding self and blocked
+      const [swipedRows, blockedSet] = await Promise.all([
+        db.select({ id: swipes.swipedId }).from(swipes).where(eq(swipes.swiperId, userId)),
+        getBlockedIds(userId),
+      ]);
+      const swipedIds = swipedRows.map(s => s.id);
+      const excludeIds = [userId, ...swipedIds, ...Array.from(blockedSet)];
 
       const candidates = await db.select({
         id: users.id,
