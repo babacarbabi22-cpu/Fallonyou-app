@@ -139,7 +139,7 @@ export default function SwipePage() {
 
   const { data: dailySpark } = useQuery<any>({
     queryKey: ["/api/daily-spark"],
-    staleTime: 1000 * 60 * 60, // 1 hour
+    staleTime: 1000 * 60 * 5, // 5 minutes — refresh more often so blocks take effect quickly
   });
   
   // Preload all user photos when feed is loaded

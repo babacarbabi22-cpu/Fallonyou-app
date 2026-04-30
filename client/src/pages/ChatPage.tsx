@@ -106,6 +106,14 @@ export default function ChatPage() {
       toast({ title: t.chat.userBlocked, description: t.chat.thankYou });
       setActionDialog(null);
       setSelectedReason("");
+      // Invalidate ALL caches so the blocked user disappears everywhere immediately
+      queryClient.invalidateQueries({ queryKey: ['/api/users'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/matches'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/daily-spark'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/stories'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/premium/liked-by'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/super-likes/received'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/events'] });
       navigate("/matches");
     }
   });
