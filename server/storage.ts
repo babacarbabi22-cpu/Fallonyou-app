@@ -3,6 +3,8 @@ import { db } from "./db";
 import { 
   users, profiles, photos, matches, ratings, messages, prompts, 
   promptResponses, superLikes, preferences, blockedUsers, reports,
+  notifications, appSessions, referrals, profileViews, stories,
+  eventParticipants, eventComments, eventRatings, pushSubscriptions,
   type User, type Profile, type InsertProfile, type Photo, type Match, 
   type Rating, type Message, type InsertMessage, type Prompt, 
   type PromptResponse, type SuperLike, type Preferences, type InsertPreferences,
@@ -450,20 +452,29 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteUser(userId: string): Promise<void> {
-    // Delete related data first
-    await db.delete(superLikes).where(
-      or(eq(superLikes.fromUserId, userId), eq(superLikes.toUserId, userId))
-    );
-    await db.delete(blockedUsers).where(
-      or(eq(blockedUsers.userId, userId), eq(blockedUsers.blockedUserId, userId))
-    );
-    await db.delete(reports).where(
-      or(eq(reports.reporterId, userId), eq(reports.reportedId, userId))
-    );
-    await db.delete(preferences).where(eq(preferences.userId, userId));
-    await db.delete(promptResponses).where(eq(promptResponses.userId, userId));
-    
-    // Finally delete the user
+    // Delete all related data in parallel for speed
+    await Promise.all([
+      db.delete(photos).where(eq(photos.userId, userId)),
+      db.delete(profiles).where(eq(profiles.userId, userId)),
+      db.delete(matches).where(or(eq(matches.user1Id, userId), eq(matches.user2Id, userId))),
+      db.delete(messages).where(or(eq(messages.senderId, userId), eq(messages.receiverId, userId))),
+      db.delete(ratings).where(or(eq(ratings.fromUserId, userId), eq(ratings.toUserId, userId))),
+      db.delete(superLikes).where(or(eq(superLikes.fromUserId, userId), eq(superLikes.toUserId, userId))),
+      db.delete(blockedUsers).where(or(eq(blockedUsers.userId, userId), eq(blockedUsers.blockedUserId, userId))),
+      db.delete(reports).where(or(eq(reports.reporterId, userId), eq(reports.reportedId, userId))),
+      db.delete(preferences).where(eq(preferences.userId, userId)),
+      db.delete(promptResponses).where(eq(promptResponses.userId, userId)),
+      db.delete(notifications).where(eq(notifications.userId, userId)),
+      db.delete(appSessions).where(eq(appSessions.userId, userId)),
+      db.delete(referrals).where(or(eq(referrals.referrerId, userId), eq(referrals.refereeId, userId))),
+      db.delete(profileViews).where(or(eq(profileViews.viewerId, userId), eq(profileViews.viewedId, userId))),
+      db.delete(stories).where(eq(stories.userId, userId)),
+      db.delete(eventParticipants).where(eq(eventParticipants.userId, userId)),
+      db.delete(eventComments).where(eq(eventComments.userId, userId)),
+      db.delete(eventRatings).where(eq(eventRatings.userId, userId)),
+      db.delete(pushSubscriptions).where(eq(pushSubscriptions.userId, userId)),
+    ]);
+    // Delete the user record last (other tables reference it)
     await db.delete(users).where(eq(users.id, userId));
   }
 }
