@@ -11,7 +11,7 @@ import { z } from "zod";
 import multer from "multer";
 import path from "path";
 import express from "express";
-import { registerObjectStorageRoutes } from "./replit_integrations/object_storage";
+import { registerObjectStorageRoutes, objectStorageClient } from "./replit_integrations/object_storage";
 import { stripeService } from "./stripeService";
 import { getStripePublishableKey } from "./stripeClient";
 import { saveSubscription, removeSubscription, sendPushNotification, sendPushToAllExcept, getVapidPublicKey } from "./pushService";
@@ -982,13 +982,39 @@ export async function registerRoutes(
     const [targetUser] = await db.select().from(users).where(eq(users.id, userId));
     if (!targetUser) return res.status(404).json({ error: 'User not found' });
 
+    // Collect all GCS file URLs before deleting DB records
+    const [userPhotos, userStories] = await Promise.all([
+      db.select({ url: photos.url }).from(photos).where(eq(photos.userId, userId)),
+      db.select({ mediaUrl: stories.mediaUrl }).from(stories).where(eq(stories.userId, userId)),
+    ]);
+
     // Respond immediately so the UI feels instant
     res.json({ success: true });
 
     // Delete everything in the background (fire & forget)
     storage.deleteUser(userId)
-      .then(() => {
+      .then(async () => {
         sendAdminAlert({ type: 'user_banned', data: { userEmail: targetUser.email || userId, userName: `ELIMINADO: ${targetUser.firstName || ''} ${targetUser.lastName || ''}`.trim(), adminEmail: req.user!.id } }).catch(() => {});
+
+        // Delete physical files from GCS
+        const gcsUrls = [
+          ...userPhotos.map(p => p.url),
+          ...userStories.map(s => s.mediaUrl),
+          targetUser.profileImageUrl,
+        ].filter((url): url is string => !!url && url.startsWith('https://storage.googleapis.com/'));
+
+        await Promise.allSettled(gcsUrls.map(async (url) => {
+          try {
+            const parsed = new URL(url);
+            const parts = parsed.pathname.split('/').filter(Boolean);
+            if (parts.length < 2) return;
+            const bucketName = parts[0];
+            const objectName = parts.slice(1).join('/');
+            await objectStorageClient.bucket(bucketName).file(objectName).delete();
+          } catch (e) {
+            console.error('[Admin] GCS file delete failed:', url, e);
+          }
+        }));
       })
       .catch((err) => console.error('[Admin] Error deleting user:', err));
   });
