@@ -88,6 +88,72 @@ export async function sendPhotoReminderEmail(to: string, firstName: string): Pro
   }
 }
 
+// ─── Email verification ──────────────────────────────────────────────────────
+
+export async function sendVerificationEmail(to: string, firstName: string, verifyLink: string): Promise<boolean> {
+  if (!isConfigured()) return false;
+  const name = firstName || "usuario";
+  try {
+    const { error } = await resend.emails.send({
+      from: FROM,
+      to,
+      subject: "✅ Confirma tu cuenta en FallonYou",
+      html: `
+<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/></head>
+<body style="margin:0;padding:0;background:#f9f6f0;font-family:Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9f6f0;padding:32px 0;">
+    <tr><td align="center">
+      <table width="500" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:20px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.08);">
+        <tr>
+          <td style="background:linear-gradient(135deg,#c9a227,#f0c040,#c9a227);padding:36px 32px 28px;text-align:center;">
+            <p style="margin:0;font-size:40px;">✉️</p>
+            <h1 style="margin:12px 0 4px;color:#1a1a1a;font-size:26px;font-weight:800;">FallonYou</h1>
+            <p style="margin:0;color:#5a4000;font-size:13px;font-weight:600;letter-spacing:1px;">CONFIRMA TU CUENTA</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:36px 32px 0;">
+            <h2 style="margin:0 0 12px;color:#111;font-size:20px;">Hola ${name} 👋</h2>
+            <p style="margin:0 0 24px;color:#555;font-size:16px;line-height:1.7;">
+              Gracias por registrarte en FallonYou. Para activar tu cuenta y empezar a conectar, confirma tu email haciendo clic en el botón. <strong>El enlace expira en 24 horas.</strong>
+            </p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:8px 32px 24px;text-align:center;">
+            <a href="${verifyLink}" style="display:inline-block;background:linear-gradient(135deg,#c9a227,#f0c040);color:#1a1a1a;font-weight:800;font-size:17px;padding:16px 40px;border-radius:50px;text-decoration:none;">
+              ✅ Confirmar mi cuenta →
+            </a>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:0 32px 32px;">
+            <p style="margin:16px 0 0;color:#999;font-size:13px;line-height:1.6;">
+              Si no has creado esta cuenta, ignora este mensaje. Nadie podrá acceder sin confirmar el email.
+            </p>
+          </td>
+        </tr>
+        <tr>
+          <td style="background:#f9f6f0;padding:20px 32px;text-align:center;">
+            <p style="margin:0;color:#bbb;font-size:12px;">© 2025 FallonYou · <a href="https://fallonyou.app" style="color:#c9a227;text-decoration:none;">fallonyou.app</a></p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`,
+    });
+    if (error) { console.error("[Email] sendVerificationEmail error:", error); return false; }
+    return true;
+  } catch (e) {
+    console.error("[Email] sendVerificationEmail exception:", e);
+    return false;
+  }
+}
+
 // ─── Password reset ──────────────────────────────────────────────────────────
 
 export async function sendPasswordResetEmail(to: string, firstName: string, resetLink: string): Promise<boolean> {

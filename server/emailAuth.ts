@@ -3,11 +3,10 @@ import session from "express-session";
 import connectPg from "connect-pg-simple";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
-import { sendAdminAlert } from "./emailService";
+import { sendAdminAlert, sendVerificationEmail, sendPasswordResetEmail } from "./emailService";
 import { db } from "./db";
 import { users, profiles, photos } from "@shared/schema";
 import { eq } from "drizzle-orm";
-import { sendPasswordResetEmail } from "./emailService";
 
 declare global {
   namespace Express {
@@ -48,7 +47,7 @@ export async function setupAuth(app: Express) {
   app.set("trust proxy", 1);
   app.use(getSession());
 
-  // Register endpoint
+  // Register endpoint — creates account and sends verification email (no session until verified)
   app.post("/api/register", async (req, res) => {
     try {
       const { email, password, firstName, lastName, ageConfirmed } = req.body;
@@ -63,10 +62,24 @@ export async function setupAuth(app: Express) {
 
       const existingUser = await db.select().from(users).where(eq(users.email, email.toLowerCase()));
       if (existingUser.length > 0) {
+        // If account exists but not verified, resend the email
+        const existing = existingUser[0];
+        if (existing.emailVerified !== 'true') {
+          const token = crypto.randomBytes(32).toString("hex");
+          const expiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
+          await db.update(users)
+            .set({ emailVerificationToken: token, emailVerificationTokenExpiry: expiry })
+            .where(eq(users.id, existing.id));
+          const baseUrl = process.env.NODE_ENV === "production" ? "https://fallonyou.app" : `${req.protocol}://${req.get("host")}`;
+          sendVerificationEmail(existing.email!, existing.firstName || "", `${baseUrl}/verify-email?token=${token}`).catch(() => {});
+          return res.status(201).json({ requiresVerification: true, email: existing.email });
+        }
         return res.status(400).json({ error: "Email already registered" });
       }
 
       const hashedPassword = await bcrypt.hash(password, 10);
+      const verificationToken = crypto.randomBytes(32).toString("hex");
+      const verificationExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
       const [newUser] = await db
         .insert(users)
@@ -77,36 +90,68 @@ export async function setupAuth(app: Express) {
           lastName: lastName || null,
           ageConfirmed: ageConfirmed ? "true" : "false",
           ageConfirmedAt: ageConfirmed ? new Date() : null,
+          emailVerified: 'false',
+          emailVerificationToken: verificationToken,
+          emailVerificationTokenExpiry: verificationExpiry,
         })
         .returning();
 
-      (req.session as any).userId = newUser.id;
-      (req.session as any).user = {
-        id: newUser.id,
-        email: newUser.email,
-        firstName: newUser.firstName,
-        lastName: newUser.lastName,
-      };
-
-      // Notify admin of new registration (fire-and-forget)
+      // Send verification email (fire-and-forget)
+      const baseUrl = process.env.NODE_ENV === "production" ? "https://fallonyou.app" : `${req.protocol}://${req.get("host")}`;
+      sendVerificationEmail(newUser.email!, newUser.firstName || "", `${baseUrl}/verify-email?token=${verificationToken}`).catch(() => {});
       sendAdminAlert({ type: 'new_user', data: { email: newUser.email || '', firstName: newUser.firstName || '', lastName: newUser.lastName || '' } }).catch(() => {});
 
-      req.session.save((err) => {
-        if (err) {
-          console.error("Session save error:", err);
-          return res.status(500).json({ error: "Registration failed" });
-        }
-        res.status(201).json({
-          id: newUser.id,
-          email: newUser.email,
-          firstName: newUser.firstName,
-          lastName: newUser.lastName,
-        });
-      });
+      // Do NOT create a session — user must verify email first
+      res.status(201).json({ requiresVerification: true, email: newUser.email });
     } catch (error: any) {
       console.error("Registration error:", error);
       res.status(500).json({ error: "Registration failed" });
     }
+  });
+
+  // Verify email endpoint — called when user clicks the link in their email
+  app.get("/api/auth/verify-email", async (req, res) => {
+    const { token } = req.query as { token: string };
+    if (!token) return res.redirect("/?verified=error");
+
+    try {
+      const [user] = await db.select().from(users).where(eq(users.emailVerificationToken, token));
+      if (!user || !user.emailVerificationTokenExpiry) return res.redirect("/?verified=invalid");
+      if (new Date() > new Date(user.emailVerificationTokenExpiry)) return res.redirect("/?verified=expired");
+
+      await db.update(users)
+        .set({ emailVerified: 'true', emailVerificationToken: null, emailVerificationTokenExpiry: null })
+        .where(eq(users.id, user.id));
+
+      // Log user in immediately after verification
+      (req.session as any).userId = user.id;
+      (req.session as any).user = { id: user.id, email: user.email, firstName: user.firstName, lastName: user.lastName };
+
+      req.session.save(() => res.redirect("/?verified=success"));
+    } catch (e) {
+      console.error("Email verification error:", e);
+      res.redirect("/?verified=error");
+    }
+  });
+
+  // Resend verification email
+  app.post("/api/auth/resend-verification", async (req, res) => {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ error: "Email is required" });
+
+    const [user] = await db.select().from(users).where(eq(users.email, email.toLowerCase()));
+    if (!user) return res.json({ success: true }); // Don't leak existence
+    if (user.emailVerified === 'true') return res.json({ success: true });
+
+    const token = crypto.randomBytes(32).toString("hex");
+    const expiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    await db.update(users)
+      .set({ emailVerificationToken: token, emailVerificationTokenExpiry: expiry })
+      .where(eq(users.id, user.id));
+
+    const baseUrl = process.env.NODE_ENV === "production" ? "https://fallonyou.app" : `${req.protocol}://${req.get("host")}`;
+    sendVerificationEmail(user.email!, user.firstName || "", `${baseUrl}/verify-email?token=${token}`).catch(() => {});
+    res.json({ success: true });
   });
 
   // Login endpoint
@@ -127,6 +172,12 @@ export async function setupAuth(app: Express) {
       const isValidPassword = await bcrypt.compare(password, user.password);
       if (!isValidPassword) {
         return res.status(401).json({ error: "Invalid email or password" });
+      }
+
+      // Block login only for new accounts explicitly created with emailVerified='false'
+      // Existing users (emailVerified=null) are grandfathered in
+      if (user.emailVerified === 'false') {
+        return res.status(403).json({ error: "EMAIL_NOT_VERIFIED", email: user.email });
       }
 
       // Check if user is banned

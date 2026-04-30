@@ -29,6 +29,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Shield, Loader2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import { TermsModal } from "@/components/TermsModal";
 import { CookieBanner } from "@/components/CookieBanner";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -84,6 +85,25 @@ function AgeConfirmationModal() {
 function SessionPing() {
   useEffect(() => {
     fetch("/api/sessions/ping", { method: "POST", credentials: "include" }).catch(() => {});
+  }, []);
+  return null;
+}
+
+function VerificationToast() {
+  const { toast } = useToast();
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const verified = params.get("verified");
+    if (verified === "success") {
+      toast({ title: "✅ Email confirmado", description: "¡Bienvenido/a a FallonYou! Tu cuenta ya está activa." });
+      window.history.replaceState({}, "", window.location.pathname);
+    } else if (verified === "expired") {
+      toast({ title: "Enlace caducado", description: "El enlace de verificación ha expirado. Vuelve a iniciar sesión para solicitar uno nuevo.", variant: "destructive" });
+      window.history.replaceState({}, "", window.location.pathname);
+    } else if (verified === "invalid" || verified === "error") {
+      toast({ title: "Enlace inválido", description: "El enlace de verificación no es válido.", variant: "destructive" });
+      window.history.replaceState({}, "", window.location.pathname);
+    }
   }, []);
   return null;
 }
@@ -202,6 +222,7 @@ function App() {
           <ErrorBoundary>
             <HeartCascade />
             <Toaster />
+            <VerificationToast />
             <Router />
             <CookieBanner />
           </ErrorBoundary>
