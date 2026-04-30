@@ -684,15 +684,20 @@ export async function registerRoutes(
 
   app.get('/api/super-likes/received', async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
-    const user = await storage.getUser(req.user!.id);
+    const [user, blockedSet] = await Promise.all([
+      storage.getUser(req.user!.id),
+      getBlockedIds(req.user!.id),
+    ]);
     const isPremium = user?.isPremium === 'true';
+
+    const allSuperLikes = await storage.getSuperLikesReceived(req.user!.id);
+    // Filter out super-likes from blocked users
+    const superLikes = allSuperLikes.filter(sl => !blockedSet.has(sl.fromUserId));
     
     if (!isPremium) {
-      const superLikes = await storage.getSuperLikesReceived(req.user!.id);
       return res.json({ count: superLikes.length, users: [], isPremium: false });
     }
     
-    const superLikes = await storage.getSuperLikesReceived(req.user!.id);
     const enriched = await Promise.all(superLikes.map(async sl => {
       const user = await storage.getUser(sl.fromUserId);
       const profile = await storage.getProfile(sl.fromUserId);
@@ -1214,8 +1219,10 @@ export async function registerRoutes(
       const participants = await db.select().from(eventParticipants).where(eq(eventParticipants.eventId, event.id));
       const creator = await storage.getUser(event.creatorId);
       const isParticipant = participants.some(p => p.userId === userId);
+      // Only show avatars of non-blocked participants
+      const visibleParticipants = participants.filter(p => !blockedSet.has(p.userId));
       const participantAvatars = await Promise.all(
-        participants.slice(0, 4).map(async (p) => {
+        visibleParticipants.slice(0, 4).map(async (p) => {
           const u = await storage.getUser(p.userId);
           return u ? { id: u.id, firstName: u.firstName, profileImageUrl: u.profileImageUrl } : null;
         })
@@ -1223,7 +1230,7 @@ export async function registerRoutes(
       return {
         ...event,
         imageUrl: fixImageUrl(event.imageUrl),
-        participantCount: participants.length,
+        participantCount: visibleParticipants.length,
         isParticipant,
         participantAvatars: participantAvatars.filter(Boolean),
         creator: creator ? { id: creator.id, firstName: creator.firstName, profileImageUrl: creator.profileImageUrl } : null,
@@ -1287,11 +1294,16 @@ export async function registerRoutes(
     const eventId = parseInt(req.params.id);
     if (isNaN(eventId)) return res.status(400).json({ error: 'Invalid event ID' });
 
-    const [event] = await db.select().from(events).where(eq(events.id, eventId));
+    const [[event], blockedSet] = await Promise.all([
+      db.select().from(events).where(eq(events.id, eventId)),
+      getBlockedIds(req.user!.id),
+    ]);
     if (!event) return res.status(404).json({ error: 'Event not found' });
 
     const participantRows = await db.select().from(eventParticipants).where(eq(eventParticipants.eventId, eventId));
-    const participants = await Promise.all(participantRows.map(async (p) => {
+    // Filter out blocked users from the participant list
+    const visibleParticipantRows = participantRows.filter(p => !blockedSet.has(p.userId));
+    const participants = await Promise.all(visibleParticipantRows.map(async (p) => {
       const user = await storage.getUser(p.userId);
       return {
         id: p.userId,
