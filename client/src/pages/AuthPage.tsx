@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Mail, Lock, User, Eye, EyeOff, Loader2, Heart, Star, Plane } from "lucide-react";
+import { Mail, Lock, User, Eye, EyeOff, Loader2, Heart, Star, Plane, AlertTriangle } from "lucide-react";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { useTranslation } from "@/lib/i18n";
 import { Link, useLocation } from "wouter";
@@ -190,32 +190,58 @@ export default function AuthPage() {
 
           <form onSubmit={handleSubmit} className="space-y-3">
             {!isLogin && (
-              <div className="grid grid-cols-2 gap-3">
-                <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-amber-400/60" />
-                  <Input
-                    type="text"
-                    placeholder={t.auth.firstName}
-                    value={formData.firstName}
-                    onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                    className="pl-10 h-12 rounded-xl text-white placeholder:text-white/30 border-white/10 focus:border-amber-500/60"
-                    style={{ background: "rgba(255,255,255,0.07)" }}
-                    data-testid="input-first-name"
-                  />
+              <>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-amber-400/60" />
+                    <Input
+                      type="text"
+                      placeholder={t.auth.firstName}
+                      value={formData.firstName}
+                      onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                      className="pl-10 h-12 rounded-xl text-white placeholder:text-white/30 border-white/10 focus:border-amber-500/60"
+                      style={{ background: "rgba(255,255,255,0.07)" }}
+                      data-testid="input-first-name"
+                    />
+                  </div>
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-amber-400/60" />
+                    <Input
+                      type="text"
+                      placeholder={t.auth.lastName}
+                      value={formData.lastName}
+                      onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                      className="pl-10 h-12 rounded-xl text-white placeholder:text-white/30 border-white/10 focus:border-amber-500/60"
+                      style={{ background: "rgba(255,255,255,0.07)" }}
+                      data-testid="input-last-name"
+                    />
+                  </div>
                 </div>
-                <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-amber-400/60" />
-                  <Input
-                    type="text"
-                    placeholder={t.auth.lastName}
-                    value={formData.lastName}
-                    onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                    className="pl-10 h-12 rounded-xl text-white placeholder:text-white/30 border-white/10 focus:border-amber-500/60"
-                    style={{ background: "rgba(255,255,255,0.07)" }}
-                    data-testid="input-last-name"
-                  />
+
+                {/* ⚠️ Aviso legal anti-cuentas falsas */}
+                <div
+                  className="rounded-xl p-3 flex gap-2.5"
+                  style={{
+                    background: "rgba(239,68,68,0.12)",
+                    border: "1px solid rgba(239,68,68,0.45)",
+                  }}
+                  data-testid="warning-fake-accounts"
+                >
+                  <AlertTriangle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
+                  <div className="space-y-1">
+                    <p className="text-red-300 text-xs font-bold uppercase tracking-wide">
+                      Aviso legal importante
+                    </p>
+                    <p className="text-red-200/85 text-xs leading-relaxed">
+                      Usar fotos de otra persona sin su consentimiento es un delito tipificado en el{" "}
+                      <strong>artículo 197 del Código Penal español</strong> (usurpación de identidad) y puede conllevar{" "}
+                      <strong>penas de prisión de hasta 4 años</strong> y responsabilidad civil.
+                      FallonYou registra la IP, el email y el dispositivo de cada cuenta.
+                      Los perfiles falsos serán denunciados a las autoridades competentes.
+                    </p>
+                  </div>
                 </div>
-              </div>
+              </>
             )}
 
             <div className="relative">
