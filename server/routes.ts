@@ -982,12 +982,15 @@ export async function registerRoutes(
     const [targetUser] = await db.select().from(users).where(eq(users.id, userId));
     if (!targetUser) return res.status(404).json({ error: 'User not found' });
 
-    await storage.deleteUser(userId);
-
-    const [adminUser] = await db.select().from(users).where(eq(users.id, req.user!.id));
-    sendAdminAlert({ type: 'user_banned', data: { userEmail: targetUser?.email || userId, userName: `ELIMINADO: ${targetUser?.firstName || ''} ${targetUser?.lastName || ''}`.trim(), adminEmail: adminUser?.email || req.user!.id } }).catch(() => {});
-
+    // Respond immediately so the UI feels instant
     res.json({ success: true });
+
+    // Delete everything in the background (fire & forget)
+    storage.deleteUser(userId)
+      .then(() => {
+        sendAdminAlert({ type: 'user_banned', data: { userEmail: targetUser.email || userId, userName: `ELIMINADO: ${targetUser.firstName || ''} ${targetUser.lastName || ''}`.trim(), adminEmail: req.user!.id } }).catch(() => {});
+      })
+      .catch((err) => console.error('[Admin] Error deleting user:', err));
   });
 
   // Set or remove premium for a user (admin only)

@@ -180,13 +180,24 @@ export default function AdminPage() {
     mutationFn: async (userId: string) => {
       return apiRequest("DELETE", `/api/admin/users/${userId}`);
     },
-    onSuccess: () => {
-      toast({ title: "🗑️ Cuenta eliminada", description: "La cuenta y todos sus datos han sido eliminados permanentemente." });
+    onMutate: async (userId: string) => {
+      // Close dialog and remove user from list instantly (optimistic)
       setShowDeleteDialog(false);
       setDeleteTarget(null);
+      await queryClient.cancelQueries({ queryKey: ["/api/admin/users"] });
+      const previous = queryClient.getQueryData<UserWithProfile[]>(["/api/admin/users"]);
+      queryClient.setQueryData<UserWithProfile[]>(["/api/admin/users"], (old) =>
+        old ? old.filter((u) => u.id !== userId) : []
+      );
+      return { previous };
+    },
+    onSuccess: () => {
+      toast({ title: "🗑️ Cuenta eliminada", description: "La cuenta y todos sus datos han sido eliminados permanentemente." });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
     },
-    onError: () => {
+    onError: (_err, _userId, context: any) => {
+      // Rollback on error
+      if (context?.previous) queryClient.setQueryData(["/api/admin/users"], context.previous);
       toast({ title: "Error al eliminar la cuenta", variant: "destructive" });
     },
   });
