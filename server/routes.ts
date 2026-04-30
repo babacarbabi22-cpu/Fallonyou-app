@@ -2219,6 +2219,9 @@ export async function registerRoutes(
       const swipedIds = swipedRows.map(s => s.id);
       const excludeIds = [userId, ...swipedIds, ...Array.from(blockedSet)];
 
+      // Account must be at least 24h old and have a profile photo to appear in spark
+      const minAge = new Date(Date.now() - 24 * 60 * 60 * 1000);
+
       const candidates = await db.select({
         id: users.id,
         firstName: users.firstName,
@@ -2235,6 +2238,8 @@ export async function registerRoutes(
           ne(users.id, userId),
           excludeIds.length > 1 ? sql`${users.id} NOT IN (${sql.join(excludeIds.map(id => sql`${id}`), sql`, `)})` : sql`true`,
           eq(users.isBanned, 'false'),
+          sql`${users.createdAt} < ${minAge}`,
+          sql`${users.profileImageUrl} IS NOT NULL`,
         ))
         .limit(100);
 

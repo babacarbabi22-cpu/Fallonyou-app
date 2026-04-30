@@ -115,10 +115,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getPotentialMatches(userId: string): Promise<User[]> {
-    // Exclude self and users with absolutely no photo (neither profileImageUrl nor gallery photos)
+    // Exclude self, banned users, very new accounts (<24h), and users with no photo
+    const minAge = new Date(Date.now() - 24 * 60 * 60 * 1000);
     return db.select().from(users).where(
       and(
         ne(users.id, userId),
+        eq(users.isBanned, 'false'),
+        sql`${users.createdAt} < ${minAge}`,
         or(
           isNotNull(users.profileImageUrl),
           sql`EXISTS (SELECT 1 FROM photos WHERE photos.user_id = ${users.id})`
