@@ -73,6 +73,8 @@ export default function AdminPage() {
   const [showMessageDialog, setShowMessageDialog] = useState(false);
   const [messageTarget, setMessageTarget] = useState<UserWithProfile | null>(null);
   const [messageText, setMessageText] = useState("");
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<UserWithProfile | null>(null);
 
   const { data: users, isLoading: usersLoading } = useQuery<UserWithProfile[]>({
     queryKey: ["/api/admin/users"],
@@ -171,6 +173,21 @@ export default function AdminPage() {
     },
     onError: () => {
       toast({ title: "Error al enviar el mensaje", variant: "destructive" });
+    },
+  });
+
+  const deleteUserMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      return apiRequest("DELETE", `/api/admin/users/${userId}`);
+    },
+    onSuccess: () => {
+      toast({ title: "🗑️ Cuenta eliminada", description: "La cuenta y todos sus datos han sido eliminados permanentemente." });
+      setShowDeleteDialog(false);
+      setDeleteTarget(null);
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+    },
+    onError: () => {
+      toast({ title: "Error al eliminar la cuenta", variant: "destructive" });
     },
   });
 
@@ -493,6 +510,20 @@ export default function AdminPage() {
                               {t.admin.ban}
                             </Button>
                           )}
+                          {/* Delete account */}
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="border-red-700 text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30"
+                            onClick={() => {
+                              setDeleteTarget(user);
+                              setShowDeleteDialog(true);
+                            }}
+                            data-testid={`button-delete-${user.id}`}
+                          >
+                            <XCircle className="w-4 h-4 mr-1" />
+                            Eliminar
+                          </Button>
                         </div>
                       </div>
                     </CardContent>
@@ -719,6 +750,33 @@ export default function AdminPage() {
               data-testid="button-confirm-ban"
             >
               {t.admin.confirmBan}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Account Dialog */}
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="text-red-700">⚠️ Eliminar cuenta permanentemente</DialogTitle>
+            <DialogDescription>
+              Estás a punto de eliminar la cuenta de{" "}
+              <strong>{deleteTarget?.profile?.displayName || deleteTarget?.firstName || "este usuario"}</strong>.
+              Esta acción es <strong>irreversible</strong>: se borrarán todos sus datos, fotos, matches y mensajes.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setShowDeleteDialog(false)}>
+              Cancelar
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => deleteTarget && deleteUserMutation.mutate(deleteTarget.id)}
+              disabled={deleteUserMutation.isPending}
+              data-testid="button-confirm-delete"
+            >
+              {deleteUserMutation.isPending ? "Eliminando..." : "Sí, eliminar cuenta"}
             </Button>
           </DialogFooter>
         </DialogContent>

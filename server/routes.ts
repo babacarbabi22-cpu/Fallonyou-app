@@ -975,6 +975,21 @@ export async function registerRoutes(
     res.json({ success: true });
   });
 
+  // Delete a user account permanently (admin only)
+  app.delete('/api/admin/users/:userId', requireAdmin, async (req, res) => {
+    const { userId } = req.params;
+
+    const [targetUser] = await db.select().from(users).where(eq(users.id, userId));
+    if (!targetUser) return res.status(404).json({ error: 'User not found' });
+
+    await storage.deleteUser(userId);
+
+    const [adminUser] = await db.select().from(users).where(eq(users.id, req.user!.id));
+    sendAdminAlert({ type: 'user_banned', data: { userEmail: targetUser?.email || userId, userName: `ELIMINADO: ${targetUser?.firstName || ''} ${targetUser?.lastName || ''}`.trim(), adminEmail: adminUser?.email || req.user!.id } }).catch(() => {});
+
+    res.json({ success: true });
+  });
+
   // Set or remove premium for a user (admin only)
   app.post('/api/admin/users/:userId/set-premium', requireAdmin, async (req, res) => {
     const { userId } = req.params;
