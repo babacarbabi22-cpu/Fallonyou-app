@@ -28,16 +28,21 @@ export default function AuthPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({ email: "", password: "", firstName: "" });
   const [legalExpanded, setLegalExpanded] = useState(false);
+  const [ageConfirmed, setAgeConfirmed] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isLogin && !ageConfirmed) {
+      toast({ title: "Edad requerida", description: "Debes confirmar que tienes 18 años o más para registrarte.", variant: "destructive" });
+      return;
+    }
     setIsLoading(true);
     try {
       const endpoint = isLogin ? "/api/login" : "/api/register";
       const response = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...formData, lastName: "", ageConfirmed: true }),
+        body: JSON.stringify({ ...formData, lastName: "", ageConfirmed }),
         credentials: "include",
       });
 
@@ -96,7 +101,7 @@ export default function AuthPage() {
                 <button
                   key={String(login)}
                   type="button"
-                  onClick={() => setIsLogin(login)}
+                  onClick={() => { setIsLogin(login); setAgeConfirmed(false); }}
                   className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${isLogin === login ? "bg-amber-500 text-black shadow-lg shadow-amber-500/30" : "text-white/50 hover:text-white/80"}`}
                   data-testid={login ? "button-login-tab" : "button-register-tab"}
                 >
@@ -189,6 +194,34 @@ export default function AuthPage() {
                     </div>
                   )}
                 </div>
+              )}
+
+              {/* Age confirmation — only on register */}
+              {!isLogin && (
+                <label className="flex items-start gap-3 cursor-pointer group" data-testid="label-age-confirm">
+                  <div className="relative mt-0.5 shrink-0">
+                    <input
+                      type="checkbox"
+                      checked={ageConfirmed}
+                      onChange={(e) => setAgeConfirmed(e.target.checked)}
+                      className="sr-only"
+                      data-testid="checkbox-age-confirm"
+                    />
+                    <div
+                      className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all duration-200 ${ageConfirmed ? "border-amber-500 bg-amber-500" : "border-white/30 bg-white/5 group-hover:border-amber-500/50"}`}
+                    >
+                      {ageConfirmed && (
+                        <svg className="w-3 h-3 text-black" fill="none" viewBox="0 0 12 12" stroke="currentColor" strokeWidth={2.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M2 6l3 3 5-5" />
+                        </svg>
+                      )}
+                    </div>
+                  </div>
+                  <span className="text-white/60 text-xs leading-relaxed group-hover:text-white/80 transition-colors">
+                    Confirmo que tengo <strong className="text-amber-400">18 años o más</strong> y acepto los{" "}
+                    <Link href="/legal" className="text-amber-400/80 hover:text-amber-400 underline underline-offset-2">Términos y la Política de Privacidad</Link>.
+                  </span>
+                </label>
               )}
 
               {/* Submit */}
