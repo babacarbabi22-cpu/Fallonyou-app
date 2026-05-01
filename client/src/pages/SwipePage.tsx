@@ -614,6 +614,26 @@ export default function SwipePage() {
         onOpenChange={setShowProfileDetail}
       />
 
+      {/* Business partnership banner — compact */}
+      <div className="px-4 pb-2">
+        <a
+          href="mailto:fallonyouapp@hotmail.com?subject=Colaboración%20empresarial%20FallonYou&body=Hola%2C%20me%20gustaría%20colaborar%20con%20FallonYou%20para%20ofrecer%20descuentos%20a%20vuestra%20comunidad."
+          className="flex items-center gap-3 rounded-xl px-3 py-2.5 group"
+          style={{
+            background: "linear-gradient(135deg, rgba(10,10,10,0.9), rgba(26,18,0,0.95))",
+            border: "1px solid rgba(245,158,11,0.3)",
+          }}
+          data-testid="banner-business-swipe"
+        >
+          <span className="text-xl shrink-0">🏢</span>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-bold text-white leading-none">¿Tienes una empresa?</p>
+            <p className="text-[10px] text-white/45 mt-0.5">Colabora con nosotros · descuentos para nuestros usuarios</p>
+          </div>
+          <span className="text-[10px] font-semibold text-amber-400 whitespace-nowrap shrink-0 group-hover:underline">Contactar →</span>
+        </a>
+      </div>
+
       <SocialProofTicker />
       <BottomNav />
     </div>

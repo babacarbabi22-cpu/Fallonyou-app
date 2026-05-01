@@ -10,7 +10,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Calendar, MapPin, Users, Plus, Clock, Loader2, Trash2, Pencil, ImagePlus, X, Search, MessageCircle, Image, Sparkles, Bell, ArrowRight } from "lucide-react";
+import { Calendar, MapPin, Users, Plus, Clock, Loader2, Trash2, Pencil, ImagePlus, X, Search, MessageCircle, Image, Sparkles, Bell, ArrowRight, Building2, ChevronRight } from "lucide-react";
 import { BottomNav } from "@/components/BottomNav";
 import { NotificationBell } from "@/components/NotificationBell";
 import { StoriesRow } from "@/components/StoriesRow";
@@ -748,6 +748,60 @@ export default function EventsPage() {
 
       {/* City inspirations carousel */}
       <CityAdsCarousel />
+
+      {/* Business partnership banner */}
+      <div className="mx-4 mt-4 mb-1">
+        <a
+          href="mailto:fallonyouapp@hotmail.com?subject=Colaboración%20empresarial%20FallonYou&body=Hola%2C%20me%20gustaría%20colaborar%20con%20FallonYou%20para%20ofrecer%20descuentos%20a%20vuestra%20comunidad."
+          className="block rounded-2xl overflow-hidden relative group cursor-pointer"
+          style={{
+            background: "linear-gradient(135deg, #0a0a0a 0%, #1a1200 50%, #0f0a00 100%)",
+            border: "1px solid rgba(245,158,11,0.35)",
+            boxShadow: "0 4px 24px rgba(0,0,0,0.35), inset 0 1px 0 rgba(245,158,11,0.12)",
+          }}
+          data-testid="banner-business-partnership"
+        >
+          {/* Gold shimmer top line */}
+          <div className="absolute top-0 left-0 right-0 h-px" style={{ background: "linear-gradient(90deg, transparent, rgba(245,158,11,0.6), transparent)" }} />
+
+          <div className="p-4 flex items-center gap-4">
+            {/* Icon block */}
+            <div
+              className="shrink-0 w-12 h-12 rounded-xl flex items-center justify-center"
+              style={{ background: "linear-gradient(135deg, rgba(245,158,11,0.25), rgba(217,119,6,0.15))", border: "1px solid rgba(245,158,11,0.3)" }}
+            >
+              <Building2 className="w-6 h-6 text-amber-400" />
+            </div>
+
+            {/* Text */}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-0.5">
+                <span className="text-[10px] font-bold tracking-widest uppercase text-amber-500/80">Colaboración empresas</span>
+              </div>
+              <p className="text-sm font-bold text-white leading-snug">
+                ¿Tienes una empresa?
+              </p>
+              <p className="text-xs text-white/50 mt-0.5 leading-relaxed">
+                Enviamos clientes a tu negocio · Ellos ganan descuentos · Tú ganas visibilidad
+              </p>
+              <div className="flex items-center gap-1 mt-1.5">
+                <span className="text-[11px] font-semibold text-amber-400">Escríbenos y colaboramos</span>
+                <ChevronRight className="w-3 h-3 text-amber-400 group-hover:translate-x-0.5 transition-transform" />
+              </div>
+            </div>
+          </div>
+
+          {/* Business icons row */}
+          <div
+            className="px-4 pb-3 flex items-center gap-3 overflow-x-auto scrollbar-hide"
+            style={{ borderTop: "1px solid rgba(245,158,11,0.1)" }}
+          >
+            {["🍽️ Restaurantes", "🏋️ Gimnasios", "💆 Spas", "🎭 Ocio", "✈️ Viajes", "🛍️ Tiendas", "🎵 Música", "🏨 Hoteles"].map((item) => (
+              <span key={item} className="text-[10px] text-white/35 whitespace-nowrap shrink-0">{item}</span>
+            ))}
+          </div>
+        </a>
+      </div>
 
       {currentUser && !currentUser.profileImageUrl && (
         <div
