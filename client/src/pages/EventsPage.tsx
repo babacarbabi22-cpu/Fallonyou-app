@@ -10,7 +10,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Calendar, MapPin, Users, Plus, Clock, Loader2, Trash2, Pencil, ImagePlus, X, Search, MessageCircle, Image, Sparkles, Bell, ArrowRight, Building2, ChevronRight } from "lucide-react";
+import { Calendar, MapPin, Users, Plus, Clock, Loader2, Trash2, Pencil, ImagePlus, X, Search, MessageCircle, Image, Sparkles, Bell, ArrowRight, Building2, ChevronRight, Tag, Copy, Check, Store } from "lucide-react";
 import { BottomNav } from "@/components/BottomNav";
 import { NotificationBell } from "@/components/NotificationBell";
 import { StoriesRow } from "@/components/StoriesRow";
@@ -480,6 +480,8 @@ export default function EventsPage() {
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [showMyEvents, setShowMyEvents] = useState(false);
+  const [showDeals, setShowDeals] = useState(false);
+  const [copiedCode, setCopiedCode] = useState<number | null>(null);
   const [citySearch, setCitySearch] = useState("");
   const [showCitySearch, setShowCitySearch] = useState(false);
   const [newEvent, setNewEvent] = useState<EventFormData>({ ...emptyForm });
@@ -499,6 +501,23 @@ export default function EventsPage() {
 
   const { data: events, isLoading } = useQuery<Event[]>({
     queryKey: ["/api/events", selectedCategory],
+  });
+
+  interface Offer {
+    id: number;
+    title: string;
+    description: string;
+    discount: string | null;
+    code: string | null;
+    validUntil: string | null;
+    partnerName: string;
+    partnerCity: string;
+    partnerCategory: string;
+    partnerLogo: string | null;
+  }
+  const { data: offers, isLoading: offersLoading } = useQuery<Offer[]>({
+    queryKey: ["/api/offers"],
+    enabled: showDeals,
   });
 
   const { data: suggestionsData } = useQuery<{
@@ -710,10 +729,10 @@ export default function EventsPage() {
 
         <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
           <Button
-            variant={!showMyEvents && selectedCategory === null ? "default" : "outline"}
+            variant={!showMyEvents && !showDeals && selectedCategory === null ? "default" : "outline"}
             size="sm"
-            onClick={() => { setShowMyEvents(false); setSelectedCategory(null); }}
-            className={!showMyEvents && selectedCategory === null ? "bg-amber-500 hover:bg-amber-600 shrink-0" : "shrink-0"}
+            onClick={() => { setShowMyEvents(false); setShowDeals(false); setSelectedCategory(null); }}
+            className={!showMyEvents && !showDeals && selectedCategory === null ? "bg-amber-500 hover:bg-amber-600 shrink-0" : "shrink-0"}
             data-testid="button-filter-all"
           >
             All
@@ -721,13 +740,22 @@ export default function EventsPage() {
           <Button
             variant={showMyEvents ? "default" : "outline"}
             size="sm"
-            onClick={() => { setShowMyEvents(!showMyEvents); setSelectedCategory(null); }}
+            onClick={() => { setShowMyEvents(!showMyEvents); setShowDeals(false); setSelectedCategory(null); }}
             className={showMyEvents ? "bg-amber-900 hover:bg-amber-950 text-amber-100 shrink-0" : "shrink-0"}
             data-testid="button-filter-my-events"
           >
             🗓️ Mis eventos
           </Button>
-          {!showMyEvents && eventCategories.map((cat) => (
+          <Button
+            variant={showDeals ? "default" : "outline"}
+            size="sm"
+            onClick={() => { setShowDeals(!showDeals); setShowMyEvents(false); setSelectedCategory(null); }}
+            className={showDeals ? "bg-green-700 hover:bg-green-800 text-white shrink-0" : "shrink-0 border-green-600 text-green-700 hover:bg-green-50"}
+            data-testid="button-filter-deals"
+          >
+            🏷️ Ofertas
+          </Button>
+          {!showMyEvents && !showDeals && eventCategories.map((cat) => (
             <Button
               key={cat.id}
               variant={selectedCategory === cat.id ? "default" : "outline"}
@@ -914,7 +942,112 @@ export default function EventsPage() {
         </div>
       )}
 
-      <div className="p-4 space-y-4">
+      {/* ── DEALS VIEW ─────────────────────────────────────── */}
+      {showDeals && (
+        <div className="p-4 space-y-4 pb-32">
+          <div className="flex items-center gap-2 mb-2">
+            <Tag className="w-5 h-5 text-green-600" />
+            <h2 className="font-bold text-lg">Ofertas exclusivas</h2>
+            <Badge className="bg-green-100 text-green-700 border-green-200 text-xs">Solo miembros</Badge>
+          </div>
+          <p className="text-sm text-muted-foreground -mt-2 mb-3">Descuentos especiales de nuestros socios para ti</p>
+          {offersLoading ? (
+            <div className="flex justify-center py-12">
+              <Loader2 className="w-8 h-8 animate-spin text-green-600" />
+            </div>
+          ) : !offers || offers.length === 0 ? (
+            <div className="text-center py-16 text-muted-foreground">
+              <Store className="w-14 h-14 mx-auto mb-4 opacity-30" />
+              <p className="font-medium">Próximamente</p>
+              <p className="text-sm mt-1">Estamos cerrando acuerdos con los mejores locales.<br />¡Vuelve pronto!</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-4">
+              {offers.map((offer) => (
+                <div
+                  key={offer.id}
+                  className="rounded-2xl border bg-card shadow-sm overflow-hidden"
+                  data-testid={`card-offer-${offer.id}`}
+                >
+                  {/* Header with partner info */}
+                  <div className="flex items-center gap-3 p-4 pb-3 border-b bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30">
+                    <div className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/50 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                      {offer.partnerLogo ? (
+                        <img src={offer.partnerLogo} alt={offer.partnerName} className="w-full h-full object-cover" />
+                      ) : (
+                        <Store className="w-5 h-5 text-green-600" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-sm leading-tight">{offer.partnerName}</p>
+                      <p className="text-xs text-muted-foreground">{offer.partnerCity} · {offer.partnerCategory}</p>
+                    </div>
+                    {offer.discount && (
+                      <div className="bg-green-600 text-white text-sm font-bold px-3 py-1 rounded-full flex-shrink-0">
+                        {offer.discount}
+                      </div>
+                    )}
+                  </div>
+                  {/* Offer details */}
+                  <div className="p-4">
+                    <h3 className="font-bold text-base mb-1">{offer.title}</h3>
+                    <p className="text-sm text-muted-foreground leading-relaxed mb-3">{offer.description}</p>
+                    {offer.validUntil && (
+                      <p className="text-xs text-amber-600 flex items-center gap-1 mb-3">
+                        <Clock className="w-3 h-3" />
+                        Válido hasta {new Date(offer.validUntil).toLocaleDateString("es-ES", { day: "numeric", month: "long" })}
+                      </p>
+                    )}
+                    {offer.code && (
+                      <div
+                        className="flex items-center justify-between bg-gray-50 dark:bg-gray-900 border border-dashed border-green-400 rounded-xl px-4 py-3 cursor-pointer active:scale-95 transition-transform"
+                        onClick={() => {
+                          navigator.clipboard.writeText(offer.code!).catch(() => {});
+                          setCopiedCode(offer.id);
+                          setTimeout(() => setCopiedCode(null), 2000);
+                        }}
+                        data-testid={`button-copy-code-${offer.id}`}
+                      >
+                        <div>
+                          <p className="text-xs text-muted-foreground mb-0.5">Código de descuento</p>
+                          <p className="font-mono font-bold text-lg tracking-widest text-green-700 dark:text-green-400">{offer.code}</p>
+                        </div>
+                        <div className="text-green-600">
+                          {copiedCode === offer.id ? (
+                            <div className="flex flex-col items-center gap-0.5">
+                              <Check className="w-5 h-5" />
+                              <span className="text-xs">¡Copiado!</span>
+                            </div>
+                          ) : (
+                            <div className="flex flex-col items-center gap-0.5">
+                              <Copy className="w-5 h-5" />
+                              <span className="text-xs">Copiar</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+          {/* CTA for businesses */}
+          <a
+            href="mailto:fallonyouapp@hotmail.com?subject=Colaboración empresarial FallonYou"
+            className="flex items-center justify-between p-4 rounded-2xl bg-gradient-to-r from-amber-900 to-amber-800 text-amber-100 mt-4"
+          >
+            <div>
+              <p className="font-semibold text-sm">¿Tienes un negocio?</p>
+              <p className="text-xs text-amber-300 mt-0.5">Colabora y llega a miles de usuarios</p>
+            </div>
+            <ChevronRight className="w-5 h-5 text-amber-400 flex-shrink-0" />
+          </a>
+        </div>
+      )}
+
+      {/* ── EVENTS VIEW ─────────────────────────────────────── */}
+      {!showDeals && <div className="p-4 space-y-4">
         {isLoading ? (
           <div className="flex justify-center py-12">
             <Loader2 className="w-8 h-8 animate-spin text-amber-500" />
@@ -1070,7 +1203,7 @@ export default function EventsPage() {
         {filteredEvents && filteredEvents.length > 0 && (
           <InviteFriends />
         )}
-      </div>
+      </div>}
 
       <Dialog open={!!editingEvent} onOpenChange={(open) => !open && setEditingEvent(null)}>
         <DialogContent className="max-w-md flex flex-col p-0 gap-0 max-h-[92vh]">

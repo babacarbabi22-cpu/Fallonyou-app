@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { BottomNav } from "@/components/BottomNav";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
-import { ArrowLeft, Search, Ban, UserCheck, AlertTriangle, Flag, Shield, Users, FileWarning, Mail, Camera, Crown, CheckCircle2, XCircle, ShieldCheck, TrendingUp, MessageSquare, Heart, Activity } from "lucide-react";
+import { ArrowLeft, Search, Ban, UserCheck, AlertTriangle, Flag, Shield, Users, FileWarning, Mail, Camera, Crown, CheckCircle2, XCircle, ShieldCheck, TrendingUp, MessageSquare, Heart, Activity, Tag, Store, Plus, Trash2 } from "lucide-react";
 import { Link } from "wouter";
 
 interface UserWithProfile {
@@ -65,7 +65,11 @@ export default function AdminPage() {
   const [selectedUser, setSelectedUser] = useState<UserWithProfile | null>(null);
   const [banReason, setBanReason] = useState("");
   const [showBanDialog, setShowBanDialog] = useState(false);
-  const [activeTab, setActiveTab] = useState<"users" | "reports" | "verifications">("users");
+  const [activeTab, setActiveTab] = useState<"users" | "reports" | "verifications" | "deals">("users");
+  const [showAddPartner, setShowAddPartner] = useState(false);
+  const [showAddOffer, setShowAddOffer] = useState(false);
+  const [partnerForm, setPartnerForm] = useState({ name: "", description: "", city: "", category: "", contactEmail: "", logoUrl: "", website: "" });
+  const [offerForm, setOfferForm] = useState({ partnerId: "", title: "", description: "", discount: "", code: "", validUntil: "" });
   const [userFilter, setUserFilter] = useState<"all" | "premium" | "banned">("all");
   const [showRejectDialog, setShowRejectDialog] = useState(false);
   const [rejectTarget, setRejectTarget] = useState<VerificationRequest | null>(null);
@@ -91,6 +95,40 @@ export default function AdminPage() {
   interface DailyRow { date: string; count: number; }
   interface AdminStats { daily: DailyRow[]; totals: { total_users: number; new_users_7d: number; total_matches: number; total_messages: number; active_today: number; }; }
   const { data: stats } = useQuery<AdminStats>({ queryKey: ["/api/admin/stats"] });
+
+  interface Partner { id: number; name: string; description: string | null; city: string; category: string; contactEmail: string; logoUrl: string | null; website: string | null; status: string | null; }
+  interface AdminOffer { id: number; title: string; description: string; discount: string | null; code: string | null; validUntil: string | null; active: boolean | null; partnerName: string; partnerCity: string; }
+  const { data: partners } = useQuery<Partner[]>({ queryKey: ["/api/admin/partners"], enabled: activeTab === "deals" });
+  const { data: adminOffers } = useQuery<AdminOffer[]>({ queryKey: ["/api/admin/offers"], enabled: activeTab === "deals" });
+
+  const createPartnerMutation = useMutation({
+    mutationFn: async (data: typeof partnerForm) => apiRequest("POST", "/api/admin/partners", { ...data, status: "active" }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/partners"] });
+      setPartnerForm({ name: "", description: "", city: "", category: "", contactEmail: "", logoUrl: "", website: "" });
+      setShowAddPartner(false);
+      toast({ title: "✅ Socio añadido" });
+    },
+  });
+
+  const createOfferMutation = useMutation({
+    mutationFn: async (data: typeof offerForm) => apiRequest("POST", "/api/admin/offers", data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/offers"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/offers"] });
+      setOfferForm({ partnerId: "", title: "", description: "", discount: "", code: "", validUntil: "" });
+      setShowAddOffer(false);
+      toast({ title: "✅ Oferta creada" });
+    },
+  });
+
+  const toggleOfferMutation = useMutation({
+    mutationFn: async ({ id, active }: { id: number; active: boolean }) => apiRequest("PATCH", `/api/admin/offers/${id}`, { active }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/offers"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/offers"] });
+    },
+  });
 
   const approveVerificationMutation = useMutation({
     mutationFn: async (userId: string) => {
@@ -370,6 +408,15 @@ export default function AdminPage() {
                 {verifications.filter(v => v.verificationStatus === "pending").length}
               </Badge>
             ) : null}
+          </Button>
+          <Button
+            variant={activeTab === "deals" ? "default" : "outline"}
+            onClick={() => setActiveTab("deals")}
+            className={activeTab === "deals" ? "flex-1 bg-green-700 hover:bg-green-800" : "flex-1"}
+            data-testid="tab-deals"
+          >
+            <Tag className="w-4 h-4 mr-2" />
+            Ofertas
           </Button>
         </div>
 
@@ -702,6 +749,105 @@ export default function AdminPage() {
               </div>
             )}
           </>
+        )}
+
+        {/* ── DEALS TAB ─────────────────────────────────────── */}
+        {activeTab === "deals" && (
+          <div className="space-y-6">
+            {/* Partners section */}
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-bold flex items-center gap-2"><Store className="w-4 h-4 text-green-600" /> Socios ({partners?.length ?? 0})</h3>
+                <Button size="sm" className="bg-green-700 hover:bg-green-800 text-white" onClick={() => setShowAddPartner(true)} data-testid="button-add-partner">
+                  <Plus className="w-4 h-4 mr-1" /> Añadir socio
+                </Button>
+              </div>
+              {showAddPartner && (
+                <Card className="mb-4 border-green-200">
+                  <CardContent className="pt-4 space-y-3">
+                    <p className="font-semibold text-sm">Nuevo socio</p>
+                    <Input placeholder="Nombre del negocio *" value={partnerForm.name} onChange={e => setPartnerForm(f => ({ ...f, name: e.target.value }))} data-testid="input-partner-name" />
+                    <Input placeholder="Ciudad *" value={partnerForm.city} onChange={e => setPartnerForm(f => ({ ...f, city: e.target.value }))} data-testid="input-partner-city" />
+                    <Input placeholder="Categoría * (restaurante, spa, hotel...)" value={partnerForm.category} onChange={e => setPartnerForm(f => ({ ...f, category: e.target.value }))} data-testid="input-partner-category" />
+                    <Input placeholder="Email de contacto *" value={partnerForm.contactEmail} onChange={e => setPartnerForm(f => ({ ...f, contactEmail: e.target.value }))} data-testid="input-partner-email" />
+                    <Input placeholder="Descripción" value={partnerForm.description} onChange={e => setPartnerForm(f => ({ ...f, description: e.target.value }))} />
+                    <Input placeholder="URL del logo" value={partnerForm.logoUrl} onChange={e => setPartnerForm(f => ({ ...f, logoUrl: e.target.value }))} />
+                    <Input placeholder="Website" value={partnerForm.website} onChange={e => setPartnerForm(f => ({ ...f, website: e.target.value }))} />
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm" onClick={() => setShowAddPartner(false)}>Cancelar</Button>
+                      <Button size="sm" className="bg-green-700 hover:bg-green-800 text-white" onClick={() => createPartnerMutation.mutate(partnerForm)} disabled={!partnerForm.name || !partnerForm.city || !partnerForm.category || !partnerForm.contactEmail || createPartnerMutation.isPending} data-testid="button-submit-partner">
+                        {createPartnerMutation.isPending ? "Guardando..." : "Guardar socio"}
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+              <div className="space-y-2">
+                {partners?.map(p => (
+                  <div key={p.id} className="flex items-center gap-3 p-3 rounded-xl border bg-card">
+                    <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
+                      {p.logoUrl ? <img src={p.logoUrl} className="w-full h-full object-cover rounded-full" /> : <Store className="w-4 h-4 text-green-600" />}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-sm">{p.name}</p>
+                      <p className="text-xs text-muted-foreground">{p.city} · {p.category}</p>
+                    </div>
+                    <Badge className={p.status === "active" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"}>{p.status}</Badge>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Offers section */}
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-bold flex items-center gap-2"><Tag className="w-4 h-4 text-green-600" /> Ofertas ({adminOffers?.length ?? 0})</h3>
+                <Button size="sm" className="bg-green-700 hover:bg-green-800 text-white" onClick={() => setShowAddOffer(true)} disabled={!partners || partners.length === 0} data-testid="button-add-offer">
+                  <Plus className="w-4 h-4 mr-1" /> Nueva oferta
+                </Button>
+              </div>
+              {showAddOffer && (
+                <Card className="mb-4 border-green-200">
+                  <CardContent className="pt-4 space-y-3">
+                    <p className="font-semibold text-sm">Nueva oferta</p>
+                    <select className="w-full border rounded-md p-2 text-sm bg-background" value={offerForm.partnerId} onChange={e => setOfferForm(f => ({ ...f, partnerId: e.target.value }))} data-testid="select-offer-partner">
+                      <option value="">Selecciona un socio *</option>
+                      {partners?.map(p => <option key={p.id} value={p.id}>{p.name} – {p.city}</option>)}
+                    </select>
+                    <Input placeholder="Título de la oferta *" value={offerForm.title} onChange={e => setOfferForm(f => ({ ...f, title: e.target.value }))} data-testid="input-offer-title" />
+                    <Textarea placeholder="Descripción *" value={offerForm.description} onChange={e => setOfferForm(f => ({ ...f, description: e.target.value }))} className="min-h-[70px]" data-testid="input-offer-description" />
+                    <Input placeholder="Descuento (ej: 20%, 2x1, Copa gratis)" value={offerForm.discount} onChange={e => setOfferForm(f => ({ ...f, discount: e.target.value }))} data-testid="input-offer-discount" />
+                    <Input placeholder="Código promocional (opcional)" value={offerForm.code} onChange={e => setOfferForm(f => ({ ...f, code: e.target.value }))} data-testid="input-offer-code" />
+                    <div>
+                      <label className="text-xs text-muted-foreground">Válido hasta (opcional)</label>
+                      <Input type="date" value={offerForm.validUntil} onChange={e => setOfferForm(f => ({ ...f, validUntil: e.target.value }))} data-testid="input-offer-valid-until" />
+                    </div>
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm" onClick={() => setShowAddOffer(false)}>Cancelar</Button>
+                      <Button size="sm" className="bg-green-700 hover:bg-green-800 text-white" onClick={() => createOfferMutation.mutate(offerForm)} disabled={!offerForm.partnerId || !offerForm.title || !offerForm.description || createOfferMutation.isPending} data-testid="button-submit-offer">
+                        {createOfferMutation.isPending ? "Guardando..." : "Crear oferta"}
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+              <div className="space-y-2">
+                {adminOffers?.map(o => (
+                  <div key={o.id} className="flex items-start gap-3 p-3 rounded-xl border bg-card">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-sm">{o.title}</p>
+                      <p className="text-xs text-muted-foreground">{o.partnerName} · {o.partnerCity}</p>
+                      {o.discount && <Badge className="mt-1 bg-green-100 text-green-700 text-xs">{o.discount}</Badge>}
+                      {o.code && <p className="text-xs font-mono text-green-700 mt-0.5">Código: {o.code}</p>}
+                    </div>
+                    <Button size="sm" variant={o.active ? "outline" : "default"} className={o.active ? "text-red-600 border-red-200 hover:bg-red-50" : "bg-green-700 hover:bg-green-800 text-white"} onClick={() => toggleOfferMutation.mutate({ id: o.id, active: !o.active })} data-testid={`button-toggle-offer-${o.id}`}>
+                      {o.active ? "Desactivar" : "Activar"}
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
         )}
       </div>
 
