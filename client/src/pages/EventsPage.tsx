@@ -479,6 +479,7 @@ export default function EventsPage() {
   const [notifBannerLoading, setNotifBannerLoading] = useState(false);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [showMyEvents, setShowMyEvents] = useState(false);
   const [citySearch, setCitySearch] = useState("");
   const [showCitySearch, setShowCitySearch] = useState(false);
   const [newEvent, setNewEvent] = useState<EventFormData>({ ...emptyForm });
@@ -617,6 +618,7 @@ export default function EventsPage() {
   }, [events, currentUser]);
 
   const filteredEvents = events?.filter((e) => {
+    if (showMyEvents) return isCreator(e);
     if (selectedCategory && e.category !== selectedCategory) return false;
     if (citySearch.trim() && !e.city.toLowerCase().includes(citySearch.toLowerCase())) return false;
     return true;
@@ -704,16 +706,26 @@ export default function EventsPage() {
           </div>
         )}
 
-        <div className="flex gap-2 overflow-x-auto pb-2">
+        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
           <Button
-            variant={selectedCategory === null ? "default" : "outline"}
+            variant={!showMyEvents && selectedCategory === null ? "default" : "outline"}
             size="sm"
-            onClick={() => setSelectedCategory(null)}
-            className={selectedCategory === null ? "bg-amber-500 hover:bg-amber-600" : ""}
+            onClick={() => { setShowMyEvents(false); setSelectedCategory(null); }}
+            className={!showMyEvents && selectedCategory === null ? "bg-amber-500 hover:bg-amber-600 shrink-0" : "shrink-0"}
+            data-testid="button-filter-all"
           >
             All
           </Button>
-          {eventCategories.map((cat) => (
+          <Button
+            variant={showMyEvents ? "default" : "outline"}
+            size="sm"
+            onClick={() => { setShowMyEvents(!showMyEvents); setSelectedCategory(null); }}
+            className={showMyEvents ? "bg-amber-900 hover:bg-amber-950 text-amber-100 shrink-0" : "shrink-0"}
+            data-testid="button-filter-my-events"
+          >
+            🗓️ Mis eventos
+          </Button>
+          {!showMyEvents && eventCategories.map((cat) => (
             <Button
               key={cat.id}
               variant={selectedCategory === cat.id ? "default" : "outline"}
@@ -854,8 +866,17 @@ export default function EventsPage() {
         ) : filteredEvents?.length === 0 ? (
           <div className="text-center py-12 text-muted-foreground">
             <Calendar className="w-12 h-12 mx-auto mb-4 opacity-50" />
-            <p>No activities yet</p>
-            <p className="text-sm">Be the first to create one!</p>
+            {showMyEvents ? (
+              <>
+                <p>Todavía no has creado ningún evento</p>
+                <p className="text-sm mt-1">¡Crea el primero pulsando el botón +!</p>
+              </>
+            ) : (
+              <>
+                <p>No activities yet</p>
+                <p className="text-sm">Be the first to create one!</p>
+              </>
+            )}
           </div>
         ) : (
           filteredEvents?.map((event) => (
