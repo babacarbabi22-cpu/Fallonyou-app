@@ -966,16 +966,17 @@ export default function EventsPage() {
                   )}
                 </div>
                 {isCreatorOrAdmin(event) && (
-                  <div className="absolute top-3 right-3 flex gap-2">
+                  <div className="absolute top-3 right-3 flex gap-2 z-10">
                     <Button
                       size="sm"
                       variant="destructive"
-                      className="h-8 w-8 p-0 rounded-full shadow-lg"
+                      className="h-9 w-9 p-0 rounded-full"
+                      style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.55), 0 0 0 2px rgba(255,255,255,0.18)" }}
                       onClick={(e) => { e.stopPropagation(); setDeleteConfirmEventId(event.id); }}
                       disabled={deleteEventMutation.isPending}
                       data-testid={`button-delete-event-${event.id}`}
                     >
-                      <Trash2 className="w-3.5 h-3.5" />
+                      <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
                 )}
