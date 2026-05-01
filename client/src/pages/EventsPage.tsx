@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -466,6 +467,7 @@ const emptyForm: EventFormData = {
 export default function EventsPage() {
   const { data: currentUser } = useCurrentUser();
   const [, navigate] = useLocation();
+  const [deleteConfirmEventId, setDeleteConfirmEventId] = useState<number | null>(null);
   const [showWelcomeTour, setShowWelcomeTour] = useState(false);
   const [showNotifBanner, setShowNotifBanner] = useState(() => {
     return !localStorage.getItem("fallonyou_notif_banner_dismissed");
@@ -878,22 +880,16 @@ export default function EventsPage() {
                 </div>
                 {isCreator(event) && (
                   <div className="absolute top-3 right-3 flex gap-2">
-                    {isPastEvent(event.startsAt) && (
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        className="h-8 w-8 p-0 rounded-full"
-                        onClick={(e) => { e.stopPropagation(); deleteEventMutation.mutate(event.id); }}
-                        disabled={deleteEventMutation.isPending}
-                        data-testid={`button-delete-event-${event.id}`}
-                      >
-                        {deleteEventMutation.isPending ? (
-                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                        ) : (
-                          <Trash2 className="w-3.5 h-3.5" />
-                        )}
-                      </Button>
-                    )}
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      className="h-8 w-8 p-0 rounded-full shadow-lg"
+                      onClick={(e) => { e.stopPropagation(); setDeleteConfirmEventId(event.id); }}
+                      disabled={deleteEventMutation.isPending}
+                      data-testid={`button-delete-event-${event.id}`}
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </Button>
                   </div>
                 )}
               </div>
@@ -1017,6 +1013,33 @@ export default function EventsPage() {
 
       <SocialProofTicker />
       <BottomNav />
+
+      {/* Delete event confirmation dialog */}
+      <AlertDialog open={deleteConfirmEventId !== null} onOpenChange={(open) => { if (!open) setDeleteConfirmEventId(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Borrar este evento?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción es permanente. Se eliminará el evento y todos sus participantes perderán el acceso. No se puede deshacer.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel data-testid="button-cancel-delete-event">Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-red-600 hover:bg-red-700 text-white"
+              data-testid="button-confirm-delete-event"
+              onClick={() => {
+                if (deleteConfirmEventId !== null) {
+                  deleteEventMutation.mutate(deleteConfirmEventId);
+                  setDeleteConfirmEventId(null);
+                }
+              }}
+            >
+              {deleteEventMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Sí, borrar evento"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
     </>
   );
