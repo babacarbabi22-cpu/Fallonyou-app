@@ -56,6 +56,7 @@ interface Event {
   endsAt: string | null;
   capacity: number | null;
   imageUrl: string | null;
+  creatorId: string;
   participantCount: number;
   isParticipant: boolean;
   participantAvatars: { id: string; firstName: string | null; profileImageUrl: string | null }[];
@@ -576,7 +577,12 @@ export default function EventsPage() {
   };
 
   const isCreator = (event: Event) => {
-    return currentUser && event.creator && event.creator.id === currentUser.id;
+    if (!currentUser) return false;
+    // Compare using creatorId directly (most reliable)
+    if (event.creatorId && String(event.creatorId) === String(currentUser.id)) return true;
+    // Fallback: compare via nested creator object
+    if (event.creator && String(event.creator.id) === String(currentUser.id)) return true;
+    return false;
   };
 
   const openEditDialog = (event: Event) => {

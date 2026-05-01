@@ -138,50 +138,52 @@ export function CityAdsCarousel() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const scrollTo = (index: number) => {
+  const scrollToIndex = (index: number) => {
     const el = scrollRef.current;
     if (!el) return;
     const card = el.children[index] as HTMLElement;
-    if (card) card.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+    if (card) {
+      const cardLeft = card.offsetLeft;
+      const containerWidth = el.offsetWidth;
+      const cardWidth = card.offsetWidth;
+      el.scrollTo({ left: cardLeft - (containerWidth - cardWidth) / 2, behavior: "smooth" });
+    }
     setCurrent(index);
   };
 
-  const next = () => scrollTo((current + 1) % cityAds.length);
-  const prev = () => scrollTo((current - 1 + cityAds.length) % cityAds.length);
+  const next = () => scrollToIndex((current + 1) % cityAds.length);
+  const prev = () => scrollToIndex((current - 1 + cityAds.length) % cityAds.length);
+
+  const advanceTick = () => {
+    setCurrent((c) => {
+      const next = (c + 1) % cityAds.length;
+      const el = scrollRef.current;
+      if (el) {
+        const card = el.children[next] as HTMLElement;
+        if (card) {
+          const cardLeft = card.offsetLeft;
+          const containerWidth = el.offsetWidth;
+          const cardWidth = card.offsetWidth;
+          el.scrollTo({ left: cardLeft - (containerWidth - cardWidth) / 2, behavior: "smooth" });
+        }
+      }
+      return next;
+    });
+  };
 
   useEffect(() => {
-    timerRef.current = setInterval(() => {
-      setCurrent((c) => {
-        const next = (c + 1) % cityAds.length;
-        const el = scrollRef.current;
-        if (el) {
-          const card = el.children[next] as HTMLElement;
-          if (card) card.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
-        }
-        return next;
-      });
-    }, 5000);
+    timerRef.current = setInterval(advanceTick, 5000);
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
   }, []);
 
   const resetTimer = () => {
     if (timerRef.current) clearInterval(timerRef.current);
-    timerRef.current = setInterval(() => {
-      setCurrent((c) => {
-        const next = (c + 1) % cityAds.length;
-        const el = scrollRef.current;
-        if (el) {
-          const card = el.children[next] as HTMLElement;
-          if (card) card.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
-        }
-        return next;
-      });
-    }, 5000);
+    timerRef.current = setInterval(advanceTick, 5000);
   };
 
   const handleNext = () => { next(); resetTimer(); };
   const handlePrev = () => { prev(); resetTimer(); };
-  const handleDot = (i: number) => { scrollTo(i); resetTimer(); };
+  const handleDot = (i: number) => { scrollToIndex(i); resetTimer(); };
 
   const ad = cityAds[current];
 
