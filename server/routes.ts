@@ -1496,7 +1496,9 @@ export async function registerRoutes(
 
     const [event] = await db.select().from(events).where(eq(events.id, eventId));
     if (!event) return res.status(404).json({ error: 'Event not found' });
-    if (event.creatorId !== req.user!.id) return res.status(403).json({ error: 'Not authorized' });
+    const editorUser = await storage.getUser(req.user!.id);
+    const isAdminEditor = editorUser?.isAdmin === 'true';
+    if (!isAdminEditor && event.creatorId !== req.user!.id) return res.status(403).json({ error: 'Not authorized' });
 
     const { title, description, category, city, location, startsAt, capacity, imageUrl } = req.body;
 
@@ -1521,7 +1523,9 @@ export async function registerRoutes(
     
     const [event] = await db.select().from(events).where(eq(events.id, eventId));
     if (!event) return res.status(404).json({ error: 'Event not found' });
-    if (event.creatorId !== req.user!.id) return res.status(403).json({ error: 'Not authorized' });
+    const requestingUser = await storage.getUser(req.user!.id);
+    const isAdmin = requestingUser?.isAdmin === 'true';
+    if (!isAdmin && event.creatorId !== req.user!.id) return res.status(403).json({ error: 'Not authorized' });
     
     await db.delete(eventParticipants).where(eq(eventParticipants.eventId, eventId));
     await db.delete(events).where(eq(events.id, eventId));

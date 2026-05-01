@@ -577,8 +577,10 @@ export default function EventsPage() {
     return new Date(startsAt) < new Date();
   };
 
-  const isCreator = (event: Event) => {
+  const isCreatorOrAdmin = (event: Event) => {
     if (!currentUser) return false;
+    // Admin can manage any event
+    if (currentUser.isAdmin === 'true') return true;
     // Compare using creatorId directly (most reliable)
     if (event.creatorId && String(event.creatorId) === String(currentUser.id)) return true;
     // Fallback: compare via nested creator object
@@ -618,7 +620,7 @@ export default function EventsPage() {
   }, [events, currentUser]);
 
   const filteredEvents = events?.filter((e) => {
-    if (showMyEvents) return isCreator(e);
+    if (showMyEvents) return isCreatorOrAdmin(e);
     if (selectedCategory && e.category !== selectedCategory) return false;
     if (citySearch.trim() && !e.city.toLowerCase().includes(citySearch.toLowerCase())) return false;
     return true;
@@ -909,7 +911,7 @@ export default function EventsPage() {
                     </Badge>
                   )}
                 </div>
-                {isCreator(event) && (
+                {isCreatorOrAdmin(event) && (
                   <div className="absolute top-3 right-3 flex gap-2">
                     <Button
                       size="sm"
@@ -977,7 +979,7 @@ export default function EventsPage() {
                       )}
                     </div>
                   </div>
-                  {!isPastEvent(event.startsAt) && isCreator(event) && (
+                  {!isPastEvent(event.startsAt) && isCreatorOrAdmin(event) && (
                     <Button
                       size="sm"
                       variant="outline"
@@ -988,12 +990,12 @@ export default function EventsPage() {
                       <Pencil className="w-3.5 h-3.5 mr-1" /> Edit
                     </Button>
                   )}
-                  {!isPastEvent(event.startsAt) && (event.isParticipant || isCreator(event)) && (
+                  {!isPastEvent(event.startsAt) && (event.isParticipant || isCreatorOrAdmin(event)) && (
                     <Badge className="bg-green-600/90 text-white border-0" data-testid={`badge-attending-${event.id}`}>
                       ✓ Attending
                     </Badge>
                   )}
-                  {!isPastEvent(event.startsAt) && !isCreator(event) && !event.isParticipant && (
+                  {!isPastEvent(event.startsAt) && !isCreatorOrAdmin(event) && !event.isParticipant && (
                     <Button
                       size="sm"
                       onClick={(e) => { e.stopPropagation(); joinEventMutation.mutate(event.id); }}
