@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Mail, Lock, User, Eye, EyeOff, Loader2, Heart, Star, Plane } from "lucide-react";
+import { Mail, Lock, User, Eye, EyeOff, Loader2, Heart, Star, Plane, AlertTriangle, ChevronDown } from "lucide-react";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { useTranslation } from "@/lib/i18n";
 import { Link } from "wouter";
@@ -31,6 +31,7 @@ export default function AuthPage() {
   const [resendCooldown, setResendCooldown] = useState(0);
 
   const [formData, setFormData] = useState({ email: "", password: "", firstName: "" });
+  const [legalExpanded, setLegalExpanded] = useState(false);
 
   const startResendCooldown = () => {
     setResendCooldown(60);
@@ -232,12 +233,31 @@ export default function AuthPage() {
                 </button>
               </div>
 
-              {/* Legal note on register — simple text, no blocking checkbox */}
+              {/* Legal warning — collapsible */}
               {!isLogin && (
-                <p className="text-white/35 text-[11px] leading-relaxed text-center px-1">
-                  Al registrarte confirmas que tienes 18+ años y aceptas los{" "}
-                  <Link href="/legal" className="text-amber-400/60 hover:text-amber-400 transition-colors">Términos y Privacidad</Link>.
-                </p>
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => setLegalExpanded(!legalExpanded)}
+                    className="w-full flex items-center gap-2 px-3 py-2 rounded-xl transition-all"
+                    style={{ background: "rgba(239,68,68,0.12)", border: "1px solid rgba(239,68,68,0.4)" }}
+                    data-testid="button-toggle-legal"
+                  >
+                    <AlertTriangle className="w-4 h-4 text-red-400 shrink-0" />
+                    <span className="text-red-300 text-xs font-bold uppercase tracking-wide flex-1 text-left">Aviso legal importante</span>
+                    <ChevronDown className={`w-4 h-4 text-red-400 shrink-0 transition-transform duration-200 ${legalExpanded ? "rotate-180" : ""}`} />
+                  </button>
+                  {legalExpanded && (
+                    <div className="mt-1 px-3 py-2.5 rounded-xl text-red-200/80 text-xs leading-relaxed"
+                      style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)" }}>
+                      Usar fotos de otra persona sin su consentimiento es un delito tipificado en el{" "}
+                      <strong>artículo 197 del Código Penal español</strong> (usurpación de identidad) y puede conllevar{" "}
+                      <strong>penas de prisión de hasta 4 años</strong> y responsabilidad civil.
+                      FallonYou registra la IP, el email y el dispositivo de cada cuenta.
+                      Los perfiles falsos serán denunciados a las autoridades competentes.
+                    </div>
+                  )}
+                </div>
               )}
 
               {/* Submit */}
