@@ -83,9 +83,17 @@ export async function setupAuth(app: Express) {
       // Notify admin (fire-and-forget)
       sendAdminAlert({ type: 'new_user', data: { email: newUser.email || '', firstName: newUser.firstName || '', lastName: newUser.lastName || '' } }).catch(() => {});
 
-      // Log the user in immediately — no email verification gate
+      // Set session the same way the login handler does so the auth middleware recognises the user
+      (req.session as any).userId = newUser.id;
+      (req.session as any).user = {
+        id: newUser.id,
+        email: newUser.email,
+        firstName: newUser.firstName,
+        lastName: newUser.lastName,
+      };
+
       await new Promise<void>((resolve, reject) => {
-        req.login(newUser, (err) => err ? reject(err) : resolve());
+        req.session.save((err) => err ? reject(err) : resolve());
       });
 
       res.status(201).json({ success: true, user: { id: newUser.id, email: newUser.email } });
