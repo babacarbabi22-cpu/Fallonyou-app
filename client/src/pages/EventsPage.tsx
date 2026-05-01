@@ -17,6 +17,7 @@ import { StoriesRow } from "@/components/StoriesRow";
 import { WelcomeTour } from "@/components/WelcomeTour";
 import { SocialProofTicker } from "@/components/SocialProofTicker";
 import { InviteFriends } from "@/components/InviteFriends";
+import { CityAdsCarousel } from "@/components/CityAdsCarousel";
 import { useCurrentUser } from "@/hooks/use-danceme";
 import { useUpload } from "@/hooks/use-upload";
 import { usePushNotifications } from "@/hooks/use-push-notifications";
@@ -724,6 +725,9 @@ export default function EventsPage() {
       <div className="px-4 pt-3 pb-1">
         <StoriesRow />
       </div>
+
+      {/* City inspirations carousel */}
+      <CityAdsCarousel />
 
       {currentUser && !currentUser.profileImageUrl && (
         <div
