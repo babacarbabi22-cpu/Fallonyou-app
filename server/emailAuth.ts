@@ -62,24 +62,10 @@ export async function setupAuth(app: Express) {
 
       const existingUser = await db.select().from(users).where(eq(users.email, email.toLowerCase()));
       if (existingUser.length > 0) {
-        // If account exists but not verified, resend the email
-        const existing = existingUser[0];
-        if (existing.emailVerified !== 'true') {
-          const token = crypto.randomBytes(32).toString("hex");
-          const expiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
-          await db.update(users)
-            .set({ emailVerificationToken: token, emailVerificationTokenExpiry: expiry })
-            .where(eq(users.id, existing.id));
-          const baseUrl = process.env.NODE_ENV === "production" ? "https://fallonyou.app" : `${req.protocol}://${req.get("host")}`;
-          sendVerificationEmail(existing.email!, existing.firstName || "", `${baseUrl}/verify-email?token=${token}`).catch(() => {});
-          return res.status(201).json({ requiresVerification: true, email: existing.email });
-        }
         return res.status(400).json({ error: "Email already registered" });
       }
 
       const hashedPassword = await bcrypt.hash(password, 10);
-      const verificationToken = crypto.randomBytes(32).toString("hex");
-      const verificationExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
       const [newUser] = await db
         .insert(users)
@@ -90,19 +76,19 @@ export async function setupAuth(app: Express) {
           lastName: lastName || null,
           ageConfirmed: ageConfirmed ? "true" : "false",
           ageConfirmedAt: ageConfirmed ? new Date() : null,
-          emailVerified: 'false',
-          emailVerificationToken: verificationToken,
-          emailVerificationTokenExpiry: verificationExpiry,
+          emailVerified: 'true',
         })
         .returning();
 
-      // Send verification email (fire-and-forget)
-      const baseUrl = process.env.NODE_ENV === "production" ? "https://fallonyou.app" : `${req.protocol}://${req.get("host")}`;
-      sendVerificationEmail(newUser.email!, newUser.firstName || "", `${baseUrl}/verify-email?token=${verificationToken}`).catch(() => {});
+      // Notify admin (fire-and-forget)
       sendAdminAlert({ type: 'new_user', data: { email: newUser.email || '', firstName: newUser.firstName || '', lastName: newUser.lastName || '' } }).catch(() => {});
 
-      // Do NOT create a session — user must verify email first
-      res.status(201).json({ requiresVerification: true, email: newUser.email });
+      // Log the user in immediately — no email verification gate
+      await new Promise<void>((resolve, reject) => {
+        req.login(newUser, (err) => err ? reject(err) : resolve());
+      });
+
+      res.status(201).json({ success: true, user: { id: newUser.id, email: newUser.email } });
     } catch (error: any) {
       console.error("Registration error:", error);
       res.status(500).json({ error: "Registration failed" });
@@ -172,12 +158,6 @@ export async function setupAuth(app: Express) {
       const isValidPassword = await bcrypt.compare(password, user.password);
       if (!isValidPassword) {
         return res.status(401).json({ error: "Invalid email or password" });
-      }
-
-      // Block login only for new accounts explicitly created with emailVerified='false'
-      // Existing users (emailVerified=null) are grandfathered in
-      if (user.emailVerified === 'false') {
-        return res.status(403).json({ error: "EMAIL_NOT_VERIFIED", email: user.email });
       }
 
       // Check if user is banned

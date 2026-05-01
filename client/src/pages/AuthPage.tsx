@@ -26,35 +26,8 @@ export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [verificationSent, setVerificationSent] = useState(false);
-  const [verificationEmail, setVerificationEmail] = useState("");
-  const [resendCooldown, setResendCooldown] = useState(0);
-
   const [formData, setFormData] = useState({ email: "", password: "", firstName: "" });
   const [legalExpanded, setLegalExpanded] = useState(false);
-
-  const startResendCooldown = () => {
-    setResendCooldown(60);
-    const interval = setInterval(() => {
-      setResendCooldown((c) => { if (c <= 1) { clearInterval(interval); return 0; } return c - 1; });
-    }, 1000);
-  };
-
-  const handleResend = async () => {
-    if (resendCooldown > 0) return;
-    setIsLoading(true);
-    try {
-      await fetch("/api/auth/resend-verification", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: verificationEmail }),
-      });
-      toast({ title: "✉️ Email reenviado", description: "Revisa tu bandeja de entrada." });
-      startResendCooldown();
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,19 +42,6 @@ export default function AuthPage() {
       });
 
       const data = await response.json();
-
-      if (!isLogin && data.requiresVerification) {
-        setVerificationEmail(data.email || formData.email);
-        setVerificationSent(true);
-        startResendCooldown();
-        return;
-      }
-
-      if (data.error === "EMAIL_NOT_VERIFIED") {
-        setVerificationEmail(data.email || formData.email);
-        setVerificationSent(true);
-        return;
-      }
 
       if (!response.ok) throw new Error(data.error || "Authentication failed");
 
@@ -126,37 +86,8 @@ export default function AuthPage() {
           <p className="text-white/60 text-sm font-light tracking-[3px] uppercase mt-1">Actividades · Viajes · Conexiones</p>
         </div>
 
-        {/* ── Verification screen ── */}
-        {verificationSent ? (
-          <div className="w-full rounded-3xl p-8 shadow-2xl text-center"
-            style={{ background: "rgba(8,8,8,0.85)", backdropFilter: "blur(24px)", WebkitBackdropFilter: "blur(24px)", border: "1px solid rgba(245,158,11,0.35)" }}>
-            <div className="text-5xl mb-4">✉️</div>
-            <h2 className="text-white text-xl font-bold mb-1">Revisa tu correo</h2>
-            <p className="text-white/55 text-sm mb-2">Te hemos enviado un enlace a</p>
-            <p className="text-amber-400 font-semibold text-sm mb-4 break-all">{verificationEmail}</p>
-            <p className="text-white/40 text-xs leading-relaxed mb-6">
-              Haz clic en el enlace del email para entrar a la app.<br />Si no lo ves, mira la carpeta de spam.
-            </p>
-            <Button
-              onClick={handleResend}
-              disabled={resendCooldown > 0 || isLoading}
-              className="w-full rounded-xl font-semibold h-11"
-              style={{ background: resendCooldown > 0 ? "rgba(255,255,255,0.1)" : "linear-gradient(135deg,#c9a227,#f0c040)", color: resendCooldown > 0 ? "#888" : "#1a1a1a" }}
-              data-testid="button-resend-verification"
-            >
-              {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : resendCooldown > 0 ? `Reenviar en ${resendCooldown}s` : "Reenviar email"}
-            </Button>
-            <button
-              onClick={() => { setVerificationSent(false); setIsLogin(true); }}
-              className="mt-4 text-white/40 text-xs hover:text-white/60 transition-colors"
-              data-testid="button-back-to-login"
-            >
-              ← Volver al inicio de sesión
-            </button>
-          </div>
-        ) : (
-          /* ── Main auth card ── */
-          <div className="w-full rounded-3xl p-6 shadow-2xl"
+        {/* ── Main auth card ── */}
+        <div className="w-full rounded-3xl p-6 shadow-2xl"
             style={{ background: "rgba(8,8,8,0.75)", backdropFilter: "blur(24px)", WebkitBackdropFilter: "blur(24px)", border: "1px solid rgba(245,158,11,0.25)", boxShadow: "0 8px 40px rgba(0,0,0,0.6), inset 0 1px 0 rgba(245,158,11,0.15)" }}>
 
             {/* Tabs */}
@@ -285,8 +216,7 @@ export default function AuthPage() {
                 {t.legal.terms} & {t.legal.privacy}
               </Link>
             </div>
-          </div>
-        )}
+        </div>
 
         <p className="text-white/30 text-xs text-center tracking-wide">Gratis · Free · Gratuit</p>
       </div>
