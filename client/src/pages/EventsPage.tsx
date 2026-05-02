@@ -475,6 +475,13 @@ export default function EventsPage() {
     return !localStorage.getItem("fallonyou_notif_banner_dismissed");
   });
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+
+  useEffect(() => {
+    if (isCreateOpen) {
+      const city = (currentUser as any)?.profile?.currentCity || (currentUser as any)?.profile?.homeCity || "";
+      if (city) setNewEvent(f => ({ ...f, city }));
+    }
+  }, [isCreateOpen]);
   const { isSupported, isSubscribed, subscribe } = usePushNotifications();
   const [notifBannerLoading, setNotifBannerLoading] = useState(false);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
@@ -1062,8 +1069,28 @@ export default function EventsPage() {
               </>
             ) : (
               <>
-                <p>No activities yet</p>
-                <p className="text-sm">Be the first to create one!</p>
+                {(() => {
+                  const userCity = (currentUser as any)?.profile?.currentCity || (currentUser as any)?.profile?.homeCity;
+                  return userCity ? (
+                    <>
+                      <p className="font-medium">No hay planes en {userCity} aún</p>
+                      <p className="text-sm mt-1">¡Sé el primero en crear uno!</p>
+                      <Button
+                        size="sm"
+                        className="mt-4 bg-amber-500 hover:bg-amber-600"
+                        onClick={() => setIsCreateOpen(true)}
+                        data-testid="button-create-event-nudge"
+                      >
+                        <Plus className="w-4 h-4 mr-1" /> Crear plan en {userCity}
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <p>No hay actividades aún</p>
+                      <p className="text-sm mt-1">¡Crea la primera!</p>
+                    </>
+                  );
+                })()}
               </>
             )}
           </div>
@@ -1075,7 +1102,7 @@ export default function EventsPage() {
               data-testid={`card-event-${event.id}`}
               onClick={() => navigate(`/event/${event.id}`)}
             >
-              <div className="relative">
+              <div className="relative overflow-hidden">
                 <div className={`w-full h-44 bg-gradient-to-br from-amber-100 to-amber-200 dark:from-amber-900/30 dark:to-amber-800/30 flex items-center justify-center ${isPastEvent(event.startsAt) ? "opacity-60 grayscale" : ""}`}>
                   <span className="text-5xl absolute z-0 opacity-30">{getCategoryIcon(event.category)}</span>
                   <img
