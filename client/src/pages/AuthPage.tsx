@@ -149,7 +149,7 @@ export default function AuthPage() {
             display: "flex",
             justifyContent: "center",
             alignItems: "flex-end",
-            gap: 6,
+            gap: 2,
             marginTop: 4,
             animation: "handsReceive 4s ease-in infinite",
             animationDelay: "0.6s",
