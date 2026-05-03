@@ -68,7 +68,33 @@ export default function AuthPage() {
       <div className="absolute inset-0 bg-gradient-to-br from-amber-900/10 via-transparent to-amber-900/10" />
 
       {/* Falling icons */}
-      <style>{`@keyframes fall { 0%{transform:translateY(-30px) rotate(0deg);opacity:0} 8%{opacity:.55} 92%{opacity:.45} 100%{transform:translateY(105vh) rotate(360deg);opacity:0} }`}</style>
+      <style>{`
+        @keyframes fall { 0%{transform:translateY(-30px) rotate(0deg);opacity:0} 8%{opacity:.55} 92%{opacity:.45} 100%{transform:translateY(105vh) rotate(360deg);opacity:0} }
+        @keyframes ballDrop {
+          0%   { transform:translateX(-50%) translateY(-110px); opacity:0; }
+          12%  { opacity:1; }
+          38%  { transform:translateX(-50%) translateY(6px); animation-timing-function:ease-out; }
+          40%  { transform:translateX(-50%) translateY(6px) scaleX(1.18) scaleY(0.78); }
+          47%  { transform:translateX(-50%) translateY(-52px) scaleX(1) scaleY(1); }
+          58%  { transform:translateX(-50%) translateY(4px); animation-timing-function:ease-out; }
+          60%  { transform:translateX(-50%) translateY(4px) scaleX(1.1) scaleY(0.86); }
+          66%  { transform:translateX(-50%) translateY(-20px) scaleX(1) scaleY(1); }
+          73%  { transform:translateX(-50%) translateY(2px); }
+          76%  { transform:translateX(-50%) translateY(-7px); }
+          80%  { transform:translateX(-50%) translateY(0px); }
+          86%  { transform:translateX(-50%) translateY(0px); opacity:1; }
+          100% { transform:translateX(-50%) translateY(0px); opacity:0; }
+        }
+        @keyframes titleBounce {
+          0%,37%  { transform:scaleX(1) scaleY(1); }
+          40%  { transform:scaleX(1.03) scaleY(0.94); }
+          44%  { transform:scaleX(0.98) scaleY(1.04); }
+          48%  { transform:scaleX(1) scaleY(1); }
+          58%  { transform:scaleX(1.015) scaleY(0.96); }
+          62%  { transform:scaleX(1) scaleY(1); }
+          100% { transform:scaleX(1) scaleY(1); }
+        }
+      `}</style>
       <div className="absolute inset-0 overflow-hidden pointer-events-none z-10">
         {fallingIcons.map((icon, i) => {
           const Ic = icon.type === "heart" ? Heart : icon.type === "plane" ? Plane : Star;
@@ -83,9 +109,33 @@ export default function AuthPage() {
       <div className="relative z-10 w-full max-w-sm px-5 flex flex-col items-center gap-5">
 
         {/* Brand */}
-        <div className="text-center">
-          <h1 className="font-display font-black text-5xl italic tracking-tight"
-            style={{ background: "linear-gradient(135deg,#D97706 0%,#FCD34D 45%,#F59E0B 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", filter: "drop-shadow(0 2px 16px rgba(251,191,36,0.45))" }}>
+        <div className="text-center relative">
+          {/* Falling ball */}
+          <div style={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            width: 22,
+            height: 22,
+            borderRadius: "50%",
+            background: "radial-gradient(circle at 35% 30%, #FDE68A, #D97706 70%)",
+            boxShadow: "0 0 14px rgba(251,191,36,0.7), 0 2px 6px rgba(0,0,0,0.5)",
+            animation: "ballDrop 3.8s ease-in infinite",
+            animationDelay: "0.8s",
+            zIndex: 10,
+            pointerEvents: "none",
+          }} />
+          <h1
+            className="font-display font-black text-5xl italic tracking-tight"
+            style={{
+              background: "linear-gradient(135deg,#D97706 0%,#FCD34D 45%,#F59E0B 100%)",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              filter: "drop-shadow(0 2px 16px rgba(251,191,36,0.45))",
+              animation: "titleBounce 3.8s ease-in infinite",
+              animationDelay: "0.8s",
+              display: "inline-block",
+            }}>
             FallonYou
           </h1>
           <div className="flex items-center justify-center gap-2 mt-2">
