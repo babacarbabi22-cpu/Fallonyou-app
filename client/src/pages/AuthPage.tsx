@@ -9,15 +9,15 @@ import { useToast } from "@/hooks/use-toast";
 import posterBg from "@assets/poster_adventure_base.png";
 
 const fallingIcons = [
-  { delay: 0,   duration: 12, left: 5,  size: 16, color: "text-amber-400", type: "heart" },
+  { delay: 0,   duration: 12, left: 5,  size: 16, color: "text-amber-400", type: "plane" },
   { delay: 2,   duration: 15, left: 20, size: 13, color: "text-yellow-300", type: "star"  },
-  { delay: 4,   duration: 10, left: 35, size: 18, color: "text-amber-500", type: "heart" },
+  { delay: 4,   duration: 10, left: 35, size: 18, color: "text-amber-500", type: "plane" },
   { delay: 1,   duration: 14, left: 50, size: 11, color: "text-white",     type: "star"  },
   { delay: 3,   duration: 16, left: 65, size: 14, color: "text-amber-400", type: "plane" },
   { delay: 5,   duration: 11, left: 80, size: 15, color: "text-yellow-400", type: "star" },
-  { delay: 2.5, duration: 13, left: 92, size: 10, color: "text-white",     type: "heart" },
+  { delay: 2.5, duration: 13, left: 92, size: 10, color: "text-white",     type: "plane" },
   { delay: 6,   duration: 14, left: 12, size: 12, color: "text-amber-300", type: "plane" },
-  { delay: 0.8, duration: 17, left: 73, size: 13, color: "text-yellow-300", type: "heart"},
+  { delay: 0.8, duration: 17, left: 73, size: 13, color: "text-yellow-300", type: "star"},
 ];
 
 export default function AuthPage() {
@@ -88,7 +88,13 @@ export default function AuthPage() {
             style={{ background: "linear-gradient(135deg,#D97706 0%,#FCD34D 45%,#F59E0B 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", filter: "drop-shadow(0 2px 16px rgba(251,191,36,0.45))" }}>
             FallonYou
           </h1>
-          <p className="text-white/60 text-sm font-light tracking-[3px] uppercase mt-1">Actividades · Viajes · Conexiones</p>
+          <p className="text-white/55 text-xs font-light tracking-[3px] uppercase mt-1">Actividades · Viajes · Conexiones</p>
+          <p className="text-white/80 text-base font-medium mt-2 leading-snug">
+            Haz amigos reales <span className="text-amber-400">donde vayas</span>
+          </p>
+          <p className="text-white/40 text-xs mt-1">
+            Únete a planes, conoce gente y comparte aventuras
+          </p>
         </div>
 
         {/* ── Main auth card ── */}
