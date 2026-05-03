@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Mail, Lock, User, Eye, EyeOff, Loader2, Heart, Star, Plane, AlertTriangle, ChevronDown } from "lucide-react";
+import { Mail, Lock, User, Eye, EyeOff, Loader2, Heart, Star, Plane, ChevronDown, ShieldCheck, Camera, Ban, UserX, Scale } from "lucide-react";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { useTranslation } from "@/lib/i18n";
 import { Link } from "wouter";
@@ -169,59 +169,96 @@ export default function AuthPage() {
                 </button>
               </div>
 
-              {/* Legal warning — collapsible */}
+              {/* Terms acceptance — only on register */}
               {!isLogin && (
-                <div>
-                  <button
-                    type="button"
-                    onClick={() => setLegalExpanded(!legalExpanded)}
-                    className="w-full flex items-center gap-2 px-3 py-2 rounded-xl transition-all"
-                    style={{ background: "rgba(239,68,68,0.12)", border: "1px solid rgba(239,68,68,0.4)" }}
-                    data-testid="button-toggle-legal"
-                  >
-                    <AlertTriangle className="w-4 h-4 text-red-400 shrink-0" />
-                    <span className="text-red-300 text-xs font-bold uppercase tracking-wide flex-1 text-left">Aviso legal importante</span>
-                    <ChevronDown className={`w-4 h-4 text-red-400 shrink-0 transition-transform duration-200 ${legalExpanded ? "rotate-180" : ""}`} />
-                  </button>
-                  {legalExpanded && (
-                    <div className="mt-1 px-3 py-2.5 rounded-xl text-red-200/80 text-xs leading-relaxed"
-                      style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)" }}>
-                      Usar fotos de otra persona sin su consentimiento es un delito tipificado en el{" "}
-                      <strong>artículo 197 del Código Penal español</strong> (usurpación de identidad) y puede conllevar{" "}
-                      <strong>penas de prisión de hasta 4 años</strong> y responsabilidad civil.
-                      FallonYou registra la IP, el email y el dispositivo de cada cuenta.
-                      Los perfiles falsos serán denunciados a las autoridades competentes.
-                    </div>
-                  )}
-                </div>
-              )}
+                <div className="space-y-2.5">
 
-              {/* Age confirmation — only on register */}
-              {!isLogin && (
-                <label className="flex items-start gap-3 cursor-pointer group" data-testid="label-age-confirm">
-                  <div className="relative mt-0.5 shrink-0">
-                    <input
-                      type="checkbox"
-                      checked={ageConfirmed}
-                      onChange={(e) => setAgeConfirmed(e.target.checked)}
-                      className="sr-only"
-                      data-testid="checkbox-age-confirm"
-                    />
-                    <div
-                      className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all duration-200 ${ageConfirmed ? "border-amber-500 bg-amber-500" : "border-white/30 bg-white/5 group-hover:border-amber-500/50"}`}
-                    >
-                      {ageConfirmed && (
-                        <svg className="w-3 h-3 text-black" fill="none" viewBox="0 0 12 12" stroke="currentColor" strokeWidth={2.5}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M2 6l3 3 5-5" />
-                        </svg>
-                      )}
+                  {/* Checkbox + accept text */}
+                  <label className="flex items-start gap-3 cursor-pointer group" data-testid="label-age-confirm">
+                    <div className="relative mt-0.5 shrink-0">
+                      <input
+                        type="checkbox"
+                        checked={ageConfirmed}
+                        onChange={(e) => setAgeConfirmed(e.target.checked)}
+                        className="sr-only"
+                        data-testid="checkbox-age-confirm"
+                      />
+                      <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all duration-200 ${ageConfirmed ? "border-amber-500 bg-amber-500" : "border-white/30 bg-white/5 group-hover:border-amber-500/50"}`}>
+                        {ageConfirmed && (
+                          <svg className="w-3 h-3 text-black" fill="none" viewBox="0 0 12 12" stroke="currentColor" strokeWidth={2.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M2 6l3 3 5-5" />
+                          </svg>
+                        )}
+                      </div>
                     </div>
+                    <span className="text-white/60 text-xs leading-relaxed group-hover:text-white/80 transition-colors">
+                      Tengo <strong className="text-amber-400">18 años o más</strong> y acepto los{" "}
+                      <Link href="/legal" className="text-amber-400/80 hover:text-amber-400 underline underline-offset-2" onClick={(e) => e.stopPropagation()}>
+                        Términos de Uso y la Política de Privacidad
+                      </Link>{" "}de FallonYou.
+                    </span>
+                  </label>
+
+                  {/* Expandable conditions */}
+                  <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid rgba(245,158,11,0.2)", background: "rgba(245,158,11,0.04)" }}>
+                    <button
+                      type="button"
+                      onClick={() => setLegalExpanded(!legalExpanded)}
+                      className="w-full flex items-center gap-2.5 px-3.5 py-2.5 transition-colors hover:bg-white/5"
+                      data-testid="button-toggle-legal"
+                    >
+                      <ShieldCheck className="w-4 h-4 text-amber-400/70 shrink-0" />
+                      <span className="text-amber-300/80 text-xs font-medium flex-1 text-left">Ver condiciones de uso</span>
+                      <ChevronDown className={`w-3.5 h-3.5 text-amber-400/50 shrink-0 transition-transform duration-200 ${legalExpanded ? "rotate-180" : ""}`} />
+                    </button>
+
+                    {legalExpanded && (
+                      <div className="px-3.5 pb-4 pt-1 space-y-3 border-t" style={{ borderColor: "rgba(245,158,11,0.12)" }}>
+
+                        <p className="text-white/40 text-[11px] uppercase tracking-widest font-semibold pt-1">
+                          Compromisos al crear tu cuenta
+                        </p>
+
+                        {[
+                          {
+                            icon: <Camera className="w-3.5 h-3.5 text-amber-400" />,
+                            title: "Solo tus propias fotos",
+                            desc: "Debes subir únicamente fotos tuyas reales. Usar imágenes de otras personas sin su consentimiento constituye usurpación de identidad.",
+                          },
+                          {
+                            icon: <UserX className="w-3.5 h-3.5 text-amber-400" />,
+                            title: "Sin cuentas falsas",
+                            desc: "Está prohibido crear perfiles con identidades inventadas, personajes ficticios o datos falsos. Cada cuenta debe representar a una persona real.",
+                          },
+                          {
+                            icon: <Ban className="w-3.5 h-3.5 text-amber-400" />,
+                            title: "Comportamiento respetuoso",
+                            desc: "No se permite el acoso, el lenguaje ofensivo ni el contenido inapropiado. FallonYou es un espacio seguro para todos.",
+                          },
+                          {
+                            icon: <Scale className="w-3.5 h-3.5 text-amber-400" />,
+                            title: "Responsabilidad legal",
+                            desc: "El incumplimiento puede derivar en la suspensión de la cuenta y, en casos graves, en acciones legales conforme a la legislación vigente.",
+                          },
+                        ].map((item, i) => (
+                          <div key={i} className="flex gap-2.5">
+                            <div className="w-6 h-6 rounded-lg bg-amber-500/10 flex items-center justify-center shrink-0 mt-0.5">
+                              {item.icon}
+                            </div>
+                            <div>
+                              <p className="text-white/75 text-xs font-semibold leading-tight">{item.title}</p>
+                              <p className="text-white/40 text-[11px] leading-relaxed mt-0.5">{item.desc}</p>
+                            </div>
+                          </div>
+                        ))}
+
+                        <p className="text-white/25 text-[10px] leading-relaxed pt-1 border-t" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
+                          FallonYou registra el email, la IP y el dispositivo de cada sesión con fines de seguridad y cumplimiento legal.
+                        </p>
+                      </div>
+                    )}
                   </div>
-                  <span className="text-white/60 text-xs leading-relaxed group-hover:text-white/80 transition-colors">
-                    Confirmo que tengo <strong className="text-amber-400">18 años o más</strong> y acepto los{" "}
-                    <Link href="/legal" className="text-amber-400/80 hover:text-amber-400 underline underline-offset-2">Términos y la Política de Privacidad</Link>.
-                  </span>
-                </label>
+                </div>
               )}
 
               {/* Submit */}
