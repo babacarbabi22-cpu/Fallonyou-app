@@ -234,7 +234,15 @@ export async function registerRoutes(
 
   app.delete(api.photos.delete.path, async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
-    await storage.deletePhoto(Number(req.params.id));
+    const photoId = Number(req.params.id);
+    // Ensure user owns the photo and has more than 1 photo remaining
+    const userPhotos = await storage.getPhotos(req.user!.id);
+    const photoToDelete = userPhotos.find(p => p.id === photoId);
+    if (!photoToDelete) return res.status(404).json({ error: "Photo not found" });
+    if (userPhotos.length <= 1) {
+      return res.status(400).json({ error: "Debes tener al menos una foto en tu perfil" });
+    }
+    await storage.deletePhoto(photoId);
     res.sendStatus(204);
   });
 

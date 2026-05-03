@@ -601,8 +601,15 @@ export default function ProfilePage() {
                     <Button
                       size="icon"
                       variant="destructive"
-                      onClick={() => deletePhoto(photo.id)}
+                      onClick={() => {
+                        if ((user.photos?.length ?? 0) <= 1) {
+                          toast({ title: "Foto obligatoria", description: "Debes tener al menos una foto en tu perfil.", variant: "destructive" });
+                          return;
+                        }
+                        deletePhoto(photo.id);
+                      }}
                       className="rounded-full w-9 h-9"
+                      disabled={(user.photos?.length ?? 0) <= 1}
                       data-testid={`button-delete-photo-${photo.id}`}
                     >
                       <Trash2 className="w-4 h-4" />
