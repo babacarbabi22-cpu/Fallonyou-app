@@ -1,4 +1,5 @@
 import { useSwipeFeed, useSwipeRight, useCurrentUser, UserWithPhotos } from "@/hooks/use-danceme";
+import { useTranslation } from "@/lib/i18n";
 import { SwipeCard } from "@/components/SwipeCard";
 import { BottomNav } from "@/components/BottomNav";
 import { SocialProofTicker } from "@/components/SocialProofTicker";
@@ -122,6 +123,7 @@ function preloadImages(urls: string[]) {
 const PROMO_EVERY = 5;
 
 export default function SwipePage() {
+  const t = useTranslation();
   const { data: currentUser, isLoading: isAuthLoading } = useCurrentUser();
   const { data: users, isLoading: isUsersLoading, refetch } = useSwipeFeed();
   const { mutate: swipeRight } = useSwipeRight();
@@ -617,7 +619,7 @@ export default function SwipePage() {
       {/* Business partnership banner — compact */}
       <div className="px-4 pb-2">
         <a
-          href="mailto:fallonyouapp@hotmail.com?subject=Colaboración%20empresarial%20FallonYou&body=Hola%2C%20me%20gustaría%20colaborar%20con%20FallonYou%20para%20ofrecer%20descuentos%20a%20vuestra%20comunidad."
+          href={`mailto:fallonyouapp@hotmail.com?subject=${t.activities.businessEmailSubject}&body=${t.activities.businessEmailBody}`}
           className="flex items-center gap-3 rounded-xl px-3 py-2.5 group"
           style={{
             background: "linear-gradient(135deg, rgba(10,10,10,0.9), rgba(26,18,0,0.95))",
@@ -627,10 +629,10 @@ export default function SwipePage() {
         >
           <span className="text-xl shrink-0">🏢</span>
           <div className="flex-1 min-w-0">
-            <p className="text-xs font-bold text-white leading-none">¿Tienes una empresa?</p>
-            <p className="text-[10px] text-white/45 mt-0.5">Colabora con nosotros · descuentos para nuestros usuarios</p>
+            <p className="text-xs font-bold text-white leading-none">{t.activities.businessTitleCompact}</p>
+            <p className="text-[10px] text-white/45 mt-0.5">{t.activities.businessSubtitleCompact}</p>
           </div>
-          <span className="text-[10px] font-semibold text-amber-400 whitespace-nowrap shrink-0 group-hover:underline">Contactar →</span>
+          <span className="text-[10px] font-semibold text-amber-400 whitespace-nowrap shrink-0 group-hover:underline">{t.activities.businessContact}</span>
         </a>
       </div>
 

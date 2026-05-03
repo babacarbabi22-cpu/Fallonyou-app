@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
+import { useTranslation } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -467,6 +468,7 @@ const emptyForm: EventFormData = {
 };
 
 export default function EventsPage() {
+  const t = useTranslation();
   const { data: currentUser } = useCurrentUser();
   const [, navigate] = useLocation();
   const [deleteConfirmEventId, setDeleteConfirmEventId] = useState<number | null>(null);
@@ -679,12 +681,12 @@ export default function EventsPage() {
             <DialogTrigger asChild>
               <Button className="bg-amber-500 hover:bg-amber-600" data-testid="button-create-event">
                 <Plus className="w-4 h-4 mr-2" />
-                Crear
+                {t.activities.newActivity}
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-md flex flex-col p-0 gap-0 max-h-[92vh]">
               <DialogHeader className="flex-shrink-0 flex flex-row items-center justify-between px-4 py-3 border-b">
-                <DialogTitle className="text-base">Nueva Actividad</DialogTitle>
+                <DialogTitle className="text-base">{t.activities.newActivity}</DialogTitle>
                 <Button
                   onClick={() => createEventMutation.mutate(newEvent)}
                   disabled={!newEvent.title.trim() || !newEvent.city.trim() || !newEvent.startsAt || createEventMutation.isPending}
@@ -692,7 +694,7 @@ export default function EventsPage() {
                   className="bg-amber-500 hover:bg-amber-600 rounded-full px-4 h-8 text-sm"
                   data-testid="button-submit-event"
                 >
-                  {createEventMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Guardar"}
+                  {createEventMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : t.common.save}
                 </Button>
               </DialogHeader>
               <div className="flex-1 overflow-y-auto px-4 py-4">
@@ -701,7 +703,7 @@ export default function EventsPage() {
                   setFormData={setNewEvent}
                   onSubmit={() => createEventMutation.mutate(newEvent)}
                   isPending={createEventMutation.isPending}
-                  submitLabel="Guardar"
+                  submitLabel={t.common.save}
                   hideButton
                 />
               </div>
@@ -742,7 +744,7 @@ export default function EventsPage() {
             className={!showMyEvents && !showDeals && selectedCategory === null ? "bg-amber-500 hover:bg-amber-600 shrink-0" : "shrink-0"}
             data-testid="button-filter-all"
           >
-            All
+            {t.activities.all}
           </Button>
           <Button
             variant={showMyEvents ? "default" : "outline"}
@@ -751,7 +753,7 @@ export default function EventsPage() {
             className={showMyEvents ? "bg-amber-900 hover:bg-amber-950 text-amber-100 shrink-0" : "shrink-0"}
             data-testid="button-filter-my-events"
           >
-            🗓️ Mis eventos
+            {t.activities.myEvents}
           </Button>
           <Button
             variant={showDeals ? "default" : "outline"}
@@ -760,7 +762,7 @@ export default function EventsPage() {
             className={showDeals ? "bg-green-700 hover:bg-green-800 text-white shrink-0" : "shrink-0 border-green-600 text-green-700 hover:bg-green-50"}
             data-testid="button-filter-deals"
           >
-            🏷️ Ofertas
+            {t.activities.deals}
           </Button>
           {!showMyEvents && !showDeals && eventCategories.map((cat) => (
             <Button
@@ -787,7 +789,7 @@ export default function EventsPage() {
       {/* Business partnership banner */}
       <div className="mx-4 mt-4 mb-1">
         <a
-          href="mailto:fallonyouapp@hotmail.com?subject=Colaboración%20empresarial%20FallonYou&body=Hola%2C%20me%20gustaría%20colaborar%20con%20FallonYou%20para%20ofrecer%20descuentos%20a%20vuestra%20comunidad."
+          href={`mailto:fallonyouapp@hotmail.com?subject=${t.activities.businessEmailSubject}&body=${t.activities.businessEmailBody}`}
           className="block rounded-2xl overflow-hidden relative group cursor-pointer"
           style={{
             background: "linear-gradient(135deg, #0a0a0a 0%, #1a1200 50%, #0f0a00 100%)",
@@ -811,16 +813,16 @@ export default function EventsPage() {
             {/* Text */}
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-0.5">
-                <span className="text-[10px] font-bold tracking-widest uppercase text-amber-500/80">Colaboración empresas</span>
+                <span className="text-[10px] font-bold tracking-widest uppercase text-amber-500/80">{t.activities.businessBadge}</span>
               </div>
               <p className="text-sm font-bold text-white leading-snug">
-                ¿Tienes una empresa?
+                {t.activities.businessTitleCompact}
               </p>
               <p className="text-xs text-white/50 mt-0.5 leading-relaxed">
-                Enviamos clientes a tu negocio · Ellos ganan descuentos · Tú ganas visibilidad
+                {t.activities.businessCTA}
               </p>
               <div className="flex items-center gap-1 mt-1.5">
-                <span className="text-[11px] font-semibold text-amber-400">Escríbenos y colaboramos</span>
+                <span className="text-[11px] font-semibold text-amber-400">{t.activities.businessContactLink}</span>
                 <ChevronRight className="w-3 h-3 text-amber-400 group-hover:translate-x-0.5 transition-transform" />
               </div>
             </div>
@@ -848,8 +850,8 @@ export default function EventsPage() {
             <span className="text-base">📸</span>
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-rose-700 dark:text-rose-400">Añade una foto de perfil</p>
-            <p className="text-xs text-muted-foreground mt-0.5">Los perfiles con foto reciben 5× más interacciones. Toca para añadirla.</p>
+            <p className="text-sm font-medium text-rose-700 dark:text-rose-400">{t.activities.addPhotoTitle}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">{t.activities.addPhotoHint}</p>
           </div>
           <ArrowRight className="w-4 h-4 text-muted-foreground shrink-0 mt-1" />
         </div>
@@ -861,8 +863,8 @@ export default function EventsPage() {
             <Bell className="w-4 h-4 text-amber-600" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium">Activa las notificaciones</p>
-            <p className="text-xs text-muted-foreground mt-0.5">Entérate de nuevas actividades, mensajes y matches al instante.</p>
+            <p className="text-sm font-medium">{t.activities.enableNotif}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">{t.activities.notifDesc}</p>
             <div className="flex gap-2 mt-2">
               <Button
                 size="sm"
@@ -879,7 +881,7 @@ export default function EventsPage() {
                   }
                 }}
               >
-                {notifBannerLoading ? "Activando..." : "Activar"}
+                {notifBannerLoading ? t.activities.notifLoading : t.activities.enableNotifBtn}
               </Button>
               <Button
                 size="sm"
@@ -891,7 +893,7 @@ export default function EventsPage() {
                   localStorage.setItem("fallonyou_notif_banner_dismissed", "1");
                 }}
               >
-                Ahora no
+                {t.activities.notifDismiss}
               </Button>
             </div>
           </div>
@@ -904,8 +906,8 @@ export default function EventsPage() {
             <Sparkles className="w-4 h-4 text-amber-500" />
             <span className="font-semibold text-sm">
               {suggestionsData.city
-                ? `Actividades en ${suggestionsData.city}`
-                : "Sugerencias para ti"}
+                ? `${t.activities.activitiesIn} ${suggestionsData.city}`
+                : t.activities.suggestionsForYou}
             </span>
           </div>
           <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide">
@@ -939,7 +941,7 @@ export default function EventsPage() {
                     </p>
                     <div className="flex items-center gap-1 mt-1">
                       <Users className="w-3 h-3 text-muted-foreground" />
-                      <span className="text-[10px] text-muted-foreground">{event.participantCount} asistentes</span>
+                      <span className="text-[10px] text-muted-foreground">{event.participantCount} {t.activities.attendees}</span>
                     </div>
                   </div>
                 </div>
@@ -954,10 +956,10 @@ export default function EventsPage() {
         <div className="p-4 space-y-4 pb-32">
           <div className="flex items-center gap-2 mb-2">
             <Tag className="w-5 h-5 text-green-600" />
-            <h2 className="font-bold text-lg">Ofertas exclusivas</h2>
-            <Badge className="bg-green-100 text-green-700 border-green-200 text-xs">Solo miembros</Badge>
+            <h2 className="font-bold text-lg">{t.activities.dealsTitle}</h2>
+            <Badge className="bg-green-100 text-green-700 border-green-200 text-xs">{t.activities.dealsOnlyMembers}</Badge>
           </div>
-          <p className="text-sm text-muted-foreground -mt-2 mb-3">Descuentos especiales de nuestros socios para ti</p>
+          <p className="text-sm text-muted-foreground -mt-2 mb-3">{t.activities.dealsSubtitle}</p>
           {offersLoading ? (
             <div className="flex justify-center py-12">
               <Loader2 className="w-8 h-8 animate-spin text-green-600" />
@@ -965,8 +967,8 @@ export default function EventsPage() {
           ) : !offers || offers.length === 0 ? (
             <div className="text-center py-16 text-muted-foreground">
               <Store className="w-14 h-14 mx-auto mb-4 opacity-30" />
-              <p className="font-medium">Próximamente</p>
-              <p className="text-sm mt-1">Estamos cerrando acuerdos con los mejores locales.<br />¡Vuelve pronto!</p>
+              <p className="font-medium">{t.activities.dealsComingSoon}</p>
+              <p className="text-sm mt-1">{t.activities.dealsComingSoonDesc}</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-4">
@@ -1002,7 +1004,7 @@ export default function EventsPage() {
                     {offer.validUntil && (
                       <p className="text-xs text-amber-600 flex items-center gap-1 mb-3">
                         <Clock className="w-3 h-3" />
-                        Válido hasta {new Date(offer.validUntil).toLocaleDateString("es-ES", { day: "numeric", month: "long" })}
+                        {t.activities.dealsValidUntil} {new Date(offer.validUntil).toLocaleDateString(undefined, { day: "numeric", month: "long" })}
                       </p>
                     )}
                     {offer.code && (
@@ -1016,19 +1018,19 @@ export default function EventsPage() {
                         data-testid={`button-copy-code-${offer.id}`}
                       >
                         <div>
-                          <p className="text-xs text-muted-foreground mb-0.5">Código de descuento</p>
+                          <p className="text-xs text-muted-foreground mb-0.5">{t.activities.dealsCodeLabel}</p>
                           <p className="font-mono font-bold text-lg tracking-widest text-green-700 dark:text-green-400">{offer.code}</p>
                         </div>
                         <div className="text-green-600">
                           {copiedCode === offer.id ? (
                             <div className="flex flex-col items-center gap-0.5">
                               <Check className="w-5 h-5" />
-                              <span className="text-xs">¡Copiado!</span>
+                              <span className="text-xs">{t.activities.dealsCopied}</span>
                             </div>
                           ) : (
                             <div className="flex flex-col items-center gap-0.5">
                               <Copy className="w-5 h-5" />
-                              <span className="text-xs">Copiar</span>
+                              <span className="text-xs">{t.activities.dealsCopyCode}</span>
                             </div>
                           )}
                         </div>
@@ -1041,12 +1043,12 @@ export default function EventsPage() {
           )}
           {/* CTA for businesses */}
           <a
-            href="mailto:fallonyouapp@hotmail.com?subject=Colaboración empresarial FallonYou"
+            href={`mailto:fallonyouapp@hotmail.com?subject=${t.activities.businessEmailSubject}`}
             className="flex items-center justify-between p-4 rounded-2xl bg-gradient-to-r from-amber-900 to-amber-800 text-amber-100 mt-4"
           >
             <div>
-              <p className="font-semibold text-sm">¿Tienes un negocio?</p>
-              <p className="text-xs text-amber-300 mt-0.5">Colabora y llega a miles de usuarios</p>
+              <p className="font-semibold text-sm">{t.activities.businessTitle}</p>
+              <p className="text-xs text-amber-300 mt-0.5">{t.activities.businessSubtitle}</p>
             </div>
             <ChevronRight className="w-5 h-5 text-amber-400 flex-shrink-0" />
           </a>
@@ -1064,8 +1066,8 @@ export default function EventsPage() {
             <Calendar className="w-12 h-12 mx-auto mb-4 opacity-50" />
             {showMyEvents ? (
               <>
-                <p>Todavía no has creado ningún evento</p>
-                <p className="text-sm mt-1">¡Crea el primero pulsando el botón +!</p>
+                <p>{t.activities.noMyEvents}</p>
+                <p className="text-sm mt-1">{t.activities.noMyEventsHint}</p>
               </>
             ) : (
               <>
@@ -1073,21 +1075,21 @@ export default function EventsPage() {
                   const userCity = (currentUser as any)?.profile?.currentCity || (currentUser as any)?.profile?.homeCity;
                   return userCity ? (
                     <>
-                      <p className="font-medium">No hay planes en {userCity} aún</p>
-                      <p className="text-sm mt-1">¡Sé el primero en crear uno!</p>
+                      <p className="font-medium">{t.activities.noActivitiesInCity.replace("{city}", userCity)}</p>
+                      <p className="text-sm mt-1">{t.activities.createFirstInCity}</p>
                       <Button
                         size="sm"
                         className="mt-4 bg-amber-500 hover:bg-amber-600"
                         onClick={() => setIsCreateOpen(true)}
                         data-testid="button-create-event-nudge"
                       >
-                        <Plus className="w-4 h-4 mr-1" /> Crear plan en {userCity}
+                        <Plus className="w-4 h-4 mr-1" /> {t.activities.createPlanInCity.replace("{city}", userCity)}
                       </Button>
                     </>
                   ) : (
                     <>
-                      <p>No hay actividades aún</p>
-                      <p className="text-sm mt-1">¡Crea la primera!</p>
+                      <p>{t.activities.noActivitiesYet}</p>
+                      <p className="text-sm mt-1">{t.activities.createFirst}</p>
                     </>
                   );
                 })()}
@@ -1121,7 +1123,7 @@ export default function EventsPage() {
                   </Badge>
                   {isPastEvent(event.startsAt) && (
                     <Badge variant="secondary" className="bg-black/70 text-white border-0 backdrop-blur-sm">
-                      Ended
+                      {t.activities.ended}
                     </Badge>
                   )}
                 </div>
@@ -1202,12 +1204,12 @@ export default function EventsPage() {
                       className="border-amber-500 text-amber-600 hover:bg-amber-50"
                       data-testid={`button-edit-event-${event.id}`}
                     >
-                      <Pencil className="w-3.5 h-3.5 mr-1" /> Edit
+                      <Pencil className="w-3.5 h-3.5 mr-1" /> {t.common.edit}
                     </Button>
                   )}
                   {!isPastEvent(event.startsAt) && (event.isParticipant || isCreatorOrAdmin(event)) && (
                     <Badge className="bg-green-600/90 text-white border-0" data-testid={`badge-attending-${event.id}`}>
-                      ✓ Attending
+                      {t.activities.attending}
                     </Badge>
                   )}
                   {!isPastEvent(event.startsAt) && !isCreatorOrAdmin(event) && !event.isParticipant && (
@@ -1218,7 +1220,7 @@ export default function EventsPage() {
                       className="bg-amber-500 hover:bg-amber-600"
                       data-testid={`button-join-event-${event.id}`}
                     >
-                      I'm interested
+                      {t.activities.joinEvent}
                     </Button>
                   )}
                 </div>
@@ -1235,7 +1237,7 @@ export default function EventsPage() {
       <Dialog open={!!editingEvent} onOpenChange={(open) => !open && setEditingEvent(null)}>
         <DialogContent className="max-w-md flex flex-col p-0 gap-0 max-h-[92vh]">
           <DialogHeader className="flex-shrink-0 flex flex-row items-center justify-between px-4 py-3 border-b">
-            <DialogTitle className="text-base">Editar Actividad</DialogTitle>
+            <DialogTitle className="text-base">{t.activities.editActivity}</DialogTitle>
             <Button
               onClick={() => editingEvent && editEventMutation.mutate({ id: editingEvent.id, data: editForm })}
               disabled={!editForm.title.trim() || !editForm.city.trim() || !editForm.startsAt || editEventMutation.isPending}
@@ -1243,7 +1245,7 @@ export default function EventsPage() {
               className="bg-amber-500 hover:bg-amber-600 rounded-full px-4 h-8 text-sm"
               data-testid="button-submit-edit-event"
             >
-              {editEventMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Guardar"}
+              {editEventMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : t.common.save}
             </Button>
           </DialogHeader>
           <div className="flex-1 overflow-y-auto px-4 py-4">
@@ -1252,7 +1254,7 @@ export default function EventsPage() {
               setFormData={setEditForm}
               onSubmit={() => editingEvent && editEventMutation.mutate({ id: editingEvent.id, data: editForm })}
               isPending={editEventMutation.isPending}
-              submitLabel="Guardar"
+              submitLabel={t.common.save}
               hideButton
             />
           </div>
@@ -1266,13 +1268,13 @@ export default function EventsPage() {
       <AlertDialog open={deleteConfirmEventId !== null} onOpenChange={(open) => { if (!open) setDeleteConfirmEventId(null); }}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>¿Borrar este evento?</AlertDialogTitle>
+            <AlertDialogTitle>{t.activities.deleteEventTitle}</AlertDialogTitle>
             <AlertDialogDescription>
-              Esta acción es permanente. Se eliminará el evento y todos sus participantes perderán el acceso. No se puede deshacer.
+              {t.activities.deleteEventDesc}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel data-testid="button-cancel-delete-event">Cancelar</AlertDialogCancel>
+            <AlertDialogCancel data-testid="button-cancel-delete-event">{t.common.cancel}</AlertDialogCancel>
             <AlertDialogAction
               className="bg-red-600 hover:bg-red-700 text-white"
               data-testid="button-confirm-delete-event"
@@ -1283,7 +1285,7 @@ export default function EventsPage() {
                 }
               }}
             >
-              {deleteEventMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Sí, borrar evento"}
+              {deleteEventMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : t.activities.deleteEventConfirm}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
