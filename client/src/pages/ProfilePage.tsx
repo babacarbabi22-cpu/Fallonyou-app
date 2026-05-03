@@ -6,7 +6,7 @@ import { useUpload } from "@/hooks/use-upload";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Camera, LogOut, Shield, User, Star, Plane, MapPin, Heart, Trash2, FileText, Mail, Briefcase, Eye, Sparkles, Lightbulb, ChevronRight, Flame, Trophy, Zap, Globe2 } from "lucide-react";
+import { Loader2, Camera, LogOut, Shield, User, Star, Plane, MapPin, Heart, Trash2, FileText, Mail, Briefcase, Eye, Sparkles, Lightbulb, ChevronRight, Flame, Trophy, Zap, Globe2, Smartphone, ChevronDown, Share2, Download } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { api } from "@shared/routes";
@@ -69,6 +69,9 @@ export default function ProfilePage() {
   // Must be before any conditional returns
   const [isSettingProfilePic, setIsSettingProfilePic] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const [showInstallGuide, setShowInstallGuide] = useState(false);
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  const isStandalone = window.matchMedia("(display-mode: standalone)").matches || (window.navigator as any).standalone === true;
 
   const { data: connectedCities } = useQuery<{ cities: string[] }>({
     queryKey: ["/api/my-connected-cities"],
@@ -680,6 +683,84 @@ export default function ProfilePage() {
               </CardContent>
             </Card>
           </Link>
+
+          {/* Install app guide — hidden once in standalone mode */}
+          {!isStandalone && (
+            <Card
+              className="cursor-pointer transition-colors overflow-hidden"
+              style={{ borderColor: "rgba(245,158,11,0.35)", background: "linear-gradient(135deg, rgba(245,158,11,0.06) 0%, transparent 60%)" }}
+              onClick={() => setShowInstallGuide((v) => !v)}
+              data-testid="card-install-app"
+            >
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-full bg-amber-500/15 flex items-center justify-center flex-shrink-0">
+                    <Smartphone className="w-4 h-4 text-amber-500" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-medium text-sm text-amber-600 dark:text-amber-400">Descarga la app</p>
+                    <p className="text-xs text-muted-foreground">Tenla siempre a mano en tu móvil</p>
+                  </div>
+                  <ChevronDown className={`w-4 h-4 text-amber-500 transition-transform duration-200 ${showInstallGuide ? "rotate-180" : ""}`} />
+                </div>
+
+                {showInstallGuide && (
+                  <div className="mt-4 pt-4 border-t border-amber-500/20" onClick={(e) => e.stopPropagation()}>
+                    <div className="flex gap-3 mb-1">
+                      <img src="/icons/icon-192x192.png" alt="FallonYou" className="w-14 h-14 rounded-2xl border border-amber-500/30 shrink-0" />
+                      <div>
+                        <p className="font-bold text-sm">FallonYou</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">Actividades · Viajes · Conexiones</p>
+                        <p className="text-xs text-amber-500 mt-1 font-medium">Gratis · Sin tienda de apps</p>
+                      </div>
+                    </div>
+
+                    {isIOS ? (
+                      <div className="mt-4 space-y-3">
+                        <p className="text-xs font-semibold text-foreground/70 uppercase tracking-wide">Cómo instalar en iPhone</p>
+                        <div className="space-y-2.5">
+                          {[
+                            { icon: <Share2 className="w-4 h-4 text-blue-400 shrink-0" />, text: <>Pulsa el botón <strong>Compartir</strong> <Share2 className="inline w-3 h-3" /> en la barra inferior de Safari</> },
+                            { icon: <span className="text-base shrink-0">➕</span>, text: <>Desliza y toca <strong>"Añadir a pantalla de inicio"</strong></> },
+                            { icon: <span className="text-base shrink-0">✅</span>, text: <>Pulsa <strong>"Añadir"</strong> — el icono aparece en tu escritorio</> },
+                          ].map((step, i) => (
+                            <div key={i} className="flex items-start gap-2.5 bg-muted/40 rounded-xl p-2.5">
+                              <div className="w-6 h-6 rounded-full bg-amber-500/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <span className="text-amber-500 font-bold text-xs">{i + 1}</span>
+                              </div>
+                              {step.icon}
+                              <p className="text-xs text-foreground/80 leading-snug">{step.text}</p>
+                            </div>
+                          ))}
+                        </div>
+                        <p className="text-[11px] text-muted-foreground/60 text-center pt-1">Solo funciona desde Safari en iPhone/iPad</p>
+                      </div>
+                    ) : (
+                      <div className="mt-4 space-y-3">
+                        <p className="text-xs font-semibold text-foreground/70 uppercase tracking-wide">Cómo instalar en Android</p>
+                        <div className="space-y-2.5">
+                          {[
+                            { icon: <span className="text-base shrink-0">⋮</span>, text: <>Toca el menú <strong>⋮</strong> en la esquina superior de Chrome</> },
+                            { icon: <Download className="w-4 h-4 text-green-400 shrink-0" />, text: <>Selecciona <strong>"Añadir a pantalla de inicio"</strong> o <strong>"Instalar app"</strong></> },
+                            { icon: <span className="text-base shrink-0">✅</span>, text: <>Pulsa <strong>"Instalar"</strong> — el icono aparece en tu móvil</> },
+                          ].map((step, i) => (
+                            <div key={i} className="flex items-start gap-2.5 bg-muted/40 rounded-xl p-2.5">
+                              <div className="w-6 h-6 rounded-full bg-amber-500/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <span className="text-amber-500 font-bold text-xs">{i + 1}</span>
+                              </div>
+                              {step.icon}
+                              <p className="text-xs text-foreground/80 leading-snug">{step.text}</p>
+                            </div>
+                          ))}
+                        </div>
+                        <p className="text-[11px] text-muted-foreground/60 text-center pt-1">Funciona en Chrome, Edge y la mayoría de navegadores Android</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
 
           <Link href="/legal">
             <Card className="cursor-pointer hover:bg-muted/50 transition-colors">
