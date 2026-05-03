@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Mail, Lock, User, Eye, EyeOff, Loader2, Heart, Star, Plane, ChevronDown, ShieldCheck, Camera, Ban, UserX, Scale } from "lucide-react";
+import { Mail, Lock, User, Eye, EyeOff, Loader2, Heart, Star, Plane, ChevronDown, ShieldCheck, Camera, Ban, UserX, Scale, Hand } from "lucide-react";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { useTranslation } from "@/lib/i18n";
 import { Link } from "wouter";
@@ -144,17 +144,34 @@ export default function AuthPage() {
             }}>
             FallonYou
           </h1>
-          {/* Hands that catch the ball */}
+          {/* Golden hands that catch the ball */}
           <div style={{
-            fontSize: 28,
-            lineHeight: 1,
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "flex-end",
+            gap: 6,
+            marginTop: 4,
             animation: "handsReceive 4s ease-in infinite",
             animationDelay: "0.6s",
-            display: "block",
-            textAlign: "center",
-            marginTop: 4,
           }}>
-            🤲
+            <Hand
+              size={26}
+              style={{
+                transform: "scaleX(-1) rotate(-30deg)",
+                color: "#FCD34D",
+                filter: "drop-shadow(0 0 8px rgba(251,191,36,0.7))",
+                strokeWidth: 1.8,
+              }}
+            />
+            <Hand
+              size={26}
+              style={{
+                transform: "rotate(30deg)",
+                color: "#FCD34D",
+                filter: "drop-shadow(0 0 8px rgba(251,191,36,0.7))",
+                strokeWidth: 1.8,
+              }}
+            />
           </div>
           <div className="flex items-center justify-center gap-2 mt-2">
             <div className="h-px w-8 bg-amber-500/40" />
