@@ -40,6 +40,9 @@ export const profiles = pgTable("profiles", {
   latitude: real("latitude"),
   longitude: real("longitude"),
   lastLocationAt: timestamp("last_location_at"),
+  availableToday: boolean("available_today").default(false),
+  availableUntil: timestamp("available_until"),
+  nextAdventure: text("next_adventure"),
 });
 
 export const photos = pgTable("photos", {

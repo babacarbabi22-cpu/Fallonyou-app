@@ -479,6 +479,35 @@ export default function SwipePage() {
         </div>
       )}
 
+      {/* ── Reto semanal ──────────────────────────────────────────────────── */}
+      {(() => {
+        const weekNum = Math.floor(Date.now() / (7 * 24 * 60 * 60 * 1000));
+        const challenges = [
+          { emoji: "🗣️", text: "Inicia una conversación con alguien de otro país" },
+          { emoji: "📸", text: "Añade una foto nueva a tu perfil esta semana" },
+          { emoji: "🗺️", text: "Añade tu próximo destino a tu perfil" },
+          { emoji: "🎉", text: "Únete a una actividad que nunca hayas probado" },
+          { emoji: "⚡", text: "Activa 'Disponible hoy' y queda con alguien" },
+          { emoji: "🌍", text: "Conecta con alguien de una ciudad diferente" },
+          { emoji: "✍️", text: "Completa tu bio con algo que te defina de verdad" },
+          { emoji: "🤝", text: "Asiste a un evento y conoce al organizador" },
+        ];
+        const challenge = challenges[weekNum % challenges.length];
+        return (
+          <div className="px-4 mb-3">
+            <div className="rounded-2xl border border-amber-500/25 bg-gradient-to-r from-amber-950/30 via-black/40 to-amber-950/30 p-3 flex items-center gap-3" data-testid="card-weekly-challenge">
+              <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center text-xl shrink-0">
+                {challenge.emoji}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[10px] font-bold tracking-widest uppercase text-amber-500 mb-0.5">⚡ Reto semanal</p>
+                <p className="text-sm font-semibold text-foreground leading-snug line-clamp-2">{challenge.text}</p>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
       {/* Card Stack */}
       <div className="relative w-full max-w-md mx-auto h-[65vh] px-4 mt-2">
         <AnimatePresence>

@@ -10,6 +10,11 @@ FallonYou is a luxury travel & social connection dating app built with React + E
 - **Vistas de perfil hoy** — Shows how many unique users viewed the profile today. Endpoint: `GET /api/profile-views/today`
 - **Countdown en actividades** — Live countdown timer (green/amber/red) on future event cards in EventsPage. Pure frontend with `useCountdown` custom hook + `EventCountdown` component.
 - **Sistema de logros/badges** — 10 achievement badges computed dynamically from user activity (Explorador, Organizador, Conectado, Favorito, En racha 7d, Constante 30d, Viajero, Veterano, Premium, Embajador). Shown in ProfilePage. Endpoint: `GET /api/my-badges`
+- **"Estoy disponible hoy"** — Toggle in ProfilePage (data-testid="toggle-available-today"). Shows pulsing green badge on SwipeCard when active. DB fields: `available_today` (boolean), `available_until` (timestamp). Endpoint: `PATCH /api/profile/availability`. Resets automatically (24h TTL via availableUntil).
+- **Reto semanal** — Weekly challenge card in SwipePage (data-testid="card-weekly-challenge"). 8 rotating challenges, deterministic by week number. Pure frontend, no DB needed.
+- **"Mi próxima aventura"** — Text field in ProfilePage form (data-testid="input-next-adventure"). Stored in `profiles.next_adventure`. Shown as amber chip with ✈️ icon on SwipeCard.
+- **Ciudades conectadas** — Section in ProfilePage (data-testid="section-connected-cities") showing unique cities from matched users' profiles. Endpoint: `GET /api/my-connected-cities`. Only shown when user has active matches.
+- **Actividad popular badge** — 🔥 Popular orange badge on event cards in EventsPage when `participantCount >= 5` and event is not past. Pure frontend.
 
 ## User Preferences
 

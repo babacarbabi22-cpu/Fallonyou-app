@@ -1117,13 +1117,18 @@ export default function EventsPage() {
                     }}
                   />
                 </div>
-                <div className="absolute top-3 left-3 flex gap-2">
+                <div className="absolute top-3 left-3 flex gap-2 flex-wrap">
                   <Badge className="bg-black/70 text-white border-0 backdrop-blur-sm">
                     {getCategoryIcon(event.category)} {eventCategories.find(c => c.id === event.category)?.label}
                   </Badge>
                   {isPastEvent(event.startsAt) && (
                     <Badge variant="secondary" className="bg-black/70 text-white border-0 backdrop-blur-sm">
                       {t.activities.ended}
+                    </Badge>
+                  )}
+                  {event.participantCount >= 5 && !isPastEvent(event.startsAt) && (
+                    <Badge className="bg-orange-500/90 text-white border-0 backdrop-blur-sm font-bold">
+                      {t.engagement?.popularBadge || "🔥 Popular"}
                     </Badge>
                   )}
                 </div>

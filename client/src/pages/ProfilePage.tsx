@@ -6,9 +6,9 @@ import { useUpload } from "@/hooks/use-upload";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Camera, LogOut, Shield, User, Star, Plane, MapPin, Heart, Trash2, FileText, Mail, Briefcase, Eye, Sparkles, Lightbulb, ChevronRight, Flame, Trophy } from "lucide-react";
+import { Loader2, Camera, LogOut, Shield, User, Star, Plane, MapPin, Heart, Trash2, FileText, Mail, Briefcase, Eye, Sparkles, Lightbulb, ChevronRight, Flame, Trophy, Zap, Globe2 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { api } from "@shared/routes";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "@/lib/i18n";
@@ -63,11 +63,32 @@ export default function ProfilePage() {
     preference: "",
     occupation: "",
     birthplace: "",
+    nextAdventure: "",
   });
 
   // Must be before any conditional returns
   const [isSettingProfilePic, setIsSettingProfilePic] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+
+  const { data: connectedCities } = useQuery<{ cities: string[] }>({
+    queryKey: ["/api/my-connected-cities"],
+    enabled: !!user,
+  });
+
+  const { mutate: toggleAvailability, isPending: isTogglingAvailability } = useMutation({
+    mutationFn: async (available: boolean) => {
+      const res = await fetch("/api/profile/availability", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ availableToday: available }),
+        credentials: "include",
+      });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [api.auth.me.path] });
+    },
+  });
 
   useEffect(() => {
     if (user) {
@@ -79,6 +100,7 @@ export default function ProfilePage() {
         preference: user.preference || user.profile?.preference || "",
         occupation: user.profile?.occupation || "",
         birthplace: user.profile?.birthplace || "",
+        nextAdventure: (user.profile as any)?.nextAdventure || "",
       });
     }
   }, [user]);
@@ -354,6 +376,60 @@ export default function ProfilePage() {
           </div>
         )}
 
+        {/* ── Estoy disponible hoy ─────────────────────────────────────────── */}
+        {(() => {
+          const isAvailable = !!(user.profile as any)?.availableToday;
+          return (
+            <div
+              className={`rounded-2xl border p-4 shadow-sm flex items-center gap-4 transition-all ${isAvailable ? "border-green-500/40 bg-green-500/5" : "border-border bg-card"}`}
+              data-testid="card-available-today"
+            >
+              <div className={`relative w-12 h-12 rounded-full flex items-center justify-center shrink-0 ${isAvailable ? "bg-green-500/20" : "bg-muted"}`}>
+                {isAvailable && (
+                  <span className="absolute inset-0 rounded-full bg-green-400/30 animate-ping" />
+                )}
+                <Zap className={`w-6 h-6 ${isAvailable ? "text-green-500 fill-green-500" : "text-muted-foreground"}`} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-bold text-sm">{t.engagement?.availableToday || "Disponible hoy"}</p>
+                <p className="text-xs text-muted-foreground leading-snug">
+                  {isAvailable ? (t.engagement?.availableActive || "Estás disponible para quedar hoy ✓") : (t.engagement?.availableInactive || "Activa para que otros sepan que puedes quedar")}
+                </p>
+              </div>
+              <button
+                onClick={() => toggleAvailability(!isAvailable)}
+                disabled={isTogglingAvailability}
+                data-testid="toggle-available-today"
+                className={`relative w-12 h-6 rounded-full transition-all duration-300 flex-shrink-0 ${isAvailable ? "bg-green-500" : "bg-muted-foreground/30"} ${isTogglingAvailability ? "opacity-60" : ""}`}
+              >
+                <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-md transition-all duration-300 ${isAvailable ? "left-6" : "left-0.5"}`} />
+              </button>
+            </div>
+          );
+        })()}
+
+        {/* ── Ciudades conectadas ───────────────────────────────────────────── */}
+        {connectedCities && connectedCities.cities.length > 0 && (
+          <div className="bg-card border rounded-2xl p-4 shadow-sm" data-testid="section-connected-cities">
+            <div className="flex items-center gap-2 mb-3">
+              <Globe2 className="w-4 h-4 text-blue-500" />
+              <span className="text-sm font-bold">{t.engagement?.connectedCities || "Ciudades conectadas"}</span>
+              <span className="ml-auto text-xs text-muted-foreground">{connectedCities.cities.length}</span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {connectedCities.cities.map((city) => (
+                <span
+                  key={city}
+                  className="inline-flex items-center gap-1.5 text-xs bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 px-3 py-1.5 rounded-full font-medium"
+                >
+                  <MapPin className="w-3 h-3" />
+                  {city}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Ver perfil preview */}
         <Button
           variant="outline"
@@ -462,6 +538,20 @@ export default function ProfilePage() {
                 data-testid="input-birthplace"
               />
             </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-muted-foreground flex items-center gap-1.5">
+              <Plane className="w-3.5 h-3.5" />
+              {t.engagement?.nextAdventure || "Mi próxima aventura"}
+            </label>
+            <Input
+              value={formState.nextAdventure}
+              onChange={(e) => setFormState({ ...formState, nextAdventure: e.target.value })}
+              className="rounded-xl"
+              placeholder={t.engagement?.nextAdventurePlaceholder || "¿A dónde quieres ir? Lisboa, Tokio..."}
+              data-testid="input-next-adventure"
+            />
           </div>
 
           <Button

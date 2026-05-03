@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion, useMotionValue, useTransform, PanInfo } from "framer-motion";
 import { UserWithPhotos } from "@/hooks/use-danceme";
-import { X, Heart, MapPin, Briefcase, Ruler, GraduationCap, Star, User } from "lucide-react";
+import { X, Heart, MapPin, Briefcase, Ruler, GraduationCap, Star, User, Zap, Plane } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 
 // Global image cache for faster loading
@@ -149,6 +149,17 @@ export function SwipeCard({ user, onSwipe, onTap }: SwipeCardProps) {
         {/* Gradient Overlay - pointer-events-none to allow clicking through */}
         <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/80 pointer-events-none z-0" />
 
+        {/* Available Today badge */}
+        {(profile as any)?.availableToday && (
+          <div className="absolute top-3 left-3 z-20">
+            <div className="flex items-center gap-1.5 bg-green-500 text-white text-[10px] font-bold px-2.5 py-1 rounded-full shadow-lg">
+              <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping inline-block" />
+              <Zap className="w-3 h-3 fill-white" />
+              Disponible hoy
+            </div>
+          </div>
+        )}
+
         {/* Content */}
         <div className="absolute bottom-0 left-0 right-0 p-6 text-white z-10">
           <div className="flex items-end justify-between mb-2">
@@ -210,6 +221,12 @@ export function SwipeCard({ user, onSwipe, onTap }: SwipeCardProps) {
                  <div className="flex items-center gap-1 bg-white/20 backdrop-blur px-3 py-1 rounded-full">
                    <Star size={14} />
                    <span>{getZodiacLabel(profile.zodiacSign)}</span>
+                 </div>
+               )}
+               {(profile as any)?.nextAdventure && (
+                 <div className="flex items-center gap-1 bg-amber-500/30 backdrop-blur px-3 py-1 rounded-full border border-amber-400/40">
+                   <Plane size={14} className="text-amber-300" />
+                   <span className="text-amber-100">{(profile as any).nextAdventure}</span>
                  </div>
                )}
             </div>

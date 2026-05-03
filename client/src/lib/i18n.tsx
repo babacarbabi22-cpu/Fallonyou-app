@@ -645,6 +645,18 @@ export const translations = {
       suggestionsForYou: "Sugerencias para ti",
       joinEvent: "Me interesa",
     },
+    engagement: {
+      availableToday: "Disponible hoy",
+      availableActive: "Estás disponible para quedar hoy ✓",
+      availableInactive: "Activa para que otros sepan que puedes quedar",
+      nextAdventure: "Mi próxima aventura",
+      nextAdventurePlaceholder: "¿A dónde quieres ir? Lisboa, Tokio...",
+      connectedCities: "Ciudades conectadas",
+      connectedCitiesEmpty: "Aún no tienes conexiones en otras ciudades",
+      weeklyChallenge: "Reto semanal",
+      weeklyChallengeSubtitle: "Esta semana:",
+      popularBadge: "🔥 Popular",
+    },
   },
   en: {
     app: {
@@ -1288,6 +1300,18 @@ export const translations = {
       suggestionsForYou: "Suggestions for you",
       joinEvent: "I'm interested",
     },
+    engagement: {
+      availableToday: "Available today",
+      availableActive: "You are available to meet today ✓",
+      availableInactive: "Activate so others know you can meet up",
+      nextAdventure: "My next adventure",
+      nextAdventurePlaceholder: "Where do you want to go? Lisbon, Tokyo...",
+      connectedCities: "Connected cities",
+      connectedCitiesEmpty: "You have no connections in other cities yet",
+      weeklyChallenge: "Weekly challenge",
+      weeklyChallengeSubtitle: "This week:",
+      popularBadge: "🔥 Popular",
+    },
   },
   fr: {
     app: {
@@ -1930,6 +1954,18 @@ export const translations = {
       businessContactLink: "Écrivez-nous et collaborons",
       suggestionsForYou: "Suggestions pour vous",
       joinEvent: "Ça m'intéresse",
+    },
+    engagement: {
+      availableToday: "Disponible aujourd'hui",
+      availableActive: "Tu es disponible pour se retrouver aujourd'hui ✓",
+      availableInactive: "Active pour que les autres sachent que tu peux se voir",
+      nextAdventure: "Ma prochaine aventure",
+      nextAdventurePlaceholder: "Où veux-tu aller ? Lisbonne, Tokyo...",
+      connectedCities: "Villes connectées",
+      connectedCitiesEmpty: "Pas encore de connexions dans d'autres villes",
+      weeklyChallenge: "Défi de la semaine",
+      weeklyChallengeSubtitle: "Cette semaine :",
+      popularBadge: "🔥 Populaire",
     },
   },
 };

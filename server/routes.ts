@@ -162,6 +162,8 @@ export async function registerRoutes(
       if (latitude !== undefined) profileData.latitude = latitude;
       if (longitude !== undefined) profileData.longitude = longitude;
       if (latitude !== undefined || longitude !== undefined) profileData.lastLocationAt = new Date();
+      const { nextAdventure } = req.body;
+      if (nextAdventure !== undefined) profileData.nextAdventure = nextAdventure;
       
       const updated = await storage.upsertProfile(req.user!.id, profileData);
       res.json({ ...updated, displayName });
@@ -169,6 +171,40 @@ export async function registerRoutes(
       console.error("[updateProfile] Error saving profile:", err);
       res.status(500).json({ error: "No se pudo guardar el perfil. Por favor inténtalo de nuevo." });
     }
+  });
+
+  // Toggle "available today" status
+  app.patch('/api/profile/availability', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const { availableToday } = req.body;
+    const active = !!availableToday;
+    const until = active ? new Date(Date.now() + 24 * 60 * 60 * 1000) : null;
+    await db.update(profiles)
+      .set({ availableToday: active, availableUntil: until })
+      .where(eq(profiles.userId, req.user!.id));
+    res.json({ availableToday: active, availableUntil: until });
+  });
+
+  // Get cities where current user has matches
+  app.get('/api/my-connected-cities', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const userId = req.user!.id;
+    const rows = await db.execute(sql`
+      SELECT DISTINCT p.current_city, p.home_city
+      FROM matches m
+      JOIN profiles p ON (
+        CASE WHEN m.user1_id = ${userId} THEN p.user_id = m.user2_id
+             ELSE p.user_id = m.user1_id END
+      )
+      WHERE (m.user1_id = ${userId} OR m.user2_id = ${userId})
+        AND m.status = 'active'
+    `);
+    const cities = new Set<string>();
+    (rows.rows as any[]).forEach((r: any) => {
+      if (r.current_city) cities.add(r.current_city);
+      if (r.home_city) cities.add(r.home_city);
+    });
+    res.json({ cities: Array.from(cities) });
   });
 
   // Photos - supports both file upload and URL registration
