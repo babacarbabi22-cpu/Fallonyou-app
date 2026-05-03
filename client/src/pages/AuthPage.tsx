@@ -71,27 +71,33 @@ export default function AuthPage() {
       <style>{`
         @keyframes fall { 0%{transform:translateY(-30px) rotate(0deg);opacity:0} 8%{opacity:.55} 92%{opacity:.45} 100%{transform:translateY(105vh) rotate(360deg);opacity:0} }
         @keyframes ballDrop {
-          0%   { transform:translateX(-50%) translateY(-110px); opacity:0; }
-          12%  { opacity:1; }
-          38%  { transform:translateX(-50%) translateY(6px); animation-timing-function:ease-out; }
-          40%  { transform:translateX(-50%) translateY(6px) scaleX(1.18) scaleY(0.78); }
-          47%  { transform:translateX(-50%) translateY(-52px) scaleX(1) scaleY(1); }
-          58%  { transform:translateX(-50%) translateY(4px); animation-timing-function:ease-out; }
-          60%  { transform:translateX(-50%) translateY(4px) scaleX(1.1) scaleY(0.86); }
-          66%  { transform:translateX(-50%) translateY(-20px) scaleX(1) scaleY(1); }
-          73%  { transform:translateX(-50%) translateY(2px); }
-          76%  { transform:translateX(-50%) translateY(-7px); }
-          80%  { transform:translateX(-50%) translateY(0px); }
-          86%  { transform:translateX(-50%) translateY(0px); opacity:1; }
-          100% { transform:translateX(-50%) translateY(0px); opacity:0; }
+          0%   { transform:translateX(-50%) translateY(-90px); opacity:0; }
+          10%  { opacity:1; }
+          42%  { transform:translateX(-50%) translateY(62px); animation-timing-function:ease-out; }
+          44%  { transform:translateX(-50%) translateY(66px) scaleX(1.2) scaleY(0.76); }
+          52%  { transform:translateX(-50%) translateY(18px) scaleX(1) scaleY(1); }
+          60%  { transform:translateX(-50%) translateY(62px); }
+          62%  { transform:translateX(-50%) translateY(64px) scaleX(1.1) scaleY(0.86); }
+          68%  { transform:translateX(-50%) translateY(38px); }
+          74%  { transform:translateX(-50%) translateY(60px); }
+          80%  { transform:translateX(-50%) translateY(56px); }
+          87%  { transform:translateX(-50%) translateY(56px); opacity:1; }
+          100% { transform:translateX(-50%) translateY(56px); opacity:0; }
+        }
+        @keyframes handsReceive {
+          0%,41%  { transform:scale(1) translateY(0); }
+          44%  { transform:scale(1.06) translateY(4px); }
+          51%  { transform:scale(0.97) translateY(-2px); }
+          56%  { transform:scale(1) translateY(0); }
+          60%  { transform:scale(1.03) translateY(2px); }
+          65%  { transform:scale(1) translateY(0); }
+          100% { transform:scale(1) translateY(0); }
         }
         @keyframes titleBounce {
-          0%,37%  { transform:scaleX(1) scaleY(1); }
-          40%  { transform:scaleX(1.03) scaleY(0.94); }
-          44%  { transform:scaleX(0.98) scaleY(1.04); }
-          48%  { transform:scaleX(1) scaleY(1); }
-          58%  { transform:scaleX(1.015) scaleY(0.96); }
-          62%  { transform:scaleX(1) scaleY(1); }
+          0%,40%  { transform:scaleX(1) scaleY(1); }
+          43%  { transform:scaleX(1.03) scaleY(0.94); }
+          47%  { transform:scaleX(0.98) scaleY(1.04); }
+          52%  { transform:scaleX(1) scaleY(1); }
           100% { transform:scaleX(1) scaleY(1); }
         }
       `}</style>
@@ -113,15 +119,15 @@ export default function AuthPage() {
           {/* Falling ball */}
           <div style={{
             position: "absolute",
-            top: "50%",
+            top: 0,
             left: "50%",
-            width: 22,
-            height: 22,
+            width: 20,
+            height: 20,
             borderRadius: "50%",
             background: "radial-gradient(circle at 35% 30%, #FDE68A, #D97706 70%)",
             boxShadow: "0 0 14px rgba(251,191,36,0.7), 0 2px 6px rgba(0,0,0,0.5)",
-            animation: "ballDrop 3.8s ease-in infinite",
-            animationDelay: "0.8s",
+            animation: "ballDrop 4s ease-in infinite",
+            animationDelay: "0.6s",
             zIndex: 10,
             pointerEvents: "none",
           }} />
@@ -132,12 +138,24 @@ export default function AuthPage() {
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
               filter: "drop-shadow(0 2px 16px rgba(251,191,36,0.45))",
-              animation: "titleBounce 3.8s ease-in infinite",
-              animationDelay: "0.8s",
+              animation: "titleBounce 4s ease-in infinite",
+              animationDelay: "0.6s",
               display: "inline-block",
             }}>
             FallonYou
           </h1>
+          {/* Hands that catch the ball */}
+          <div style={{
+            fontSize: 28,
+            lineHeight: 1,
+            animation: "handsReceive 4s ease-in infinite",
+            animationDelay: "0.6s",
+            display: "block",
+            textAlign: "center",
+            marginTop: 4,
+          }}>
+            🤲
+          </div>
           <div className="flex items-center justify-center gap-2 mt-2">
             <div className="h-px w-8 bg-amber-500/40" />
             <p className="text-amber-400 text-sm font-semibold tracking-widest uppercase">Depende de ti</p>
