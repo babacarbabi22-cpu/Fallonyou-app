@@ -88,12 +88,13 @@ export default function AuthPage() {
             style={{ background: "linear-gradient(135deg,#D97706 0%,#FCD34D 45%,#F59E0B 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", filter: "drop-shadow(0 2px 16px rgba(251,191,36,0.45))" }}>
             FallonYou
           </h1>
-          <p className="text-white/55 text-xs font-light tracking-[3px] uppercase mt-1">Actividades · Viajes · Conexiones</p>
-          <p className="text-white/80 text-base font-medium mt-2 leading-snug">
-            Haz amigos reales <span className="text-amber-400">donde vayas</span>
-          </p>
-          <p className="text-white/40 text-xs mt-1">
-            Únete a planes, conoce gente y comparte aventuras
+          <div className="flex items-center justify-center gap-2 mt-2">
+            <div className="h-px w-8 bg-amber-500/40" />
+            <p className="text-amber-400 text-sm font-semibold tracking-widest uppercase">Depende de ti</p>
+            <div className="h-px w-8 bg-amber-500/40" />
+          </div>
+          <p className="text-white/50 text-xs mt-2 tracking-wide">
+            Conoce gente, únete a planes y viaja diferente
           </p>
         </div>
 
