@@ -1,26 +1,40 @@
 {
   "name": "FallonYou",
   "short_name": "FallonYou",
-  "description": "Find your perfect match with FallonYou - the modern dating app",
+  "description": "Haz amigos en tus viajes, crea actividades y descubre eventos en tu ciudad.",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#fdf7f8",
-  "theme_color": "#e11d62",
-  "orientation": "portrait",
+  "background_color": "#09090b",
+  "theme_color": "#f59e0b",
+  "orientation": "portrait-primary",
+  "lang": "es",
   "icons": [
     {
       "src": "/icons/icon-192x192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
     },
     {
       "src": "/icons/icon-512x512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ],
-  "categories": ["social", "lifestyle"],
+  "categories": ["social", "lifestyle", "travel"],
   "prefer_related_applications": false
 }

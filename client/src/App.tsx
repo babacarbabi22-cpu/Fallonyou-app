@@ -33,6 +33,7 @@ import { useToast } from "@/hooks/use-toast";
 import { TermsModal } from "@/components/TermsModal";
 import { CookieBanner } from "@/components/CookieBanner";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { PWAInstallBanner } from "@/components/PWAInstallBanner";
 
 function AgeConfirmationModal() {
   const t = useTranslation();
@@ -225,6 +226,7 @@ function App() {
             <VerificationToast />
             <Router />
             <CookieBanner />
+            <PWAInstallBanner />
           </ErrorBoundary>
         </TooltipProvider>
       </I18nProvider>

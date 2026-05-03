@@ -1,55 +1,94 @@
-self.addEventListener('push', function(event) {
-  let data = { title: 'FallonYou', body: 'Tienes una nueva notificación', icon: '/favicon.png' };
-  
-  if (event.data) {
-    try {
-      data = event.data.json();
-    } catch (e) {
-      data.body = event.data.text();
-    }
-  }
+const CACHE_NAME = 'fallonyou-v2';
+const STATIC_ASSETS = [
+  '/',
+  '/manifest.json',
+  '/favicon.png',
+  '/icons/icon-192x192.png',
+  '/icons/icon-512x512.png',
+];
 
-  const options = {
-    body: data.body,
-    icon: data.icon || '/favicon.png',
-    badge: '/favicon.png',
-    vibrate: [200, 100, 200],
-    data: {
-      url: data.url || '/',
-    },
-    actions: data.actions || [],
-  };
-
+// ── Install: cache static shell ───────────────────────────────────────────────
+self.addEventListener('install', (event) => {
+  self.skipWaiting();
   event.waitUntil(
-    self.registration.showNotification(data.title || 'FallonYou', options)
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_ASSETS).catch(() => {}))
   );
 });
 
-self.addEventListener('notificationclick', function(event) {
-  event.notification.close();
-
-  const url = event.notification.data?.url || '/';
-
+// ── Activate: clean old caches ────────────────────────────────────────────────
+self.addEventListener('activate', (event) => {
   event.waitUntil(
-    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(clientList) {
-      for (let i = 0; i < clientList.length; i++) {
-        const client = clientList[i];
+    caches.keys().then((keys) =>
+      Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))
+    ).then(() => clients.claim())
+  );
+});
+
+// ── Fetch: network-first for API, cache-first for assets ─────────────────────
+self.addEventListener('fetch', (event) => {
+  const url = new URL(event.request.url);
+
+  // Skip non-GET and cross-origin requests
+  if (event.request.method !== 'GET' || url.origin !== self.location.origin) return;
+
+  // API calls: network only (never cache)
+  if (url.pathname.startsWith('/api/')) return;
+
+  // Navigation requests: network-first, fallback to cached shell
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request).catch(() =>
+        caches.match('/').then((r) => r || fetch(event.request))
+      )
+    );
+    return;
+  }
+
+  // Static assets: cache-first
+  event.respondWith(
+    caches.match(event.request).then((cached) => {
+      if (cached) return cached;
+      return fetch(event.request).then((response) => {
+        if (response.ok) {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then((c) => c.put(event.request, clone));
+        }
+        return response;
+      }).catch(() => cached);
+    })
+  );
+});
+
+// ── Push notifications ────────────────────────────────────────────────────────
+self.addEventListener('push', (event) => {
+  let data = { title: 'FallonYou', body: 'Tienes una nueva notificación', icon: '/favicon.png' };
+  if (event.data) {
+    try { data = event.data.json(); } catch (e) { data.body = event.data.text(); }
+  }
+  event.waitUntil(
+    self.registration.showNotification(data.title || 'FallonYou', {
+      body: data.body,
+      icon: data.icon || '/icons/icon-192x192.png',
+      badge: '/favicon.png',
+      vibrate: [200, 100, 200],
+      data: { url: data.url || '/' },
+      actions: data.actions || [],
+    })
+  );
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const url = event.notification.data?.url || '/';
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((list) => {
+      for (const client of list) {
         if (client.url.includes(self.location.origin) && 'focus' in client) {
           client.navigate(url);
           return client.focus();
         }
       }
-      if (clients.openWindow) {
-        return clients.openWindow(url);
-      }
+      if (clients.openWindow) return clients.openWindow(url);
     })
   );
-});
-
-self.addEventListener('install', function(event) {
-  self.skipWaiting();
-});
-
-self.addEventListener('activate', function(event) {
-  event.waitUntil(clients.claim());
 });
