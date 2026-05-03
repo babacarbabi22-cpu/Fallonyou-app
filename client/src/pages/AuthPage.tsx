@@ -155,21 +155,21 @@ export default function AuthPage() {
             animationDelay: "0.6s",
           }}>
             <Hand
-              size={26}
+              size={30}
               style={{
-                transform: "scaleX(-1) rotate(-30deg)",
+                transform: "scaleX(-1) rotate(20deg)",
                 color: "#FCD34D",
-                filter: "drop-shadow(0 0 8px rgba(251,191,36,0.7))",
-                strokeWidth: 1.8,
+                filter: "drop-shadow(0 0 10px rgba(251,191,36,0.75))",
+                strokeWidth: 1.6,
               }}
             />
             <Hand
-              size={26}
+              size={30}
               style={{
-                transform: "rotate(30deg)",
+                transform: "rotate(-20deg)",
                 color: "#FCD34D",
-                filter: "drop-shadow(0 0 8px rgba(251,191,36,0.7))",
-                strokeWidth: 1.8,
+                filter: "drop-shadow(0 0 10px rgba(251,191,36,0.75))",
+                strokeWidth: 1.6,
               }}
             />
           </div>
