@@ -8,7 +8,7 @@ import { MatchHeartCascade } from "@/components/HeartCascade";
 import { AnimatePresence, motion } from "framer-motion";
 import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Loader2, Sparkles, SlidersHorizontal, Star, X, Heart, Plane, Camera, MapPin, CalendarDays, Zap } from "lucide-react";
+import { Loader2, Sparkles, SlidersHorizontal, Star, X, Heart, Plane, Camera, MapPin, CalendarDays, Zap, Crown, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Slider } from "@/components/ui/slider";
@@ -141,8 +141,12 @@ export default function SwipePage() {
 
   const { data: dailySpark } = useQuery<any>({
     queryKey: ["/api/daily-spark"],
-    staleTime: 1000 * 60 * 5, // 5 minutes — refresh more often so blocks take effect quickly
+    staleTime: 1000 * 60 * 5,
   });
+
+  const { data: premiumStatus } = useQuery<{
+    isPremium: boolean; remainingLikes: number; canLike: boolean;
+  }>({ queryKey: ["/api/premium/status"], staleTime: 1000 * 60 });
   
   // Preload all user photos when feed is loaded
   useEffect(() => {
@@ -302,6 +306,24 @@ export default function SwipePage() {
       <div className="px-6 py-4 flex items-center justify-between">
         <h1 className="text-3xl font-display font-black"><span className="bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 bg-clip-text text-transparent">Fallon</span><span className="text-foreground">You</span></h1>
         <div className="flex items-center gap-2">
+          {/* Likes counter for free users */}
+          {premiumStatus && !premiumStatus.isPremium && (
+            <button
+              onClick={() => navigate("/premium")}
+              data-testid="badge-likes-remaining"
+              className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold transition-all"
+              style={{
+                background: premiumStatus.remainingLikes <= 3
+                  ? "rgba(239,68,68,0.12)"
+                  : "rgba(245,158,11,0.12)",
+                border: `1px solid ${premiumStatus.remainingLikes <= 3 ? "rgba(239,68,68,0.35)" : "rgba(245,158,11,0.3)"}`,
+                color: premiumStatus.remainingLikes <= 3 ? "#ef4444" : "#f59e0b",
+              }}
+            >
+              <Heart className="w-3 h-3 fill-current" />
+              {premiumStatus.remainingLikes}
+            </button>
+          )}
           <Sheet open={showFilters} onOpenChange={setShowFilters}>
             <SheetTrigger asChild>
               <Button variant="ghost" size="icon" data-testid="button-filters">
@@ -508,7 +530,43 @@ export default function SwipePage() {
         );
       })()}
 
+      {/* ── Likes agotados ── */}
+      {premiumStatus && !premiumStatus.isPremium && !premiumStatus.canLike && (
+        <div className="px-4 mt-2">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.96 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="rounded-3xl overflow-hidden text-center py-10 px-6 flex flex-col items-center gap-4"
+            style={{ background: "linear-gradient(135deg,#1a0a00,#3d1f00,#1a0a00)", border: "1px solid rgba(245,158,11,0.3)" }}
+            data-testid="card-likes-exhausted"
+          >
+            <div className="w-16 h-16 rounded-full flex items-center justify-center"
+              style={{ background: "linear-gradient(135deg,#F59E0B,#D97706)" }}>
+              <Lock className="w-8 h-8 text-white" />
+            </div>
+            <div>
+              <p className="text-white font-bold text-xl mb-1">Has llegado al límite diario</p>
+              <p className="text-amber-300/70 text-sm leading-relaxed">
+                Los usuarios gratuitos tienen 10 likes al día.<br />
+                Vuelve mañana o hazte Premium para conectar sin límites.
+              </p>
+            </div>
+            <Button
+              className="w-full font-bold py-5 rounded-2xl"
+              style={{ background: "linear-gradient(90deg,#FCD34D,#F59E0B)", color: "#000" }}
+              onClick={() => navigate("/premium")}
+              data-testid="button-get-premium-from-wall"
+            >
+              <Crown className="w-5 h-5 mr-2" />
+              Ver Premium — desde €5/mes
+            </Button>
+            <p className="text-amber-400/50 text-xs">7 días gratis · Cancela cuando quieras</p>
+          </motion.div>
+        </div>
+      )}
+
       {/* Card Stack */}
+      {(!premiumStatus || premiumStatus.isPremium || premiumStatus.canLike) && (
       <div className="relative w-full max-w-md mx-auto h-[65vh] px-4 mt-2">
         <AnimatePresence>
           {/* Promotional card — appears every PROMO_EVERY swipes */}
@@ -552,9 +610,10 @@ export default function SwipePage() {
           ) : null}
         </AnimatePresence>
       </div>
+      )}
 
       {/* Action Buttons */}
-      {!showPromoCard && activeUsers && activeUsers.length > 0 && (
+      {(!premiumStatus || premiumStatus.isPremium || premiumStatus.canLike) && !showPromoCard && activeUsers && activeUsers.length > 0 && (
         <div className="flex justify-center gap-6 mt-4">
           <Button
             variant="outline"

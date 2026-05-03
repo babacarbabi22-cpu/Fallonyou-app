@@ -1,8 +1,18 @@
-# FallonYou - Dating App
+# FallonYou - Social Travel App
 
 ## Overview
 
-FallonYou is a luxury travel & social connection dating app built with React + Express + PostgreSQL. Black & gold palette, multi-language (ES/EN/FR), event creation, push notifications, admin panel, Ambassador/Referral program. Completely free during launch.
+FallonYou is a luxury travel & social friendship app built with React + Express + PostgreSQL. Black & gold palette, multi-language (ES/EN/FR), event creation, push notifications, admin panel, Ambassador/Referral program. NOT a dating app — focused on friendship, travel, and social connections.
+
+### Monetization / Premium System
+- **Free tier**: 10 likes/day, 1 Super Like/day, basic filters. Gated from: seeing who liked you, seeing profile visitors.
+- **Premium tier**: Unlimited likes, 5 Super Likes/day, advanced filters, see who liked you, see profile visitors, priority visibility, Premium badge.
+- **Pricing**: Monthly or Yearly (50% off, ~€5/month equivalent). 7-day free trial on first subscription.
+- **Payment**: Stripe (primary) — checkout sessions, customer portal, webhook sync via `stripe-replit-sync`.
+- **PremiumPage** (`/premium`): Full redesign — pricing toggle, Free vs Premium comparison table, gated "who liked you" / "who viewed you" sections with blur+lock overlay + upgrade CTA.
+- **SwipePage**: Likes counter badge in header (amber→red when ≤3 remaining). "Likes agotados" paywall card shown when daily limit reached (blocks card stack).
+- **Backend gates**: `FREE_DAILY_LIKES = 10` in `server/storage.ts`. `canUserLike()` checks daily usage. `/api/premium/status` returns `{ isPremium, remainingLikes, canLike }`.
+- **Admin**: Can manually grant/revoke premium via AdminPage → `/api/admin/users/:userId/set-premium`.
 
 ### Engagement / Retention Features
 - **Spark del día** — A daily featured profile shown in SwipePage (deterministic per user+date seed, changes every 24h). Endpoint: `GET /api/daily-spark`
