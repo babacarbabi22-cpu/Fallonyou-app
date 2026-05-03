@@ -113,7 +113,6 @@ export type UserWithPhotos = User & {
     politics?: string | null;
     pets?: string | null;
     exercise?: string | null;
-    incognito?: boolean | null;
     interests?: string[] | null;
     relationshipType?: string | null;
     lastActive?: Date | null;

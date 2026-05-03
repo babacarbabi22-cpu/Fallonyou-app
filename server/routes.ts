@@ -121,7 +121,7 @@ export async function registerRoutes(
       const { 
         displayName, bio, age, gender, preference,
         zodiacSign, smoking, drinking, children, education,
-        occupation, birthplace, height, religion, politics, pets, exercise, incognito,
+        occupation, birthplace, height, religion, politics, pets, exercise,
         interests, relationshipType,
         connectionTypes, travelInterests, travelerMode, currentCity, homeCity, latitude, longitude
       } = req.body;
@@ -151,7 +151,6 @@ export async function registerRoutes(
       if (politics !== undefined) profileData.politics = politics;
       if (pets !== undefined) profileData.pets = pets;
       if (exercise !== undefined) profileData.exercise = exercise;
-      if (incognito !== undefined) profileData.incognito = incognito;
       if (interests !== undefined) profileData.interests = Array.isArray(interests) ? interests : [];
       if (relationshipType !== undefined) profileData.relationshipType = relationshipType;
       if (connectionTypes !== undefined) profileData.connectionTypes = connectionTypes;
