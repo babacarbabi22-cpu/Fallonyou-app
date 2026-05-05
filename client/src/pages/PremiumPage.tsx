@@ -16,11 +16,11 @@ import { useLocation } from "wouter";
 const FREE_DAILY_LIKES = 10;
 
 const freeFeatures = [
-  { label: `${FREE_DAILY_LIKES} likes por día`, included: true },
+  { label: `${FREE_DAILY_LIKES} conexiones por día`, included: true },
   { label: "1 Super Like por día", included: true },
   { label: "Filtros básicos (edad, distancia)", included: true },
   { label: "Crear y unirte a eventos", included: true },
-  { label: "Ver quién te dio like", included: false },
+  { label: "Ver quién quiere conocerte", included: false },
   { label: "Ver quién visitó tu perfil", included: false },
   { label: "Visibilidad prioritaria", included: false },
   { label: "Filtros avanzados (intereses, idioma)", included: false },
@@ -28,11 +28,11 @@ const freeFeatures = [
 ];
 
 const premiumFeatures = [
-  { label: "Likes ilimitados", included: true },
+  { label: "Conexiones ilimitadas", included: true },
   { label: "5 Super Likes por día", included: true },
   { label: "Filtros avanzados (intereses, idioma)", included: true },
   { label: "Crear y unirte a eventos", included: true },
-  { label: "Ver quién te dio like", included: true },
+  { label: "Ver quién quiere conocerte", included: true },
   { label: "Ver quién visitó tu perfil", included: true },
   { label: "Visibilidad prioritaria", included: true },
   { label: "Insignia Premium en tu perfil", included: true },
@@ -76,6 +76,7 @@ export default function PremiumPage() {
   const { toast } = useToast();
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [billingInterval, setBillingInterval] = useState<"month" | "year">("year");
+  const [showPricing, setShowPricing] = useState(false);
   const [, navigate] = useLocation();
 
   const { data: premiumStatus, isLoading } = useQuery<PremiumStatus>({ queryKey: ["/api/premium/status"] });
@@ -96,7 +97,7 @@ export default function PremiumPage() {
     ? (yearlyPrice.unit_amount / 100 / 12).toFixed(2)
     : monthlyPrice
     ? (monthlyPrice.unit_amount / 100).toFixed(2)
-    : "9.99";
+    : billingInterval === "year" ? "4.17" : "7.00";
 
   const checkoutMutation = useMutation({
     mutationFn: async () => {
@@ -188,122 +189,144 @@ export default function PremiumPage() {
         {!isPremium && (
           <motion.section initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
 
-            {/* Billing toggle */}
-            <div className="flex items-center justify-center gap-1 p-1 rounded-full mb-5 mx-auto w-fit"
-              style={{ background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.2)" }}>
-              {(["month", "year"] as const).map((interval) => (
-                <button
-                  key={interval}
-                  onClick={() => setBillingInterval(interval)}
-                  data-testid={`tab-billing-${interval}`}
-                  className="flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-semibold transition-all"
-                  style={billingInterval === interval
-                    ? { background: "linear-gradient(90deg,#D97706,#F59E0B)", color: "#000" }
-                    : { color: "var(--muted-foreground)" }
-                  }
-                >
-                  {interval === "month" ? "Mensual" : "Anual"}
-                  {interval === "year" && (
-                    <span className="text-[10px] bg-green-500 text-white px-1.5 py-0.5 rounded-full font-bold">−50%</span>
-                  )}
-                </button>
-              ))}
-            </div>
-
-            {/* Price display */}
-            <div
-              className="rounded-3xl p-6 text-center mb-4"
-              style={{
-                background: "linear-gradient(135deg,#78350f,#92400e,#b45309)",
-                boxShadow: "0 8px 32px rgba(180,83,9,0.35)",
-              }}
-              data-testid="card-pricing"
-            >
-              <Crown className="w-8 h-8 text-amber-300 mx-auto mb-3" />
-              <p className="text-amber-200 text-sm font-medium mb-1">FallonYou Premium</p>
-              <div className="flex items-end justify-center gap-1 mb-1">
-                <span className="text-white font-black text-5xl">€{displayMonthly}</span>
-                <span className="text-amber-300/80 text-sm mb-2">/mes</span>
-              </div>
-              {billingInterval === "year" && (
-                <p className="text-amber-300/70 text-xs mb-4">
-                  Facturado anualmente · {yearlyPrice ? `€${(yearlyPrice.unit_amount / 100).toFixed(2)}/año` : "€59.99/año"}
-                </p>
-              )}
-              {billingInterval === "month" && (
-                <p className="text-amber-300/70 text-xs mb-4">Facturado mensualmente</p>
-              )}
-
-              <div className="flex items-center justify-center gap-1.5 text-green-300 text-xs font-medium mb-4">
-                <Check className="w-3.5 h-3.5" />
-                7 días gratis — cancela cuando quieras
-              </div>
-
-              <Button
-                className="w-full font-bold text-base py-6 rounded-2xl"
-                style={{ background: "linear-gradient(90deg,#FCD34D,#F59E0B)", color: "#000" }}
-                onClick={() => checkoutMutation.mutate()}
-                disabled={checkoutMutation.isPending}
-                data-testid="button-subscribe"
+            {/* Collapsed CTA button */}
+            {!showPricing ? (
+              <button
+                onClick={() => setShowPricing(true)}
+                data-testid="button-show-pricing"
+                className="w-full rounded-2xl py-4 px-6 flex items-center justify-between transition-opacity active:opacity-80"
+                style={{
+                  background: "linear-gradient(135deg,#78350f,#92400e,#b45309)",
+                  boxShadow: "0 8px 32px rgba(180,83,9,0.35)",
+                }}
               >
-                {checkoutMutation.isPending
-                  ? <Loader2 className="w-5 h-5 animate-spin mr-2" />
-                  : <Crown className="w-5 h-5 mr-2" />}
-                Empezar prueba gratuita
-              </Button>
-
-              <p className="text-amber-300/50 text-xs mt-3">
-                Sin compromiso · Pago seguro con Stripe
-              </p>
-            </div>
-
-            {/* Free vs Premium comparison */}
-            <div className="grid grid-cols-2 gap-3">
-              {/* Free column */}
-              <div className="rounded-2xl overflow-hidden border border-border">
-                <div className="px-3 py-2.5 text-center bg-muted/50">
-                  <p className="font-bold text-sm">Gratis</p>
+                <div className="flex items-center gap-3">
+                  <Crown className="w-6 h-6 text-amber-300" />
+                  <div className="text-left">
+                    <p className="text-white font-bold text-base">Ver planes Premium</p>
+                    <p className="text-amber-300/70 text-xs">Desde €7/mes · 7 días gratis</p>
+                  </div>
                 </div>
-                <div className="p-3 space-y-2">
-                  {freeFeatures.map((f, i) => (
-                    <div key={i} className="flex items-start gap-2">
-                      {f.included
-                        ? <Check className="w-3.5 h-3.5 text-green-500 mt-0.5 shrink-0" />
-                        : <X className="w-3.5 h-3.5 text-muted-foreground/40 mt-0.5 shrink-0" />}
-                      <p className={`text-xs leading-tight ${f.included ? "" : "text-muted-foreground/50"}`}>{f.label}</p>
-                    </div>
+                <ArrowRight className="w-5 h-5 text-amber-300" />
+              </button>
+            ) : (
+              <>
+                {/* Billing toggle */}
+                <div className="flex items-center justify-center gap-1 p-1 rounded-full mb-5 mx-auto w-fit"
+                  style={{ background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.2)" }}>
+                  {(["month", "year"] as const).map((interval) => (
+                    <button
+                      key={interval}
+                      onClick={() => setBillingInterval(interval)}
+                      data-testid={`tab-billing-${interval}`}
+                      className="flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-semibold transition-all"
+                      style={billingInterval === interval
+                        ? { background: "linear-gradient(90deg,#D97706,#F59E0B)", color: "#000" }
+                        : { color: "var(--muted-foreground)" }
+                      }
+                    >
+                      {interval === "month" ? "Mensual 7€" : "Anual 50€"}
+                      {interval === "year" && (
+                        <span className="text-[10px] bg-green-500 text-white px-1.5 py-0.5 rounded-full font-bold ml-1">−40%</span>
+                      )}
+                    </button>
                   ))}
                 </div>
-              </div>
 
-              {/* Premium column */}
-              <div className="rounded-2xl overflow-hidden"
-                style={{ border: "1px solid rgba(245,158,11,0.4)", background: "rgba(245,158,11,0.04)" }}>
-                <div className="px-3 py-2.5 text-center"
-                  style={{ background: "linear-gradient(90deg,rgba(217,119,6,0.3),rgba(245,158,11,0.2))" }}>
-                  <p className="font-bold text-sm text-amber-500 flex items-center justify-center gap-1">
-                    <Crown className="w-3.5 h-3.5" /> Premium
+                {/* Price display */}
+                <div
+                  className="rounded-3xl p-6 text-center mb-4"
+                  style={{
+                    background: "linear-gradient(135deg,#78350f,#92400e,#b45309)",
+                    boxShadow: "0 8px 32px rgba(180,83,9,0.35)",
+                  }}
+                  data-testid="card-pricing"
+                >
+                  <Crown className="w-8 h-8 text-amber-300 mx-auto mb-3" />
+                  <p className="text-amber-200 text-sm font-medium mb-1">FallonYou Premium</p>
+                  <div className="flex items-end justify-center gap-1 mb-1">
+                    <span className="text-white font-black text-5xl">€{displayMonthly}</span>
+                    <span className="text-amber-300/80 text-sm mb-2">/mes</span>
+                  </div>
+                  {billingInterval === "year" && (
+                    <p className="text-amber-300/70 text-xs mb-4">
+                      Facturado anualmente · {yearlyPrice ? `€${(yearlyPrice.unit_amount / 100).toFixed(2)}/año` : "€50/año"}
+                    </p>
+                  )}
+                  {billingInterval === "month" && (
+                    <p className="text-amber-300/70 text-xs mb-4">Facturado mensualmente · €7/mes</p>
+                  )}
+
+                  <div className="flex items-center justify-center gap-1.5 text-green-300 text-xs font-medium mb-4">
+                    <Check className="w-3.5 h-3.5" />
+                    7 días gratis — cancela cuando quieras
+                  </div>
+
+                  <Button
+                    className="w-full font-bold text-base py-6 rounded-2xl"
+                    style={{ background: "linear-gradient(90deg,#FCD34D,#F59E0B)", color: "#000" }}
+                    onClick={() => checkoutMutation.mutate()}
+                    disabled={checkoutMutation.isPending}
+                    data-testid="button-subscribe"
+                  >
+                    {checkoutMutation.isPending
+                      ? <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                      : <Crown className="w-5 h-5 mr-2" />}
+                    Empezar prueba gratuita
+                  </Button>
+
+                  <p className="text-amber-300/50 text-xs mt-3">
+                    Sin compromiso · Pago seguro con Stripe
                   </p>
                 </div>
-                <div className="p-3 space-y-2">
-                  {premiumFeatures.map((f, i) => (
-                    <div key={i} className="flex items-start gap-2">
-                      <Check className="w-3.5 h-3.5 text-amber-500 mt-0.5 shrink-0" />
-                      <p className="text-xs leading-tight font-medium">{f.label}</p>
+
+                {/* Free vs Premium comparison */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="rounded-2xl overflow-hidden border border-border">
+                    <div className="px-3 py-2.5 text-center bg-muted/50">
+                      <p className="font-bold text-sm">Gratis</p>
                     </div>
-                  ))}
+                    <div className="p-3 space-y-2">
+                      {freeFeatures.map((f, i) => (
+                        <div key={i} className="flex items-start gap-2">
+                          {f.included
+                            ? <Check className="w-3.5 h-3.5 text-green-500 mt-0.5 shrink-0" />
+                            : <X className="w-3.5 h-3.5 text-muted-foreground/40 mt-0.5 shrink-0" />}
+                          <p className={`text-xs leading-tight ${f.included ? "" : "text-muted-foreground/50"}`}>{f.label}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="rounded-2xl overflow-hidden"
+                    style={{ border: "1px solid rgba(245,158,11,0.4)", background: "rgba(245,158,11,0.04)" }}>
+                    <div className="px-3 py-2.5 text-center"
+                      style={{ background: "linear-gradient(90deg,rgba(217,119,6,0.3),rgba(245,158,11,0.2))" }}>
+                      <p className="font-bold text-sm text-amber-500 flex items-center justify-center gap-1">
+                        <Crown className="w-3.5 h-3.5" /> Premium
+                      </p>
+                    </div>
+                    <div className="p-3 space-y-2">
+                      {premiumFeatures.map((f, i) => (
+                        <div key={i} className="flex items-start gap-2">
+                          <Check className="w-3.5 h-3.5 text-amber-500 mt-0.5 shrink-0" />
+                          <p className="text-xs leading-tight font-medium">{f.label}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
+              </>
+            )}
           </motion.section>
         )}
 
-        {/* ── Quién te dio like ── */}
+        {/* ── Quién quiere conocerte ── */}
         {likedByData && likedByData.count > 0 && (
           <section>
             <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-              <Heart className="w-5 h-5 text-rose-500 fill-rose-500" />
-              {likedByData.count} {likedByData.count === 1 ? "persona te dio like" : "personas te dieron like"}
+              <Users className="w-5 h-5 text-amber-500" />
+              {likedByData.count} {likedByData.count === 1 ? "persona quiere conocerte" : "personas quieren conocerte"}
             </h2>
             {isPremium ? (
               <div className="grid grid-cols-3 gap-3">
@@ -326,10 +349,10 @@ export default function PremiumPage() {
                 style={{ border: "1px solid rgba(245,158,11,0.25)" }}
                 data-testid="card-liked-by-locked"
               >
-                {/* Blurred grid */}
-                <div className="grid grid-cols-3 gap-0.5 p-0.5 blur-sm opacity-60 pointer-events-none select-none">
+                {/* Blurred grid — dark tones matching app palette */}
+                <div className="grid grid-cols-3 gap-0.5 p-0.5 blur-sm opacity-40 pointer-events-none select-none">
                   {[1, 2, 3, 4, 5, 6].map((i) => (
-                    <div key={i} className="aspect-square bg-gradient-to-br from-rose-200 to-rose-100 dark:from-rose-900/40 dark:to-rose-800/30" />
+                    <div key={i} className="aspect-square bg-gradient-to-br from-zinc-800 to-zinc-900" />
                   ))}
                 </div>
                 {/* Lock overlay */}
@@ -338,12 +361,12 @@ export default function PremiumPage() {
                     style={{ background: "linear-gradient(135deg,#F59E0B,#D97706)" }}>
                     <Lock className="w-6 h-6 text-white" />
                   </div>
-                  <p className="text-sm font-semibold text-center">Descubre quién te ha dado like</p>
+                  <p className="text-sm font-semibold text-center">Descubre quién quiere conocerte</p>
                   <Button
                     size="sm"
                     className="font-bold"
                     style={{ background: "linear-gradient(90deg,#D97706,#F59E0B)", color: "#000" }}
-                    onClick={() => { setBillingInterval("year"); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                    onClick={() => { setShowPricing(true); window.scrollTo({ top: 0, behavior: "smooth" }); }}
                     data-testid="button-unlock-liked-by"
                   >
                     <Crown className="w-3.5 h-3.5 mr-1.5" /> Desbloquear con Premium
