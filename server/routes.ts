@@ -554,6 +554,31 @@ export async function registerRoutes(
     });
   });
 
+  // Teaser users — random real users with photos for premium upsell (no sensitive data)
+  app.get('/api/premium/teaser-users', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const userId = req.user!.id;
+    // Get users who have at least one photo, excluding current user, random order, limit 6
+    const usersWithPhotos = await db
+      .selectDistinct({ id: photos.userId })
+      .from(photos)
+      .where(ne(photos.userId, userId))
+      .orderBy(sql`RANDOM()`)
+      .limit(6);
+    if (usersWithPhotos.length === 0) return res.json({ users: [] });
+    const ids = usersWithPhotos.map(u => u.id);
+    const allPhotos = await db.select().from(photos).where(inArray(photos.userId, ids));
+    const photosMap = new Map<string, string>();
+    for (const p of allPhotos) {
+      if (!photosMap.has(p.userId)) photosMap.set(p.userId, p.url);
+    }
+    const result = ids
+      .filter(id => photosMap.has(id))
+      .slice(0, 4)
+      .map(id => ({ photoUrl: photosMap.get(id)! }));
+    res.json({ users: result });
+  });
+
   // Check like limit
   app.get('/api/likes/status', async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);

@@ -80,18 +80,41 @@ interface PremiumStatus {
 interface LikedByData { count: number; users: any[]; isPremium: boolean; }
 interface ProfileViewersData { count: number; viewers: any[]; }
 interface Product { id: string; name: string; prices: { id: string; unit_amount: number; currency: string; recurring?: { interval: string } }[] }
+interface TeaserUser { photoUrl: string; }
+
+const TEASER_LS_KEY = "fy_teaser_last_seen";
+const TEASER_INTERVAL_MS = 6 * 60 * 60 * 1000; // 6 hours
+
+function shouldShowTeaser(): boolean {
+  try {
+    const raw = localStorage.getItem(TEASER_LS_KEY);
+    if (!raw) return true; // first visit ever
+    const lastSeen = parseInt(raw, 10);
+    return Date.now() - lastSeen > TEASER_INTERVAL_MS;
+  } catch { return true; }
+}
+
+function markTeaserSeen() {
+  try { localStorage.setItem(TEASER_LS_KEY, String(Date.now())); } catch {}
+}
 
 export default function PremiumPage() {
   const { toast } = useToast();
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [billingInterval, setBillingInterval] = useState<"month" | "year">("year");
   const [showPricing, setShowPricing] = useState(false);
+  const [teaserVisible, setTeaserVisible] = useState(() => shouldShowTeaser());
   const [, navigate] = useLocation();
 
   const { data: premiumStatus, isLoading } = useQuery<PremiumStatus>({ queryKey: ["/api/premium/status"] });
   const { data: likedByData } = useQuery<LikedByData>({ queryKey: ["/api/premium/liked-by"] });
   const { data: viewersData } = useQuery<ProfileViewersData>({ queryKey: ["/api/profile-views/viewers"] });
   const { data: productsData } = useQuery<{ products: Product[] }>({ queryKey: ["/api/premium/products"] });
+  const { data: teaserData } = useQuery<{ users: TeaserUser[] }>({
+    queryKey: ["/api/premium/teaser-users"],
+    enabled: teaserVisible,
+    staleTime: 10 * 60 * 1000,
+  });
 
   const isPremium = premiumStatus?.isPremium;
 
@@ -339,49 +362,60 @@ export default function PremiumPage() {
                 ? `${likedByData.count} ${likedByData.count === 1 ? "persona quiere conocerte" : "personas quieren conocerte"}`
                 : "¿Alguien quiere conocerte?"}
             </h2>
-            {/* Teaser when count is 0 */}
-            {likedByData.count === 0 && (
-              <div
-                className="rounded-2xl overflow-hidden relative"
-                style={{ border: "1px solid rgba(245,158,11,0.25)" }}
-                data-testid="card-liked-by-teaser"
-              >
-                <div className="grid grid-cols-2 gap-0.5 pointer-events-none select-none">
-                  {BLUR_FALLBACK_PHOTOS.slice(0, 4).map((src, i) => (
-                    <div key={i} className="aspect-square overflow-hidden relative">
-                      <img
-                        src={src}
-                        alt=""
-                        className="w-full h-full object-cover"
-                        style={{ filter: "blur(16px)", transform: "scale(1.15)" }}
-                      />
-                    </div>
-                  ))}
-                </div>
-                <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 px-5"
-                  style={{ background: "rgba(0,0,0,0.35)" }}>
-                  <div className="w-12 h-12 rounded-full flex items-center justify-center"
-                    style={{ background: "linear-gradient(135deg,#F59E0B,#D97706)" }}>
-                    <Sparkles className="w-6 h-6 text-white" />
+            {/* Teaser when count is 0 — only show when "intelligent" timing allows */}
+            {likedByData.count === 0 && teaserVisible && (() => {
+              // Build photo list: real users first, fall back to stock
+              const realPhotos = (teaserData?.users ?? []).map(u => u.photoUrl);
+              const photoSlots = Array.from({ length: 4 }, (_, i) =>
+                realPhotos[i] || BLUR_FALLBACK_PHOTOS[i]
+              );
+              // Mark as seen so it doesn't show again for 6h
+              markTeaserSeen();
+              return (
+                <div
+                  className="rounded-2xl overflow-hidden relative"
+                  style={{ border: "1px solid rgba(245,158,11,0.25)" }}
+                  data-testid="card-liked-by-teaser"
+                >
+                  <div className="grid grid-cols-2 gap-0.5 pointer-events-none select-none">
+                    {photoSlots.map((src, i) => (
+                      <div key={i} className="aspect-square overflow-hidden relative">
+                        <img
+                          src={src}
+                          alt=""
+                          className="w-full h-full object-cover"
+                          style={{ filter: "blur(16px)", transform: "scale(1.15)" }}
+                        />
+                      </div>
+                    ))}
                   </div>
-                  <p className="text-base font-bold text-center text-white drop-shadow leading-snug">
-                    Es posible que alguien<br />quiera conocerte pronto
-                  </p>
-                  <p className="text-xs text-amber-200/80 text-center">
-                    Activa Premium para saberlo en cuanto ocurra
-                  </p>
-                  <Button
-                    size="sm"
-                    className="font-bold mt-1"
-                    style={{ background: "linear-gradient(90deg,#D97706,#F59E0B)", color: "#000" }}
-                    onClick={() => { setShowPricing(true); window.scrollTo({ top: 0, behavior: "smooth" }); }}
-                    data-testid="button-unlock-teaser"
-                  >
-                    <Crown className="w-3.5 h-3.5 mr-1.5" /> Ver planes Premium
-                  </Button>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 px-5"
+                    style={{ background: "rgba(0,0,0,0.35)" }}>
+                    <div className="w-12 h-12 rounded-full flex items-center justify-center"
+                      style={{ background: "linear-gradient(135deg,#F59E0B,#D97706)" }}>
+                      <Sparkles className="w-6 h-6 text-white" />
+                    </div>
+                    <p className="text-base font-bold text-center text-white drop-shadow leading-snug">
+                      Es posible que alguien<br />quiera conocerte pronto
+                    </p>
+                    <p className="text-xs text-amber-200/80 text-center">
+                      {realPhotos.length > 0
+                        ? "Hay personas en la app que podrían querer conocerte"
+                        : "Activa Premium para saberlo en cuanto ocurra"}
+                    </p>
+                    <Button
+                      size="sm"
+                      className="font-bold mt-1"
+                      style={{ background: "linear-gradient(90deg,#D97706,#F59E0B)", color: "#000" }}
+                      onClick={() => { setShowPricing(true); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                      data-testid="button-unlock-teaser"
+                    >
+                      <Crown className="w-3.5 h-3.5 mr-1.5" /> Ver planes Premium
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            )}
+              );
+            })()}
             {likedByData.count > 0 && (isPremium ? (
               <div className="grid grid-cols-3 gap-3">
                 {likedByData.users?.map((user: any) => (
