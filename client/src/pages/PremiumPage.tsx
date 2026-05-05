@@ -15,6 +15,15 @@ import { useLocation } from "wouter";
 
 const FREE_DAILY_LIKES = 10;
 
+const BLUR_FALLBACK_PHOTOS = [
+  "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=400&fit=crop&q=80",
+  "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&fit=crop&q=80",
+  "https://images.unsplash.com/photo-1494790108755-2616b612e5e4?w=400&fit=crop&q=80",
+  "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&fit=crop&q=80",
+  "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&fit=crop&q=80",
+  "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&fit=crop&q=80",
+];
+
 const freeFeatures = [
   { label: `${FREE_DAILY_LIKES} conexiones por día`, included: true },
   { label: "1 Super Like por día", included: true },
@@ -349,37 +358,40 @@ export default function PremiumPage() {
                 style={{ border: "1px solid rgba(245,158,11,0.25)" }}
                 data-testid="card-liked-by-locked"
               >
-                {/* Blurred grid — warm beige with realistic person silhouettes */}
-                <div className="grid grid-cols-3 gap-0.5 p-0.5 blur-[2px] opacity-90 pointer-events-none select-none">
-                  {[1, 2, 3, 4, 5, 6].map((i) => (
-                    <div
-                      key={i}
-                      className="aspect-square overflow-hidden relative"
-                      style={{ background: `linear-gradient(180deg, #ede0c8 0%, #dcc9a0 100%)` }}
-                    >
-                      <svg viewBox="0 0 100 100" className="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        {/* Subtle background gradient */}
-                        <rect width="100" height="100" fill={i % 3 === 0 ? "#dcc9a0" : i % 3 === 1 ? "#d4be94" : "#cab48a"} />
-                        {/* Head */}
-                        <circle cx="50" cy="35" r="18" fill={i % 2 === 0 ? "#b8895a" : "#a87848"} />
-                        {/* Neck */}
-                        <rect x="43" y="50" width="14" height="10" rx="4" fill={i % 2 === 0 ? "#b8895a" : "#a87848"} />
-                        {/* Shoulders / body — realistic curved shape */}
-                        <path
-                          d="M5 110 C5 75 20 65 35 62 Q50 58 65 62 C80 65 95 75 95 110 Z"
-                          fill={i % 2 === 0 ? "#b8895a" : "#a87848"}
-                        />
-                      </svg>
+                {/* Blurred real photos */}
+                {(() => {
+                  const count = Math.min(likedByData.count, 6);
+                  const cols = count <= 2 ? count : count <= 4 ? 2 : 3;
+                  const slots = Array.from({ length: Math.max(count, 4) }, (_, i) => {
+                    const user = likedByData.users?.[i];
+                    return user?.photos?.[0]?.url || BLUR_FALLBACK_PHOTOS[i % BLUR_FALLBACK_PHOTOS.length];
+                  });
+                  const gridClass = cols === 1 ? "grid-cols-1" : cols === 2 ? "grid-cols-2" : "grid-cols-3";
+                  return (
+                    <div className={`grid ${gridClass} gap-0.5 pointer-events-none select-none`}>
+                      {slots.map((src, i) => (
+                        <div key={i} className="aspect-square overflow-hidden relative">
+                          <img
+                            src={src}
+                            alt=""
+                            className="w-full h-full object-cover"
+                            style={{ filter: "blur(14px)", transform: "scale(1.15)" }}
+                          />
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
+                  );
+                })()}
                 {/* Lock overlay */}
-                <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 px-4">
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 px-4"
+                  style={{ background: "rgba(0,0,0,0.25)" }}>
                   <div className="w-12 h-12 rounded-full flex items-center justify-center"
                     style={{ background: "linear-gradient(135deg,#F59E0B,#D97706)" }}>
                     <Lock className="w-6 h-6 text-white" />
                   </div>
-                  <p className="text-sm font-semibold text-center">Descubre quién quiere conocerte</p>
+                  <p className="text-sm font-semibold text-center text-white drop-shadow">
+                    Descubre quién quiere <span className="text-amber-300">conocerte</span>
+                  </p>
                   <Button
                     size="sm"
                     className="font-bold"
@@ -423,35 +435,44 @@ export default function PremiumPage() {
                 style={{ border: "1px solid rgba(245,158,11,0.25)" }}
                 data-testid="card-viewers-locked"
               >
-                <div className="grid grid-cols-3 gap-0.5 p-0.5 blur-[2px] opacity-90 pointer-events-none select-none">
-                  {[1, 2, 3].map((i) => (
-                    <div
-                      key={i}
-                      className="aspect-square overflow-hidden relative"
-                    >
-                      <svg viewBox="0 0 100 100" className="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <rect width="100" height="100" fill={i % 3 === 0 ? "#dcc9a0" : i % 3 === 1 ? "#d4be94" : "#cab48a"} />
-                        <circle cx="50" cy="35" r="18" fill={i % 2 === 0 ? "#b8895a" : "#a87848"} />
-                        <rect x="43" y="50" width="14" height="10" rx="4" fill={i % 2 === 0 ? "#b8895a" : "#a87848"} />
-                        <path
-                          d="M5 110 C5 75 20 65 35 62 Q50 58 65 62 C80 65 95 75 95 110 Z"
-                          fill={i % 2 === 0 ? "#b8895a" : "#a87848"}
-                        />
-                      </svg>
+                {/* Blurred real photos */}
+                {(() => {
+                  const count = Math.min(viewersData!.count, 6);
+                  const cols = count <= 2 ? count : count <= 4 ? 2 : 3;
+                  const slots = Array.from({ length: Math.max(count, 4) }, (_, i) => {
+                    const user = viewersData!.viewers?.[i];
+                    return user?.photos?.[0]?.url || user?.profileImageUrl || BLUR_FALLBACK_PHOTOS[(i + 2) % BLUR_FALLBACK_PHOTOS.length];
+                  });
+                  const gridClass = cols === 1 ? "grid-cols-1" : cols === 2 ? "grid-cols-2" : "grid-cols-3";
+                  return (
+                    <div className={`grid ${gridClass} gap-0.5 pointer-events-none select-none`}>
+                      {slots.map((src, i) => (
+                        <div key={i} className="aspect-square overflow-hidden relative">
+                          <img
+                            src={src}
+                            alt=""
+                            className="w-full h-full object-cover"
+                            style={{ filter: "blur(14px)", transform: "scale(1.15)" }}
+                          />
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-                <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 px-4">
+                  );
+                })()}
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 px-4"
+                  style={{ background: "rgba(0,0,0,0.25)" }}>
                   <div className="w-12 h-12 rounded-full flex items-center justify-center"
                     style={{ background: "linear-gradient(135deg,#F59E0B,#D97706)" }}>
                     <Eye className="w-6 h-6 text-white" />
                   </div>
-                  <p className="text-sm font-semibold text-center">Ve quién ha visitado tu perfil</p>
+                  <p className="text-sm font-semibold text-center text-white drop-shadow">
+                    Ve quién ha <span className="text-amber-300">visitado tu perfil</span>
+                  </p>
                   <Button
                     size="sm"
                     className="font-bold"
                     style={{ background: "linear-gradient(90deg,#D97706,#F59E0B)", color: "#000" }}
-                    onClick={() => { window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                    onClick={() => { setShowPricing(true); window.scrollTo({ top: 0, behavior: "smooth" }); }}
                     data-testid="button-unlock-viewers"
                   >
                     <Crown className="w-3.5 h-3.5 mr-1.5" /> Desbloquear con Premium
