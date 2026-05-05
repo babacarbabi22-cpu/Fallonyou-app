@@ -203,8 +203,8 @@ export default function PremiumPage() {
                 <div className="flex items-center gap-3">
                   <Crown className="w-6 h-6 text-amber-300" />
                   <div className="text-left">
-                    <p className="text-white font-bold text-base">Ver planes Premium</p>
-                    <p className="text-amber-300/70 text-xs">Desde €7/mes · 7 días gratis</p>
+                    <p className="text-white font-bold text-base">Prueba gratis 7 días</p>
+                    <p className="text-amber-300/70 text-xs">Sin compromiso · Cancela cuando quieras</p>
                   </div>
                 </div>
                 <ArrowRight className="w-5 h-5 text-amber-300" />
