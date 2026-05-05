@@ -331,13 +331,58 @@ export default function PremiumPage() {
         )}
 
         {/* ── Quién quiere conocerte ── */}
-        {likedByData && likedByData.count > 0 && (
+        {likedByData && (
           <section>
             <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
               <Users className="w-5 h-5 text-amber-500" />
-              {likedByData.count} {likedByData.count === 1 ? "persona quiere conocerte" : "personas quieren conocerte"}
+              {likedByData.count > 0
+                ? `${likedByData.count} ${likedByData.count === 1 ? "persona quiere conocerte" : "personas quieren conocerte"}`
+                : "¿Alguien quiere conocerte?"}
             </h2>
-            {isPremium ? (
+            {/* Teaser when count is 0 */}
+            {likedByData.count === 0 && (
+              <div
+                className="rounded-2xl overflow-hidden relative"
+                style={{ border: "1px solid rgba(245,158,11,0.25)" }}
+                data-testid="card-liked-by-teaser"
+              >
+                <div className="grid grid-cols-2 gap-0.5 pointer-events-none select-none">
+                  {BLUR_FALLBACK_PHOTOS.slice(0, 4).map((src, i) => (
+                    <div key={i} className="aspect-square overflow-hidden relative">
+                      <img
+                        src={src}
+                        alt=""
+                        className="w-full h-full object-cover"
+                        style={{ filter: "blur(16px)", transform: "scale(1.15)" }}
+                      />
+                    </div>
+                  ))}
+                </div>
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 px-5"
+                  style={{ background: "rgba(0,0,0,0.35)" }}>
+                  <div className="w-12 h-12 rounded-full flex items-center justify-center"
+                    style={{ background: "linear-gradient(135deg,#F59E0B,#D97706)" }}>
+                    <Sparkles className="w-6 h-6 text-white" />
+                  </div>
+                  <p className="text-base font-bold text-center text-white drop-shadow leading-snug">
+                    Es posible que alguien<br />quiera conocerte pronto
+                  </p>
+                  <p className="text-xs text-amber-200/80 text-center">
+                    Activa Premium para saberlo en cuanto ocurra
+                  </p>
+                  <Button
+                    size="sm"
+                    className="font-bold mt-1"
+                    style={{ background: "linear-gradient(90deg,#D97706,#F59E0B)", color: "#000" }}
+                    onClick={() => { setShowPricing(true); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                    data-testid="button-unlock-teaser"
+                  >
+                    <Crown className="w-3.5 h-3.5 mr-1.5" /> Ver planes Premium
+                  </Button>
+                </div>
+              </div>
+            )}
+            {likedByData.count > 0 && (isPremium ? (
               <div className="grid grid-cols-3 gap-3">
                 {likedByData.users?.map((user: any) => (
                   <Card key={user.id} className="overflow-hidden">
@@ -403,7 +448,7 @@ export default function PremiumPage() {
                   </Button>
                 </div>
               </div>
-            )}
+            ))}
           </section>
         )}
 
