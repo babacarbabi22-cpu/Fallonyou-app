@@ -349,10 +349,20 @@ export default function PremiumPage() {
                 style={{ border: "1px solid rgba(245,158,11,0.25)" }}
                 data-testid="card-liked-by-locked"
               >
-                {/* Blurred grid — dark tones matching app palette */}
-                <div className="grid grid-cols-3 gap-0.5 p-0.5 blur-sm opacity-40 pointer-events-none select-none">
+                {/* Blurred grid — warm beige with person silhouettes */}
+                <div className="grid grid-cols-3 gap-0.5 p-0.5 blur-[3px] opacity-80 pointer-events-none select-none">
                   {[1, 2, 3, 4, 5, 6].map((i) => (
-                    <div key={i} className="aspect-square bg-gradient-to-br from-zinc-800 to-zinc-900" />
+                    <div
+                      key={i}
+                      className="aspect-square flex flex-col items-center justify-end overflow-hidden relative"
+                      style={{ background: `linear-gradient(175deg, #f5e6c8 0%, #e8d0a0 60%, #d4b87a 100%)` }}
+                    >
+                      {/* Person silhouette */}
+                      <svg viewBox="0 0 80 90" className="w-full absolute bottom-0" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <ellipse cx="40" cy="24" rx="16" ry="18" fill={i % 2 === 0 ? "#c4996a" : "#b8875a"} />
+                        <ellipse cx="40" cy="95" rx="34" ry="38" fill={i % 2 === 0 ? "#c4996a" : "#b8875a"} />
+                      </svg>
+                    </div>
                   ))}
                 </div>
                 {/* Lock overlay */}
@@ -405,9 +415,18 @@ export default function PremiumPage() {
                 style={{ border: "1px solid rgba(245,158,11,0.25)" }}
                 data-testid="card-viewers-locked"
               >
-                <div className="grid grid-cols-3 gap-0.5 p-0.5 blur-sm opacity-60 pointer-events-none select-none">
+                <div className="grid grid-cols-3 gap-0.5 p-0.5 blur-[3px] opacity-80 pointer-events-none select-none">
                   {[1, 2, 3].map((i) => (
-                    <div key={i} className="aspect-square bg-gradient-to-br from-amber-100 to-amber-50 dark:from-amber-900/40 dark:to-amber-800/20" />
+                    <div
+                      key={i}
+                      className="aspect-square flex flex-col items-center justify-end overflow-hidden relative"
+                      style={{ background: `linear-gradient(175deg, #f5e6c8 0%, #e8d0a0 60%, #d4b87a 100%)` }}
+                    >
+                      <svg viewBox="0 0 80 90" className="w-full absolute bottom-0" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <ellipse cx="40" cy="24" rx="16" ry="18" fill={i % 2 === 0 ? "#c4996a" : "#b8875a"} />
+                        <ellipse cx="40" cy="95" rx="34" ry="38" fill={i % 2 === 0 ? "#c4996a" : "#b8875a"} />
+                      </svg>
+                    </div>
                   ))}
                 </div>
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 px-4">
