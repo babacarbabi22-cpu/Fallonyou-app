@@ -349,18 +349,26 @@ export default function PremiumPage() {
                 style={{ border: "1px solid rgba(245,158,11,0.25)" }}
                 data-testid="card-liked-by-locked"
               >
-                {/* Blurred grid — warm beige with person silhouettes */}
-                <div className="grid grid-cols-3 gap-0.5 p-0.5 blur-[3px] opacity-80 pointer-events-none select-none">
+                {/* Blurred grid — warm beige with realistic person silhouettes */}
+                <div className="grid grid-cols-3 gap-0.5 p-0.5 blur-[2px] opacity-90 pointer-events-none select-none">
                   {[1, 2, 3, 4, 5, 6].map((i) => (
                     <div
                       key={i}
-                      className="aspect-square flex flex-col items-center justify-end overflow-hidden relative"
-                      style={{ background: `linear-gradient(175deg, #f5e6c8 0%, #e8d0a0 60%, #d4b87a 100%)` }}
+                      className="aspect-square overflow-hidden relative"
+                      style={{ background: `linear-gradient(180deg, #ede0c8 0%, #dcc9a0 100%)` }}
                     >
-                      {/* Person silhouette */}
-                      <svg viewBox="0 0 80 90" className="w-full absolute bottom-0" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <ellipse cx="40" cy="24" rx="16" ry="18" fill={i % 2 === 0 ? "#c4996a" : "#b8875a"} />
-                        <ellipse cx="40" cy="95" rx="34" ry="38" fill={i % 2 === 0 ? "#c4996a" : "#b8875a"} />
+                      <svg viewBox="0 0 100 100" className="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        {/* Subtle background gradient */}
+                        <rect width="100" height="100" fill={i % 3 === 0 ? "#dcc9a0" : i % 3 === 1 ? "#d4be94" : "#cab48a"} />
+                        {/* Head */}
+                        <circle cx="50" cy="35" r="18" fill={i % 2 === 0 ? "#b8895a" : "#a87848"} />
+                        {/* Neck */}
+                        <rect x="43" y="50" width="14" height="10" rx="4" fill={i % 2 === 0 ? "#b8895a" : "#a87848"} />
+                        {/* Shoulders / body — realistic curved shape */}
+                        <path
+                          d="M5 110 C5 75 20 65 35 62 Q50 58 65 62 C80 65 95 75 95 110 Z"
+                          fill={i % 2 === 0 ? "#b8895a" : "#a87848"}
+                        />
                       </svg>
                     </div>
                   ))}
@@ -415,16 +423,20 @@ export default function PremiumPage() {
                 style={{ border: "1px solid rgba(245,158,11,0.25)" }}
                 data-testid="card-viewers-locked"
               >
-                <div className="grid grid-cols-3 gap-0.5 p-0.5 blur-[3px] opacity-80 pointer-events-none select-none">
+                <div className="grid grid-cols-3 gap-0.5 p-0.5 blur-[2px] opacity-90 pointer-events-none select-none">
                   {[1, 2, 3].map((i) => (
                     <div
                       key={i}
-                      className="aspect-square flex flex-col items-center justify-end overflow-hidden relative"
-                      style={{ background: `linear-gradient(175deg, #f5e6c8 0%, #e8d0a0 60%, #d4b87a 100%)` }}
+                      className="aspect-square overflow-hidden relative"
                     >
-                      <svg viewBox="0 0 80 90" className="w-full absolute bottom-0" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <ellipse cx="40" cy="24" rx="16" ry="18" fill={i % 2 === 0 ? "#c4996a" : "#b8875a"} />
-                        <ellipse cx="40" cy="95" rx="34" ry="38" fill={i % 2 === 0 ? "#c4996a" : "#b8875a"} />
+                      <svg viewBox="0 0 100 100" className="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="100" height="100" fill={i % 3 === 0 ? "#dcc9a0" : i % 3 === 1 ? "#d4be94" : "#cab48a"} />
+                        <circle cx="50" cy="35" r="18" fill={i % 2 === 0 ? "#b8895a" : "#a87848"} />
+                        <rect x="43" y="50" width="14" height="10" rx="4" fill={i % 2 === 0 ? "#b8895a" : "#a87848"} />
+                        <path
+                          d="M5 110 C5 75 20 65 35 62 Q50 58 65 62 C80 65 95 75 95 110 Z"
+                          fill={i % 2 === 0 ? "#b8895a" : "#a87848"}
+                        />
                       </svg>
                     </div>
                   ))}
