@@ -524,6 +524,9 @@ export default function SwipePage() {
               <div className="flex-1 min-w-0">
                 <p className="text-[10px] font-bold tracking-widest uppercase text-amber-500 mb-0.5">⚡ Reto semanal</p>
                 <p className="text-sm font-semibold text-foreground leading-snug line-clamp-2">{challenge.text}</p>
+                {challenge.tip && (
+                  <p className="text-[10px] text-amber-400/70 mt-1 leading-snug line-clamp-1">💡 {challenge.tip}</p>
+                )}
               </div>
             </div>
           </div>

@@ -206,6 +206,20 @@ export async function registerRoutes(
     res.json({ cities: Array.from(cities) });
   });
 
+  // Top destinations — cities with most users for the explore/tips page
+  app.get('/api/explore/destinations', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const rows = await db.execute(sql`
+      SELECT current_city AS city, COUNT(*) AS user_count
+      FROM profiles
+      WHERE current_city IS NOT NULL AND current_city != ''
+      GROUP BY current_city
+      ORDER BY user_count DESC
+      LIMIT 10
+    `);
+    res.json({ destinations: (rows.rows as any[]).map(r => ({ city: r.city, count: Number(r.user_count) })) });
+  });
+
   // Photos - supports both file upload and URL registration
   app.post(api.photos.upload.path, upload.single('file'), async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);

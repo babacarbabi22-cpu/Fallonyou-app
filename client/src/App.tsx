@@ -21,6 +21,7 @@ import DeleteAccountPage from "@/pages/DeleteAccountPage";
 import ResetPasswordPage from "@/pages/ResetPasswordPage";
 import EventsPage from "@/pages/EventsPage";
 import EventDetailPage from "@/pages/EventDetailPage";
+import TipsPage from "@/pages/TipsPage";
 import AmbassadorsPage from "@/pages/AmbassadorsPage";
 import AmbassadorPage from "@/pages/AmbassadorPage";
 import HowItWorksPage from "@/pages/HowItWorksPage";
@@ -192,6 +193,9 @@ function Router() {
       </Route>
       <Route path="/admin">
         {() => <ProtectedRoute component={AdminPage} />}
+      </Route>
+      <Route path="/tips">
+        {() => <ProtectedRoute component={TipsPage} />}
       </Route>
       <Route path="/events">
         {() => <ProtectedRoute component={EventsPage} />}
