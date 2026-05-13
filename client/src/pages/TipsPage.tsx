@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { BottomNav } from "@/components/BottomNav";
 import { Link } from "wouter";
-import { ArrowLeft, Lightbulb, MapPin, Shield, Globe, Zap, ChevronDown, ChevronUp, Users } from "lucide-react";
+import { ArrowLeft, Lightbulb, MapPin, Shield, Globe, Zap, ChevronDown, ChevronUp, Users, ExternalLink, Backpack } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 // ── A: Daily travel tips (deterministic by day of year) ──────────────────────
@@ -179,6 +179,73 @@ function getWeeklyChallenge() {
   const weekNum = Math.floor(Date.now() / (7 * 24 * 60 * 60 * 1000));
   return WEEKLY_CHALLENGES[weekNum % WEEKLY_CHALLENGES.length];
 }
+
+// ── F: Travel resources ──────────────────────────────────────────────────────
+const TRAVEL_RESOURCES = [
+  {
+    emoji: "🏠",
+    name: "Airbnb",
+    desc: "Alojamiento único con ambiente local en todo el mundo",
+    url: "https://www.airbnb.com",
+    color: "#FF5A5F",
+  },
+  {
+    emoji: "🏨",
+    name: "Booking.com",
+    desc: "Hoteles, apartamentos y hostels con cancelación gratuita",
+    url: "https://www.booking.com",
+    color: "#003580",
+  },
+  {
+    emoji: "✈️",
+    name: "Skyscanner",
+    desc: "Compara vuelos baratos de todas las aerolíneas",
+    url: "https://www.skyscanner.com",
+    color: "#0770E3",
+  },
+  {
+    emoji: "🚆",
+    name: "Omio",
+    desc: "Trenes, autobuses y ferrys en Europa desde un solo lugar",
+    url: "https://www.omio.com",
+    color: "#00C8A0",
+  },
+  {
+    emoji: "🎒",
+    name: "Hostelworld",
+    desc: "Hostels en todo el mundo — perfecto para conocer viajeros",
+    url: "https://www.hostelworld.com",
+    color: "#F26522",
+  },
+  {
+    emoji: "⭐",
+    name: "TripAdvisor",
+    desc: "Restaurantes, actividades y atracciones con reseñas reales",
+    url: "https://www.tripadvisor.com",
+    color: "#00AA6C",
+  },
+  {
+    emoji: "💱",
+    name: "XE Currency",
+    desc: "Tipo de cambio en tiempo real para cualquier divisa",
+    url: "https://www.xe.com",
+    color: "#1A56DB",
+  },
+  {
+    emoji: "🌐",
+    name: "Google Translate",
+    desc: "Traducciones instantáneas incluso con la cámara del móvil",
+    url: "https://translate.google.com",
+    color: "#4285F4",
+  },
+  {
+    emoji: "🗺️",
+    name: "Maps.me",
+    desc: "Mapas offline detallados que funcionan sin internet",
+    url: "https://maps.me",
+    color: "#FF6600",
+  },
+];
 
 // ── Main component ────────────────────────────────────────────────────────────
 export default function TipsPage() {
@@ -384,6 +451,43 @@ export default function TipsPage() {
                   )}
                 </AnimatePresence>
               </div>
+            ))}
+          </div>
+        </section>
+
+        {/* ── F: Recursos y herramientas de viaje ───────────────────── */}
+        <section data-testid="section-travel-resources">
+          <div className="flex items-center gap-2 mb-3">
+            <Backpack className="w-4 h-4 text-amber-500" />
+            <h2 className="text-sm font-bold uppercase tracking-widest text-amber-500">Herramientas de viaje</h2>
+          </div>
+          <p className="text-xs text-muted-foreground mb-4">Apps y webs útiles para organizar tu próxima aventura</p>
+          <div className="space-y-2">
+            {TRAVEL_RESOURCES.map((r, i) => (
+              <motion.a
+                key={r.name}
+                href={r.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.04 }}
+                className="flex items-center gap-3 rounded-xl p-3.5 active:scale-98 transition-transform"
+                style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}
+                data-testid={`resource-${r.name.toLowerCase().replace(/\s/g, "-")}`}
+              >
+                <div
+                  className="w-11 h-11 rounded-xl flex items-center justify-center text-xl shrink-0 font-bold"
+                  style={{ background: r.color + "22", border: `1px solid ${r.color}44` }}
+                >
+                  {r.emoji}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold">{r.name}</p>
+                  <p className="text-xs text-muted-foreground leading-snug">{r.desc}</p>
+                </div>
+                <ExternalLink className="w-4 h-4 text-muted-foreground shrink-0" />
+              </motion.a>
             ))}
           </div>
         </section>
