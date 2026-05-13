@@ -206,6 +206,33 @@ export async function registerRoutes(
     res.json({ cities: Array.from(cities) });
   });
 
+  // Users in a specific city — for destination upsell modal
+  app.get('/api/explore/destination-users', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const userId = req.user!.id;
+    const city = String(req.query.city || '').trim();
+    if (!city) return res.status(400).json({ error: 'city required' });
+    const isPremium = (await storage.canUserLike(userId)).isPremium;
+    // Get up to 6 users in that city with photos, excluding current user
+    const profilesInCity = await db
+      .select({ userId: profiles.userId })
+      .from(profiles)
+      .where(and(eq(profiles.currentCity, city), ne(profiles.userId, userId)))
+      .limit(6);
+    if (profilesInCity.length === 0) return res.json({ users: [], isPremium, total: 0 });
+    const ids = profilesInCity.map(p => p.userId);
+    const cityPhotos = await db.select().from(photos).where(inArray(photos.userId, ids));
+    const photosMap = new Map<string, string>();
+    for (const p of cityPhotos) {
+      if (!photosMap.has(p.userId)) photosMap.set(p.userId, p.url);
+    }
+    const users = ids
+      .filter(id => photosMap.has(id))
+      .slice(0, 4)
+      .map(id => ({ photoUrl: photosMap.get(id)! }));
+    res.json({ users, isPremium, total: profilesInCity.length });
+  });
+
   // Top destinations — cities with most users for the explore/tips page
   app.get('/api/explore/destinations', async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);

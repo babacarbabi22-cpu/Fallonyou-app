@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { BottomNav } from "@/components/BottomNav";
-import { Link } from "wouter";
-import { ArrowLeft, Lightbulb, MapPin, Shield, Globe, Zap, ChevronDown, ChevronUp, Users, ExternalLink, Backpack } from "lucide-react";
+import { Link, useLocation } from "wouter";
+import { ArrowLeft, Lightbulb, MapPin, Shield, Globe, Zap, ChevronDown, ChevronUp, Users, ExternalLink, Backpack, Crown, Lock, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 // ── A: Daily travel tips (deterministic by day of year) ──────────────────────
@@ -251,6 +251,8 @@ const TRAVEL_RESOURCES = [
 export default function TipsPage() {
   const [openSafety, setOpenSafety] = useState<number | null>(null);
   const [selectedLang, setSelectedLang] = useState<string>("en");
+  const [selectedCity, setSelectedCity] = useState<string | null>(null);
+  const [, navigate] = useLocation();
 
   const dailyTip = getDailyTip();
   const challenge = getWeeklyChallenge();
@@ -258,6 +260,17 @@ export default function TipsPage() {
   const { data: destinationsData } = useQuery<{ destinations: { city: string; count: number }[] }>({
     queryKey: ["/api/explore/destinations"],
     staleTime: 5 * 60 * 1000,
+  });
+
+  const { data: cityUsersData, isLoading: cityLoading } = useQuery<{
+    users: { photoUrl: string }[];
+    isPremium: boolean;
+    total: number;
+  }>({
+    queryKey: ["/api/explore/destination-users", selectedCity],
+    queryFn: () => fetch(`/api/explore/destination-users?city=${encodeURIComponent(selectedCity!)}`, { credentials: "include" }).then(r => r.json()),
+    enabled: !!selectedCity,
+    staleTime: 2 * 60 * 1000,
   });
 
   const destinations = destinationsData?.destinations ?? [];
@@ -338,23 +351,25 @@ export default function TipsPage() {
           ) : (
             <div className="grid grid-cols-2 gap-2">
               {destinations.slice(0, 8).map((d, i) => (
-                <motion.div
+                <motion.button
                   key={d.city}
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: i * 0.04 }}
-                  className="rounded-xl p-3 flex items-center gap-2.5"
+                  onClick={() => setSelectedCity(d.city)}
+                  className="rounded-xl p-3 text-left w-full active:scale-95 transition-transform"
                   style={{ background: "rgba(245,158,11,0.07)", border: "1px solid rgba(245,158,11,0.2)" }}
                   data-testid={`card-destination-${i}`}
                 >
-                  <MapPin className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-                  <div className="min-w-0">
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <MapPin className="w-3.5 h-3.5 text-amber-500 shrink-0" />
                     <p className="text-sm font-semibold truncate">{d.city}</p>
-                    <p className="text-xs text-muted-foreground flex items-center gap-1">
-                      <Users className="w-3 h-3" />{d.count} {d.count === 1 ? "viajero" : "viajeros"}
-                    </p>
                   </div>
-                </motion.div>
+                  <p className="text-xs text-muted-foreground flex items-center gap-1">
+                    <Users className="w-3 h-3" />{d.count} {d.count === 1 ? "viajero" : "viajeros"}
+                  </p>
+                  <p className="text-[10px] text-amber-500 mt-1.5 font-semibold">Ver quién va aquí →</p>
+                </motion.button>
               ))}
             </div>
           )}
@@ -493,6 +508,121 @@ export default function TipsPage() {
         </section>
 
       </div>
+
+      {/* ── Modal: viajeros en destino ───────────────────────────────── */}
+      <AnimatePresence>
+        {selectedCity && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-end justify-center p-4"
+            style={{ background: "rgba(0,0,0,0.7)" }}
+            onClick={() => setSelectedCity(null)}
+          >
+            <motion.div
+              initial={{ y: 80, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 80, opacity: 0 }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              onClick={e => e.stopPropagation()}
+              className="w-full max-w-md rounded-3xl overflow-hidden"
+              style={{ background: "#111", border: "1px solid rgba(245,158,11,0.25)" }}
+              data-testid="modal-destination-users"
+            >
+              {/* Modal header */}
+              <div className="flex items-center justify-between px-5 pt-5 pb-3">
+                <div>
+                  <h3 className="text-base font-bold flex items-center gap-2">
+                    <MapPin className="w-4 h-4 text-amber-500" /> {selectedCity}
+                  </h3>
+                  {cityUsersData && (
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {cityUsersData.total} {cityUsersData.total === 1 ? "viajero" : "viajeros"} en esta ciudad
+                    </p>
+                  )}
+                </div>
+                <button
+                  onClick={() => setSelectedCity(null)}
+                  className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/10 transition-colors"
+                  data-testid="button-close-destination-modal"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Photos grid */}
+              <div className="px-5 pb-2">
+                {cityLoading ? (
+                  <div className="grid grid-cols-4 gap-1.5">
+                    {Array.from({ length: 4 }).map((_, i) => (
+                      <div key={i} className="aspect-square rounded-xl bg-white/10 animate-pulse" />
+                    ))}
+                  </div>
+                ) : cityUsersData && cityUsersData.users.length > 0 ? (
+                  <div className="grid grid-cols-4 gap-1.5 relative">
+                    {cityUsersData.users.map((u, i) => (
+                      <div key={i} className="aspect-square rounded-xl overflow-hidden relative">
+                        <img
+                          src={u.photoUrl}
+                          alt=""
+                          className="w-full h-full object-cover"
+                          style={
+                            !cityUsersData.isPremium
+                              ? { filter: "blur(12px)", transform: "scale(1.15)" }
+                              : {}
+                          }
+                        />
+                      </div>
+                    ))}
+                    {!cityUsersData.isPremium && (
+                      <div className="absolute inset-0 flex items-center justify-center rounded-xl">
+                        <div className="w-10 h-10 rounded-full flex items-center justify-center"
+                          style={{ background: "linear-gradient(135deg,#F59E0B,#D97706)" }}>
+                          <Lock className="w-5 h-5 text-white" />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    Aún no hay usuarios con foto en esta ciudad
+                  </p>
+                )}
+              </div>
+
+              {/* CTA */}
+              <div className="px-5 pb-5 pt-3">
+                {cityUsersData?.isPremium ? (
+                  <p className="text-xs text-center text-muted-foreground">
+                    Conécta con ellos en la sección de descubrimiento
+                  </p>
+                ) : (
+                  <>
+                    <p className="text-sm font-semibold text-center mb-1">
+                      {cityUsersData && cityUsersData.total > 0
+                        ? `Hay ${cityUsersData.total} ${cityUsersData.total === 1 ? "persona" : "personas"} en ${selectedCity} que podrían querer conocerte`
+                        : `Descubre quién viaja a ${selectedCity}`}
+                    </p>
+                    <p className="text-xs text-muted-foreground text-center mb-4">
+                      Activa Premium para ver sus perfiles
+                    </p>
+                    <button
+                      onClick={() => { setSelectedCity(null); navigate("/premium"); }}
+                      className="w-full py-3 rounded-2xl font-bold text-sm text-black"
+                      style={{ background: "linear-gradient(90deg,#D97706,#F59E0B)" }}
+                      data-testid="button-destination-upgrade"
+                    >
+                      <Crown className="w-4 h-4 inline mr-2" />
+                      Ver perfiles — Activar Premium
+                    </button>
+                  </>
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <BottomNav />
     </div>
