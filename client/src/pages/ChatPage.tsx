@@ -224,11 +224,41 @@ export default function ChatPage() {
             <p className="text-muted-foreground">Cargando mensajes...</p>
           </div>
         ) : messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-center">
-            <p className="text-muted-foreground mb-2">Aún no hay mensajes</p>
-            <p className="text-sm text-muted-foreground">
-              ¡Di hola a {otherUser?.firstName || "tu match"}!
-            </p>
+          <div className="flex flex-col items-center justify-center h-full px-2 py-6 gap-5">
+            {/* Avatar + greeting */}
+            <div className="flex flex-col items-center gap-2 text-center">
+              <div className="text-3xl">👋</div>
+              <p className="text-base font-semibold">
+                ¡Empieza la conversación con {otherUser?.firstName || "tu conexión"}!
+              </p>
+              <p className="text-xs text-muted-foreground max-w-xs">
+                Toca uno de estos mensajes para enviarlo directamente, o escribe el tuyo propio abajo.
+              </p>
+            </div>
+            {/* Starter chips */}
+            <div className="flex flex-col gap-2 w-full max-w-sm">
+              {[
+                { emoji: "👋", text: `¡Hola ${otherUser?.firstName || ""}! Vi tu perfil y me pareció genial, ¿cómo estás?` },
+                { emoji: "🎉", text: "¿Viste mi evento? Me gustaría que vinieras, creo que lo pasaríamos bien." },
+                { emoji: "✈️", text: "¡Hola! Vi que también tienes ganas de viajar. ¿A dónde tienes pensado ir?" },
+                { emoji: "🗺️", text: "Tengo ganas de explorar la ciudad y no tengo con quien. ¿Te apuntarías a algo?" },
+                { emoji: "🎯", text: "Quiero organizar una actividad y pensé en contactarte. ¿Estarías disponible?" },
+                { emoji: "☕", text: "¡Hola! ¿Te apetecería quedar un día para conocernos en persona?" },
+                { emoji: "🌍", text: "Hola, ¿cuál es tu próxima aventura? Estoy buscando personas con quien viajar." },
+                { emoji: "🏔️", text: "Vi que te gustan las actividades al aire libre. ¿Tienes alguna en mente próximamente?" },
+              ].map((starter, i) => (
+                <button
+                  key={i}
+                  onClick={() => setMessage(starter.text.replace(`${otherUser?.firstName || ""} `, otherUser?.firstName ? `${otherUser.firstName} ` : ""))}
+                  className="flex items-start gap-2.5 rounded-2xl px-4 py-3 text-left w-full transition-all active:scale-98"
+                  style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" }}
+                  data-testid={`starter-${i}`}
+                >
+                  <span className="text-base shrink-0 mt-0.5">{starter.emoji}</span>
+                  <p className="text-sm text-foreground/90 leading-snug">{starter.text.replace(`${otherUser?.firstName || ""} `, otherUser?.firstName ? `${otherUser.firstName} ` : "")}</p>
+                </button>
+              ))}
+            </div>
           </div>
         ) : (
           messages.map((msg) => {
