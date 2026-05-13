@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { BottomNav } from "@/components/BottomNav";
 import { Link, useLocation } from "wouter";
-import { ArrowLeft, Lightbulb, MapPin, Shield, Globe, Zap, ChevronDown, ChevronUp, Users, ExternalLink, Backpack, Crown, Lock, X } from "lucide-react";
+import { ArrowLeft, Lightbulb, MapPin, Shield, Globe, Zap, ChevronDown, ChevronUp, Users, ExternalLink, Backpack, Crown, Lock, X, Phone, Plane, AlertTriangle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 // ── A: Daily travel tips (deterministic by day of year) ──────────────────────
@@ -247,6 +247,79 @@ const TRAVEL_RESOURCES = [
   },
 ];
 
+// ── G: Emergency numbers ─────────────────────────────────────────────────────
+const UNIVERSAL_NUMBERS = [
+  { flag: "🌍", label: "Europa (112)", number: "112", desc: "Emergencias en toda la UE — policía, ambulancia, bomberos" },
+  { flag: "🇺🇸", label: "EE.UU. / Canadá", number: "911", desc: "Emergencias en Estados Unidos y Canadá" },
+  { flag: "🆘", label: "Información consular", number: "Embajada", desc: "Busca el número de tu embajada antes de viajar" },
+];
+
+const COUNTRY_NUMBERS = [
+  { flag: "🇬🇧", country: "Reino Unido", emergency: "999", police: "101", ambulance: "999" },
+  { flag: "🇫🇷", country: "Francia", emergency: "112", police: "17", ambulance: "15" },
+  { flag: "🇩🇪", country: "Alemania", emergency: "112", police: "110", ambulance: "112" },
+  { flag: "🇮🇹", country: "Italia", emergency: "112", police: "113", ambulance: "118" },
+  { flag: "🇵🇹", country: "Portugal", emergency: "112", police: "112", ambulance: "112" },
+  { flag: "🇳🇱", country: "Países Bajos", emergency: "112", police: "0900-8844", ambulance: "112" },
+  { flag: "🇧🇪", country: "Bélgica", emergency: "112", police: "101", ambulance: "100" },
+  { flag: "🇨🇭", country: "Suiza", emergency: "117", police: "117", ambulance: "144" },
+  { flag: "🇲🇽", country: "México", emergency: "911", police: "911", ambulance: "911" },
+  { flag: "🇦🇷", country: "Argentina", emergency: "911", police: "101", ambulance: "107" },
+  { flag: "🇧🇷", country: "Brasil", emergency: "190", police: "190", ambulance: "192" },
+  { flag: "🇲🇦", country: "Marruecos", emergency: "15", police: "19", ambulance: "15" },
+  { flag: "🇹🇷", country: "Turquía", emergency: "112", police: "155", ambulance: "112" },
+  { flag: "🇬🇷", country: "Grecia", emergency: "112", police: "100", ambulance: "166" },
+  { flag: "🇹🇭", country: "Tailandia", emergency: "191", police: "191", ambulance: "1669" },
+  { flag: "🇯🇵", country: "Japón", emergency: "110/119", police: "110", ambulance: "119" },
+  { flag: "🇦🇺", country: "Australia", emergency: "000", police: "000", ambulance: "000" },
+  { flag: "🇿🇦", country: "Sudáfrica", emergency: "10111", police: "10111", ambulance: "10177" },
+  { flag: "🇮🇳", country: "India", emergency: "112", police: "100", ambulance: "108" },
+  { flag: "🇦🇪", country: "Emiratos Árabes", emergency: "999", police: "999", ambulance: "998" },
+];
+
+// ── H: Airport tips ──────────────────────────────────────────────────────────
+const AIRPORT_FREE = [
+  { emoji: "⏰", tip: "Llega 2h antes para vuelos nacionales y 3h para internacionales" },
+  { emoji: "📱", tip: "Descarga la app de tu aerolínea para tener la tarjeta de embarque offline" },
+  { emoji: "💧", tip: "Lleva una botella vacía — puedes llenarla gratis después del control de seguridad" },
+];
+
+const AIRPORT_PREMIUM = [
+  { emoji: "🛋️", tip: "Muchas tarjetas de crédito premium dan acceso gratuito a salas VIP. Consulta la tuya antes de viajar." },
+  { emoji: "🔌", tip: "Los enchufes están en las columnas centrales y junto a las puertas de embarque, no solo en las cafeterías." },
+  { emoji: "🧳", tip: "Factura las maletas grandes online siempre. En el aeropuerto suele costar más." },
+  { emoji: "🚿", tip: "En vuelos largos, muchos aeropuertos ofrecen duchas de pago en la terminal (suele costar 10-20€). Ideal entre escalas largas." },
+  { emoji: "💊", tip: "Las farmacias en terminales venden adaptadores, cargadores y artículos básicos si olvidaste algo." },
+  { emoji: "🎫", tip: "Si tu vuelo se cancela o retrasa más de 3h en la UE, tienes derecho a compensación de hasta 600€ (Reglamento CE 261/2004)." },
+  { emoji: "🍽️", tip: "Pide comida especial (vegana, sin gluten, kosher) al reservar. Suele llegar antes y a veces es mejor que la estándar." },
+  { emoji: "💺", tip: "Los asientos junto a la salida de emergencia tienen más espacio para las piernas pero no reclinan. Elige según tus prioridades." },
+  { emoji: "🔋", tip: "Carga todos los dispositivos antes de pasar el control — te pueden pedir que los enciendas para verificar que funcionan." },
+];
+
+// ── I: Anti-theft & lost guide ───────────────────────────────────────────────
+const ANTITHEFT_FREE = [
+  { emoji: "👜", tip: "Lleva la mochila por delante en zonas concurridas y transportes públicos" },
+  { emoji: "💳", tip: "Nunca lleves todas tus tarjetas juntas — guarda una de repuesto separada" },
+  { emoji: "📵", tip: "No uses el móvil en la calle en zonas turísticas conocidas por carteristas" },
+];
+
+const ANTITHEFT_PREMIUM = [
+  { emoji: "🌍", tip: "Zonas de especial cuidado en Europa: La Rambla (Barcelona), Termini (Roma), Châtelet (París), Praterstern (Viena)." },
+  { emoji: "💰", tip: "Lleva el dinero en efectivo repartido en dos sitios. Así si te roban uno, tienes el otro." },
+  { emoji: "🔐", tip: "Usa una riñonera interior (debajo de la ropa) para el pasaporte y tarjetas en zonas de alto riesgo." },
+  { emoji: "📷", tip: "Los carteristas suelen trabajar en parejas: uno distrae, otro roba. Si alguien te enfoca mucho, alerta." },
+  { emoji: "🚇", tip: "En el metro, los robos ocurren principalmente al entrar y salir del vagón — ese es el momento de mayor vigilancia." },
+  { emoji: "🏨", tip: "Guarda pasaporte y objetos de valor en la caja fuerte del hotel, nunca en la maleta aunque esté con candado." },
+];
+
+const STOLEN_GUIDE = [
+  { emoji: "📄", step: "1. Pasaporte robado", action: "Ve directamente a la embajada o consulado de tu país. Necesitarán una copia de tu DNI o pasaporte (por eso guárdala en la nube) y una denuncia policial." },
+  { emoji: "💳", step: "2. Tarjeta robada", action: "Llama inmediatamente al número de emergencias de tu banco (suele estar en el reverso). Bloquéala por teléfono o app. Pide una tarjeta de emergencia — muchos bancos la envían en 24-48h." },
+  { emoji: "📱", step: "3. Móvil robado", action: "Desde otro dispositivo: activa 'Buscar mi iPhone' o 'Encontrar mi dispositivo' de Google para bloquearlo remotamente. Luego denuncia a la policía local." },
+  { emoji: "🧳", step: "4. Maleta perdida en el aeropuerto", action: "Antes de salir del aeropuerto ve al mostrador de la aerolínea. Abre un parte de irregularidad de equipaje (PIR). Tienes derecho a compensación por retraso y a una cantidad diaria para artículos básicos." },
+  { emoji: "🏥", step: "5. Necesitas atención médica", action: "En la UE usa la Tarjeta Sanitaria Europea (TSE) para atención gratuita. Fuera de la UE, contacta a tu seguro de viaje inmediatamente antes de recibir tratamiento si es posible." },
+];
+
 // ── Main component ────────────────────────────────────────────────────────────
 export default function TipsPage() {
   const [openSafety, setOpenSafety] = useState<number | null>(null);
@@ -477,6 +550,159 @@ export default function TipsPage() {
               </div>
             ))}
           </div>
+        </section>
+
+        {/* ── G: Números de emergencia ──────────────────────────────── */}
+        <section data-testid="section-emergency-numbers">
+          <div className="flex items-center gap-2 mb-3">
+            <Phone className="w-4 h-4 text-amber-500" />
+            <h2 className="text-sm font-bold uppercase tracking-widest text-amber-500">Números de emergencia</h2>
+          </div>
+          {/* Free: universal numbers */}
+          <div className="space-y-2 mb-3">
+            {UNIVERSAL_NUMBERS.map((n, i) => (
+              <div key={i} className="rounded-xl p-3.5 flex items-center gap-3"
+                style={{ background: "rgba(239,68,68,0.07)", border: "1px solid rgba(239,68,68,0.2)" }}
+                data-testid={`emergency-universal-${i}`}>
+                <span className="text-xl shrink-0">{n.flag}</span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold">{n.label}</p>
+                  <p className="text-xs text-muted-foreground">{n.desc}</p>
+                </div>
+                <span className="text-lg font-bold text-red-400 shrink-0">{n.number}</span>
+              </div>
+            ))}
+          </div>
+          {/* Premium: country-specific */}
+          {isPremium ? (
+            <div className="space-y-2">
+              <p className="text-xs text-muted-foreground mb-2">Números específicos por país:</p>
+              {COUNTRY_NUMBERS.map((c, i) => (
+                <div key={i} className="rounded-xl px-3.5 py-2.5 flex items-center gap-3"
+                  style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}
+                  data-testid={`emergency-country-${i}`}>
+                  <span className="text-lg shrink-0">{c.flag}</span>
+                  <p className="flex-1 text-sm font-semibold">{c.country}</p>
+                  <div className="text-right text-xs text-muted-foreground space-y-0.5 shrink-0">
+                    <p>🚨 <span className="font-bold text-red-400">{c.emergency}</span></p>
+                    <p>👮 {c.police} · 🚑 {c.ambulance}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <button onClick={() => navigate("/premium")}
+              className="w-full rounded-xl p-3.5 flex items-center gap-3 text-left"
+              style={{ background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.25)" }}
+              data-testid="button-emergency-premium-lock">
+              <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center shrink-0">
+                <Lock className="w-5 h-5 text-amber-500" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold">Números por país — 20+ destinos</p>
+                <p className="text-xs text-muted-foreground">Reino Unido, Francia, Japón, Australia y más</p>
+              </div>
+              <Crown className="w-4 h-4 text-amber-500 shrink-0" />
+            </button>
+          )}
+        </section>
+
+        {/* ── H: Consejos en el aeropuerto ──────────────────────────── */}
+        <section data-testid="section-airport-tips">
+          <div className="flex items-center gap-2 mb-3">
+            <Plane className="w-4 h-4 text-amber-500" />
+            <h2 className="text-sm font-bold uppercase tracking-widest text-amber-500">En el aeropuerto</h2>
+          </div>
+          <div className="space-y-2 mb-3">
+            {AIRPORT_FREE.map((t, i) => (
+              <div key={i} className="rounded-xl p-3 flex items-start gap-3"
+                style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                <span className="text-xl shrink-0">{t.emoji}</span>
+                <p className="text-sm text-foreground leading-snug">{t.tip}</p>
+              </div>
+            ))}
+          </div>
+          {isPremium ? (
+            <div className="space-y-2">
+              <p className="text-xs text-muted-foreground mb-2">Consejos insider Premium:</p>
+              {AIRPORT_PREMIUM.map((t, i) => (
+                <div key={i} className="rounded-xl p-3 flex items-start gap-3"
+                  style={{ background: "rgba(245,158,11,0.06)", border: "1px solid rgba(245,158,11,0.18)" }}>
+                  <span className="text-xl shrink-0">{t.emoji}</span>
+                  <p className="text-sm text-foreground leading-snug">{t.tip}</p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <button onClick={() => navigate("/premium")}
+              className="w-full rounded-xl p-3.5 flex items-center gap-3 text-left"
+              style={{ background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.25)" }}
+              data-testid="button-airport-premium-lock">
+              <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center shrink-0">
+                <Lock className="w-5 h-5 text-amber-500" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold">9 consejos insider del aeropuerto</p>
+                <p className="text-xs text-muted-foreground">Salas VIP, derechos si te cancelan el vuelo, trucos de comfort</p>
+              </div>
+              <Crown className="w-4 h-4 text-amber-500 shrink-0" />
+            </button>
+          )}
+        </section>
+
+        {/* ── I: Anti-robo y qué hacer si te pasa algo ─────────────── */}
+        <section data-testid="section-antitheft">
+          <div className="flex items-center gap-2 mb-3">
+            <AlertTriangle className="w-4 h-4 text-amber-500" />
+            <h2 className="text-sm font-bold uppercase tracking-widest text-amber-500">Si te roban o te pierdes</h2>
+          </div>
+          {/* Free: 3 basic anti-theft */}
+          <div className="space-y-2 mb-3">
+            {ANTITHEFT_FREE.map((t, i) => (
+              <div key={i} className="rounded-xl p-3 flex items-start gap-3"
+                style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                <span className="text-xl shrink-0">{t.emoji}</span>
+                <p className="text-sm text-foreground leading-snug">{t.tip}</p>
+              </div>
+            ))}
+          </div>
+          {isPremium ? (
+            <div className="space-y-3">
+              <p className="text-xs text-muted-foreground">Guía anti-robo avanzada por zonas:</p>
+              {ANTITHEFT_PREMIUM.map((t, i) => (
+                <div key={i} className="rounded-xl p-3 flex items-start gap-3"
+                  style={{ background: "rgba(245,158,11,0.06)", border: "1px solid rgba(245,158,11,0.18)" }}>
+                  <span className="text-xl shrink-0">{t.emoji}</span>
+                  <p className="text-sm text-foreground leading-snug">{t.tip}</p>
+                </div>
+              ))}
+              <p className="text-xs text-muted-foreground mt-1">¿Qué hacer si te ocurre algo?</p>
+              {STOLEN_GUIDE.map((s, i) => (
+                <div key={i} className="rounded-xl p-4"
+                  style={{ background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.18)" }}
+                  data-testid={`stolen-step-${i}`}>
+                  <p className="text-sm font-bold flex items-center gap-2 mb-1.5">
+                    <span>{s.emoji}</span>{s.step}
+                  </p>
+                  <p className="text-xs text-muted-foreground leading-relaxed">{s.action}</p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <button onClick={() => navigate("/premium")}
+              className="w-full rounded-xl p-3.5 flex items-center gap-3 text-left"
+              style={{ background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.25)" }}
+              data-testid="button-antitheft-premium-lock">
+              <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center shrink-0">
+                <Lock className="w-5 h-5 text-amber-500" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold">Guía completa + qué hacer si te roban</p>
+                <p className="text-xs text-muted-foreground">Pasaporte, tarjeta, móvil, maleta perdida — paso a paso</p>
+              </div>
+              <Crown className="w-4 h-4 text-amber-500 shrink-0" />
+            </button>
+          )}
         </section>
 
         {/* ── F: Recursos y herramientas de viaje ───────────────────── */}
