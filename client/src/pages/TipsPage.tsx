@@ -257,6 +257,9 @@ export default function TipsPage() {
   const dailyTip = getDailyTip();
   const challenge = getWeeklyChallenge();
 
+  const { data: premiumStatus } = useQuery<{ isPremium: boolean }>({ queryKey: ["/api/premium/status"] });
+  const isPremium = premiumStatus?.isPremium ?? false;
+
   const { data: destinationsData } = useQuery<{ destinations: { city: string; count: number }[] }>({
     queryKey: ["/api/explore/destinations"],
     staleTime: 5 * 60 * 1000,
@@ -356,7 +359,7 @@ export default function TipsPage() {
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: i * 0.04 }}
-                  onClick={() => setSelectedCity(d.city)}
+                  onClick={() => isPremium ? setSelectedCity(d.city) : navigate("/premium")}
                   className="rounded-xl p-3 text-left w-full active:scale-95 transition-transform"
                   style={{ background: "rgba(245,158,11,0.07)", border: "1px solid rgba(245,158,11,0.2)" }}
                   data-testid={`card-destination-${i}`}
@@ -368,7 +371,13 @@ export default function TipsPage() {
                   <p className="text-xs text-muted-foreground flex items-center gap-1">
                     <Users className="w-3 h-3" />{d.count} {d.count === 1 ? "viajero" : "viajeros"}
                   </p>
-                  <p className="text-[10px] text-amber-500 mt-1.5 font-semibold">Ver quién va aquí →</p>
+                  {isPremium ? (
+                    <p className="text-[10px] text-amber-500 mt-1.5 font-semibold">Ver quién va aquí →</p>
+                  ) : (
+                    <p className="text-[10px] text-muted-foreground mt-1.5 font-semibold flex items-center gap-1">
+                      <Lock className="w-2.5 h-2.5" /> Solo Premium
+                    </p>
+                  )}
                 </motion.button>
               ))}
             </div>
@@ -560,29 +569,16 @@ export default function TipsPage() {
                     ))}
                   </div>
                 ) : cityUsersData && cityUsersData.users.length > 0 ? (
-                  <div className="grid grid-cols-4 gap-1.5 relative">
+                  <div className="grid grid-cols-4 gap-1.5">
                     {cityUsersData.users.map((u, i) => (
-                      <div key={i} className="aspect-square rounded-xl overflow-hidden relative">
+                      <div key={i} className="aspect-square rounded-xl overflow-hidden">
                         <img
                           src={u.photoUrl}
                           alt=""
                           className="w-full h-full object-cover"
-                          style={
-                            !cityUsersData.isPremium
-                              ? { filter: "blur(12px)", transform: "scale(1.15)" }
-                              : {}
-                          }
                         />
                       </div>
                     ))}
-                    {!cityUsersData.isPremium && (
-                      <div className="absolute inset-0 flex items-center justify-center rounded-xl">
-                        <div className="w-10 h-10 rounded-full flex items-center justify-center"
-                          style={{ background: "linear-gradient(135deg,#F59E0B,#D97706)" }}>
-                          <Lock className="w-5 h-5 text-white" />
-                        </div>
-                      </div>
-                    )}
                   </div>
                 ) : (
                   <p className="text-sm text-muted-foreground text-center py-4">
@@ -593,31 +589,10 @@ export default function TipsPage() {
 
               {/* CTA */}
               <div className="px-5 pb-5 pt-3">
-                {cityUsersData?.isPremium ? (
-                  <p className="text-xs text-center text-muted-foreground">
-                    Conécta con ellos en la sección de descubrimiento
-                  </p>
-                ) : (
-                  <>
-                    <p className="text-sm font-semibold text-center mb-1">
-                      {cityUsersData && cityUsersData.total > 0
-                        ? `Hay ${cityUsersData.total} ${cityUsersData.total === 1 ? "persona" : "personas"} en ${selectedCity} que podrían querer conocerte`
-                        : `Descubre quién viaja a ${selectedCity}`}
-                    </p>
-                    <p className="text-xs text-muted-foreground text-center mb-4">
-                      Activa Premium para ver sus perfiles
-                    </p>
-                    <button
-                      onClick={() => { setSelectedCity(null); navigate("/premium"); }}
-                      className="w-full py-3 rounded-2xl font-bold text-sm text-black"
-                      style={{ background: "linear-gradient(90deg,#D97706,#F59E0B)" }}
-                      data-testid="button-destination-upgrade"
-                    >
-                      <Crown className="w-4 h-4 inline mr-2" />
-                      Ver perfiles — Activar Premium
-                    </button>
-                  </>
-                )}
+                <p className="text-xs text-center text-muted-foreground">
+                  Conéctalos en la sección de descubrimiento 
+                  <Crown className="w-3 h-3 inline ml-1 text-amber-500" />
+                </p>
               </div>
             </motion.div>
           </motion.div>
