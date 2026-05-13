@@ -180,6 +180,17 @@ export const eventRatings = pgTable("event_ratings", {
 export type EventRating = typeof eventRatings.$inferSelect;
 export const insertEventRatingSchema = createInsertSchema(eventRatings).omit({ id: true, createdAt: true });
 
+export const adventurePhotos = pgTable("adventure_photos", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  photoUrl: text("photo_url").notNull(),
+  caption: text("caption"),
+  city: text("city"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+export type AdventurePhoto = typeof adventurePhotos.$inferSelect;
+export const insertAdventurePhotoSchema = createInsertSchema(adventurePhotos).omit({ id: true, createdAt: true });
+
 export const pushSubscriptions = pgTable("push_subscriptions", {
   id: serial("id").primaryKey(),
   userId: varchar("user_id").notNull().references(() => users.id),

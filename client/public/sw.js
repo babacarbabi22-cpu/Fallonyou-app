@@ -1,13 +1,12 @@
-const CACHE_NAME = 'fallonyou-v2';
+const CACHE_NAME = 'fallonyou-v3';
 const STATIC_ASSETS = [
-  '/',
   '/manifest.json',
   '/favicon.png',
   '/icons/icon-192x192.png',
   '/icons/icon-512x512.png',
 ];
 
-// ── Install: cache static shell ───────────────────────────────────────────────
+// ── Install: cache only true static assets ────────────────────────────────────
 self.addEventListener('install', (event) => {
   self.skipWaiting();
   event.waitUntil(
@@ -24,15 +23,24 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// ── Fetch: network-first for API, cache-first for assets ─────────────────────
+// ── Fetch ─────────────────────────────────────────────────────────────────────
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
   // Skip non-GET and cross-origin requests
   if (event.request.method !== 'GET' || url.origin !== self.location.origin) return;
 
-  // API calls: network only (never cache)
-  if (url.pathname.startsWith('/api/')) return;
+  // Never cache: API calls, Vite dev modules, HMR, source files, node_modules
+  const skip =
+    url.pathname.startsWith('/api/') ||
+    url.pathname.startsWith('/node_modules/') ||
+    url.pathname.startsWith('/@') ||
+    url.pathname.startsWith('/src/') ||
+    url.search.includes('v=') ||
+    url.search.includes('t=') ||
+    url.pathname === '/';
+
+  if (skip) return;
 
   // Navigation requests: network-first, fallback to cached shell
   if (event.request.mode === 'navigate') {
@@ -44,7 +52,13 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Static assets: cache-first
+  // Only cache true static assets (icons, manifest, fonts)
+  const isCacheable =
+    url.pathname.match(/\.(png|jpg|jpeg|gif|webp|ico|svg|woff2?|ttf|eot)$/) ||
+    url.pathname === '/manifest.json';
+
+  if (!isCacheable) return;
+
   event.respondWith(
     caches.match(event.request).then((cached) => {
       if (cached) return cached;

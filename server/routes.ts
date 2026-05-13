@@ -4,7 +4,7 @@ import type { Server } from "http";
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
 import { db } from "./db";
-import { users, profiles, photos, events, eventParticipants, eventComments, eventRatings, matches, preferences, referrals, profileViews, stories, businessPartners, localOffers, notifications, swipes, ambassadorApplications, appSessions, blockedUsers } from "@shared/schema";
+import { users, profiles, photos, events, eventParticipants, eventComments, eventRatings, matches, preferences, referrals, profileViews, stories, businessPartners, localOffers, notifications, swipes, ambassadorApplications, appSessions, blockedUsers, adventurePhotos } from "@shared/schema";
 import { eq, and, desc, ilike, gte, inArray, or, sql, lt, ne, count } from "drizzle-orm";
 import { api } from "@shared/routes";
 import { z } from "zod";
@@ -1782,6 +1782,72 @@ export async function registerRoutes(
       average: average ? Math.round(average * 10) / 10 : null,
       count: allRatings.length,
     });
+  });
+
+  // Top-rated events (for EventsPage featured section)
+  app.get('/api/events/top-rated', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const rows = await db.execute(sql`
+      SELECT e.id, e.title, e.category, e.city, e.starts_at, e.image_url, e.location,
+             ROUND(AVG(er.rating)::numeric, 1) AS avg_rating,
+             COUNT(er.id) AS rating_count,
+             COUNT(ep.id) AS participant_count
+      FROM events e
+      JOIN event_ratings er ON er.event_id = e.id
+      LEFT JOIN event_participants ep ON ep.event_id = e.id
+      GROUP BY e.id
+      HAVING COUNT(er.id) >= 1
+      ORDER BY avg_rating DESC, rating_count DESC
+      LIMIT 8
+    `);
+    res.json({ events: rows.rows });
+  });
+
+  // Adventure photos — community album
+  app.get('/api/album', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const limit = Math.min(parseInt(String(req.query.limit || 20)), 50);
+    const offset = parseInt(String(req.query.offset || 0));
+    const rows = await db
+      .select({
+        id: adventurePhotos.id,
+        photoUrl: adventurePhotos.photoUrl,
+        caption: adventurePhotos.caption,
+        city: adventurePhotos.city,
+        createdAt: adventurePhotos.createdAt,
+        userId: adventurePhotos.userId,
+        firstName: users.firstName,
+        profileImageUrl: users.profileImageUrl,
+      })
+      .from(adventurePhotos)
+      .leftJoin(users, eq(adventurePhotos.userId, users.id))
+      .orderBy(desc(adventurePhotos.createdAt))
+      .limit(limit)
+      .offset(offset);
+    res.json({ photos: rows });
+  });
+
+  app.post('/api/album', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const { photoUrl, caption, city } = req.body;
+    if (!photoUrl) return res.status(400).json({ error: 'photoUrl required' });
+    const [created] = await db.insert(adventurePhotos).values({
+      userId: req.user!.id,
+      photoUrl,
+      caption: caption || null,
+      city: city || null,
+    }).returning();
+    res.status(201).json(created);
+  });
+
+  app.delete('/api/album/:id', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const id = parseInt(req.params.id);
+    const [photo] = await db.select().from(adventurePhotos).where(eq(adventurePhotos.id, id));
+    if (!photo) return res.sendStatus(404);
+    if (photo.userId !== req.user!.id) return res.sendStatus(403);
+    await db.delete(adventurePhotos).where(eq(adventurePhotos.id, id));
+    res.json({ success: true });
   });
 
   // ============ SELFIE VERIFICATION ============

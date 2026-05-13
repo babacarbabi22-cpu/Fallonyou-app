@@ -11,7 +11,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Calendar, MapPin, Users, Plus, Clock, Loader2, Trash2, Pencil, ImagePlus, X, Search, MessageCircle, Image, Sparkles, Bell, ArrowRight, Building2, ChevronRight, Tag, Copy, Check, Store } from "lucide-react";
+import { Calendar, MapPin, Users, Plus, Clock, Loader2, Trash2, Pencil, ImagePlus, X, Search, MessageCircle, Image, Sparkles, Bell, ArrowRight, Building2, ChevronRight, Tag, Copy, Check, Store, Star, Camera } from "lucide-react";
 import { BottomNav } from "@/components/BottomNav";
 import { NotificationBell } from "@/components/NotificationBell";
 import { StoriesRow } from "@/components/StoriesRow";
@@ -466,6 +466,107 @@ const emptyForm: EventFormData = {
   capacity: "",
   imageUrl: "",
 };
+
+// ── Top-rated events horizontal section ─────────────────────────────────────
+function TopRatedSection() {
+  const { data, isLoading } = useQuery<{ events: Array<{
+    id: number; title: string; category: string; city: string; starts_at: string;
+    image_url: string | null; avg_rating: string | null; rating_count: number;
+  }> }>({ queryKey: ["/api/events/top-rated"], staleTime: 5 * 60 * 1000 });
+  const [, navigate] = useLocation();
+  if (isLoading) return null;
+  if (!data?.events?.length) return null;
+
+  const getCategoryEmoji = (cat: string) => {
+    const map: Record<string, string> = { dining: "🍽️", nightlife: "🎉", outdoor: "🏔️", culture: "🏛️", sports: "⚽", music: "🎵", wellness: "🧘", travel: "✈️" };
+    return map[cat] || "📅";
+  };
+
+  return (
+    <div className="px-4 py-3">
+      <div className="flex items-center gap-2 mb-3">
+        <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
+        <span className="font-bold text-sm">Más valorados</span>
+        <span className="text-xs text-muted-foreground ml-auto">por la comunidad</span>
+      </div>
+      <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide">
+        {data.events.map(event => (
+          <div
+            key={event.id}
+            onClick={() => navigate(`/event/${event.id}`)}
+            className="flex-shrink-0 w-44 cursor-pointer"
+            data-testid={`top-rated-card-${event.id}`}
+          >
+            <div className="rounded-2xl overflow-hidden border border-amber-500/20 hover:border-amber-500/50 transition-colors">
+              <div className="relative h-28 bg-gradient-to-br from-amber-900/30 to-yellow-900/20">
+                {event.image_url ? (
+                  <img src={event.image_url} alt={event.title} className="w-full h-28 object-cover" onError={e => { e.currentTarget.style.display = "none"; }} />
+                ) : (
+                  <div className="w-full h-28 flex items-center justify-center text-4xl opacity-40">{getCategoryEmoji(event.category)}</div>
+                )}
+                <div className="absolute top-2 left-2 flex items-center gap-0.5 bg-black/70 rounded-full px-2 py-0.5">
+                  <Star className="w-3 h-3 text-amber-400 fill-amber-400" />
+                  <span className="text-[11px] font-bold text-amber-300">{parseFloat(event.avg_rating || "0").toFixed(1)}</span>
+                  <span className="text-[9px] text-white/60">({event.rating_count})</span>
+                </div>
+              </div>
+              <div className="p-2.5 bg-card">
+                <p className="text-xs font-semibold line-clamp-1">{event.title}</p>
+                <p className="text-[10px] text-muted-foreground flex items-center gap-0.5 mt-0.5">
+                  <MapPin className="w-2.5 h-2.5" />{event.city}
+                </p>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── Album promo banner ───────────────────────────────────────────────────────
+function AlbumPromo() {
+  const [, navigate] = useLocation();
+  const { data } = useQuery<{ photos: Array<{ id: number; photoUrl: string }> }>({
+    queryKey: ["/api/album"],
+    staleTime: 5 * 60 * 1000,
+  });
+  const previewPhotos = data?.photos?.slice(0, 3) ?? [];
+
+  return (
+    <div className="px-4 pb-2">
+      <div
+        onClick={() => navigate("/album")}
+        className="rounded-2xl overflow-hidden cursor-pointer relative"
+        style={{ background: "linear-gradient(135deg,#1a0a00,#2d1500)", border: "1px solid rgba(217,119,6,0.3)" }}
+        data-testid="promo-album"
+      >
+        <div className="p-4 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "rgba(217,119,6,0.2)" }}>
+            <Camera className="w-5 h-5 text-amber-400" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-bold text-sm text-white">Álbum de aventuras</p>
+            <p className="text-[11px] text-amber-200/70">
+              {previewPhotos.length > 0 ? `${data?.photos?.length} fotos de la comunidad` : "Comparte tus experiencias con fotos reales"}
+            </p>
+          </div>
+          {previewPhotos.length > 0 ? (
+            <div className="flex -space-x-2">
+              {previewPhotos.map(p => (
+                <div key={p.id} className="w-8 h-8 rounded-full overflow-hidden border-2 border-amber-900/60">
+                  <img src={p.photoUrl} alt="" className="w-full h-full object-cover" />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <ChevronRight className="w-4 h-4 text-amber-500" />
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function EventsPage() {
   const t = useTranslation();
@@ -950,6 +1051,12 @@ export default function EventsPage() {
           </div>
         </div>
       )}
+
+      {/* ── TOP RATED EVENTS ─────────────────────────────────── */}
+      <TopRatedSection />
+
+      {/* ── ALBUM PROMO ──────────────────────────────────────── */}
+      <AlbumPromo />
 
       {/* ── DEALS VIEW ─────────────────────────────────────── */}
       {showDeals && (
