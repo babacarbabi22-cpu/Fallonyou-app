@@ -43,6 +43,7 @@ export const profiles = pgTable("profiles", {
   availableToday: boolean("available_today").default(false),
   availableUntil: timestamp("available_until"),
   nextAdventure: text("next_adventure"),
+  availableAsGuide: boolean("available_as_guide").default(false),
 });
 
 export const photos = pgTable("photos", {
@@ -372,6 +373,27 @@ export const localOffers = pgTable("local_offers", {
 export type LocalOffer = typeof localOffers.$inferSelect;
 export const insertLocalOfferSchema = createInsertSchema(localOffers).omit({ id: true, createdAt: true });
 export type InsertLocalOffer = z.infer<typeof insertLocalOfferSchema>;
+
+// ─── City Guide Tips ─────────────────────────────────────────────────────────
+export const cityTips = pgTable("city_tips", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  city: text("city").notNull(),
+  category: text("category").notNull(),
+  title: text("title").notNull(),
+  body: text("body").notNull(),
+  votes: integer("votes").notNull().default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+export type CityTip = typeof cityTips.$inferSelect;
+export const insertCityTipSchema = createInsertSchema(cityTips).omit({ id: true, votes: true, createdAt: true });
+export type InsertCityTip = z.infer<typeof insertCityTipSchema>;
+
+export const cityTipVotes = pgTable("city_tip_votes", {
+  id: serial("id").primaryKey(),
+  tipId: integer("tip_id").notNull().references(() => cityTips.id),
+  userId: varchar("user_id").notNull().references(() => users.id),
+});
 
 // ─── In-app Notifications ────────────────────────────────────────────────────
 export const notifications = pgTable("notifications", {

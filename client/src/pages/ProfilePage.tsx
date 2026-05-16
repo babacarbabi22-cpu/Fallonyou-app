@@ -78,6 +78,21 @@ export default function ProfilePage() {
     enabled: !!user,
   });
 
+  const { mutate: toggleGuide, isPending: isTogglingGuide } = useMutation({
+    mutationFn: async (active: boolean) => {
+      const res = await fetch("/api/profile/guide-status", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ availableAsGuide: active }),
+        credentials: "include",
+      });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [api.auth.me.path] });
+    },
+  });
+
   const { mutate: toggleAvailability, isPending: isTogglingAvailability } = useMutation({
     mutationFn: async (available: boolean) => {
       const res = await fetch("/api/profile/availability", {
@@ -406,6 +421,40 @@ export default function ProfilePage() {
                 className={`relative w-12 h-6 rounded-full transition-all duration-300 flex-shrink-0 ${isAvailable ? "bg-green-500" : "bg-muted-foreground/30"} ${isTogglingAvailability ? "opacity-60" : ""}`}
               >
                 <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-md transition-all duration-300 ${isAvailable ? "left-6" : "left-0.5"}`} />
+              </button>
+            </div>
+          );
+        })()}
+
+        {/* ── Disponible de guía ───────────────────────────────────────────── */}
+        {(() => {
+          const isGuide = !!(user.profile as any)?.availableAsGuide;
+          return (
+            <div
+              className={`rounded-2xl border p-4 shadow-sm flex items-center gap-4 transition-all ${isGuide ? "border-blue-500/40 bg-blue-500/5" : "border-border bg-card"}`}
+              data-testid="card-available-as-guide"
+            >
+              <div className={`relative w-12 h-12 rounded-full flex items-center justify-center shrink-0 ${isGuide ? "bg-blue-500/20" : "bg-muted"}`}>
+                {isGuide && (
+                  <span className="absolute inset-0 rounded-full bg-blue-400/30 animate-ping" />
+                )}
+                <MapPin className={`w-6 h-6 ${isGuide ? "text-blue-500 fill-blue-100" : "text-muted-foreground"}`} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-bold text-sm">{t.engagement?.availableAsGuide || "Disponible de guía"}</p>
+                <p className="text-xs text-muted-foreground leading-snug">
+                  {isGuide
+                    ? (t.engagement?.availableAsGuideActive || "Ofreces mostrar tu ciudad a turistas ✓")
+                    : (t.engagement?.availableAsGuideInactive || "Activa para que turistas puedan pedirte ayuda")}
+                </p>
+              </div>
+              <button
+                onClick={() => toggleGuide(!isGuide)}
+                disabled={isTogglingGuide}
+                data-testid="toggle-available-as-guide"
+                className={`relative w-12 h-6 rounded-full transition-all duration-300 flex-shrink-0 ${isGuide ? "bg-blue-500" : "bg-muted-foreground/30"} ${isTogglingGuide ? "opacity-60" : ""}`}
+              >
+                <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-md transition-all duration-300 ${isGuide ? "left-6" : "left-0.5"}`} />
               </button>
             </div>
           );

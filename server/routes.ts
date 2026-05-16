@@ -4,7 +4,7 @@ import type { Server } from "http";
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
 import { db } from "./db";
-import { users, profiles, photos, events, eventParticipants, eventComments, eventRatings, matches, preferences, referrals, profileViews, stories, businessPartners, localOffers, notifications, swipes, ambassadorApplications, appSessions, blockedUsers, adventurePhotos } from "@shared/schema";
+import { users, profiles, photos, events, eventParticipants, eventComments, eventRatings, matches, preferences, referrals, profileViews, stories, businessPartners, localOffers, notifications, swipes, ambassadorApplications, appSessions, blockedUsers, adventurePhotos, cityTips, cityTipVotes } from "@shared/schema";
 import { eq, and, desc, ilike, gte, inArray, or, sql, lt, ne, count } from "drizzle-orm";
 import { api } from "@shared/routes";
 import { z } from "zod";
@@ -170,6 +170,17 @@ export async function registerRoutes(
       console.error("[updateProfile] Error saving profile:", err);
       res.status(500).json({ error: "No se pudo guardar el perfil. Por favor inténtalo de nuevo." });
     }
+  });
+
+  // Toggle "available as guide" status
+  app.patch('/api/profile/guide-status', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const { availableAsGuide } = req.body;
+    const active = !!availableAsGuide;
+    await db.update(profiles)
+      .set({ availableAsGuide: active })
+      .where(eq(profiles.userId, req.user!.id));
+    res.json({ availableAsGuide: active });
   });
 
   // Toggle "available today" status
@@ -1801,6 +1812,69 @@ export async function registerRoutes(
       average: average ? Math.round(average * 10) / 10 : null,
       count: allRatings.length,
     });
+  });
+
+  // ─── City Guide Tips ─────────────────────────────────────────────────────
+  app.get('/api/city-tips', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const { city, category } = req.query;
+    let query = db
+      .select({
+        id: cityTips.id,
+        city: cityTips.city,
+        category: cityTips.category,
+        title: cityTips.title,
+        body: cityTips.body,
+        votes: cityTips.votes,
+        createdAt: cityTips.createdAt,
+        userId: cityTips.userId,
+        firstName: users.firstName,
+        profileImageUrl: users.profileImageUrl,
+      })
+      .from(cityTips)
+      .leftJoin(users, eq(cityTips.userId, users.id))
+      .orderBy(desc(cityTips.votes), desc(cityTips.createdAt))
+      .$dynamic();
+    if (city && typeof city === 'string') query = query.where(ilike(cityTips.city, `%${city}%`)) as any;
+    if (category && typeof category === 'string' && category !== 'all') query = query.where(eq(cityTips.category, category)) as any;
+    const rows = await query.limit(50);
+    const myVotes = await db.select({ tipId: cityTipVotes.tipId }).from(cityTipVotes).where(eq(cityTipVotes.userId, req.user!.id));
+    const voted = new Set(myVotes.map(v => v.tipId));
+    res.json({ tips: rows.map(r => ({ ...r, voted: voted.has(r.id) })) });
+  });
+
+  app.post('/api/city-tips', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const { city, category, title, body } = req.body;
+    if (!city?.trim() || !category?.trim() || !title?.trim() || !body?.trim()) return res.status(400).json({ error: 'Missing fields' });
+    const [tip] = await db.insert(cityTips).values({ userId: req.user!.id, city: city.trim(), category: category.trim(), title: title.trim(), body: body.trim() }).returning();
+    res.json(tip);
+  });
+
+  app.post('/api/city-tips/:id/vote', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const tipId = parseInt(req.params.id);
+    if (isNaN(tipId)) return res.status(400).json({ error: 'Invalid ID' });
+    const existing = await db.select().from(cityTipVotes).where(and(eq(cityTipVotes.tipId, tipId), eq(cityTipVotes.userId, req.user!.id)));
+    if (existing.length > 0) {
+      await db.delete(cityTipVotes).where(and(eq(cityTipVotes.tipId, tipId), eq(cityTipVotes.userId, req.user!.id)));
+      await db.update(cityTips).set({ votes: sql`${cityTips.votes} - 1` }).where(eq(cityTips.id, tipId));
+      return res.json({ voted: false });
+    }
+    await db.insert(cityTipVotes).values({ tipId, userId: req.user!.id });
+    await db.update(cityTips).set({ votes: sql`${cityTips.votes} + 1` }).where(eq(cityTips.id, tipId));
+    res.json({ voted: true });
+  });
+
+  app.delete('/api/city-tips/:id', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const tipId = parseInt(req.params.id);
+    if (isNaN(tipId)) return res.status(400).json({ error: 'Invalid ID' });
+    const [tip] = await db.select().from(cityTips).where(eq(cityTips.id, tipId));
+    if (!tip) return res.status(404).json({ error: 'Not found' });
+    if (tip.userId !== req.user!.id) return res.status(403).json({ error: 'Forbidden' });
+    await db.delete(cityTips).where(eq(cityTips.id, tipId));
+    res.json({ ok: true });
   });
 
   // Adventure photos — community album

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion, useMotionValue, useTransform, PanInfo } from "framer-motion";
 import { UserWithPhotos } from "@/hooks/use-danceme";
-import { X, Heart, MapPin, Briefcase, Ruler, GraduationCap, Star, User, Zap, Plane } from "lucide-react";
+import { X, Heart, MapPin, Briefcase, Ruler, GraduationCap, Star, User, Zap, Plane, BookOpen } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 
 // Global image cache for faster loading
@@ -156,6 +156,16 @@ export function SwipeCard({ user, onSwipe, onTap }: SwipeCardProps) {
               <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping inline-block" />
               <Zap className="w-3 h-3 fill-white" />
               Disponible hoy
+            </div>
+          </div>
+        )}
+
+        {/* Available as Guide badge */}
+        {(profile as any)?.availableAsGuide && (
+          <div className={`absolute z-20 ${(profile as any)?.availableToday ? "top-10 left-3" : "top-3 left-3"}`}>
+            <div className="flex items-center gap-1.5 bg-blue-500 text-white text-[10px] font-bold px-2.5 py-1 rounded-full shadow-lg">
+              <BookOpen className="w-3 h-3" />
+              De guía
             </div>
           </div>
         )}
