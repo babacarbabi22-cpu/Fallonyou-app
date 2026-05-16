@@ -565,7 +565,13 @@ export default function EventsPage() {
   useEffect(() => {
     if (isCreateOpen) {
       const city = (currentUser as any)?.profile?.currentCity || (currentUser as any)?.profile?.homeCity || "";
-      if (city) setNewEvent(f => ({ ...f, city }));
+      // Default to tomorrow at noon so the Save button is never blocked by a missing date
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      tomorrow.setHours(12, 0, 0, 0);
+      const pad = (n: number) => String(n).padStart(2, "0");
+      const defaultDate = `${tomorrow.getFullYear()}-${pad(tomorrow.getMonth() + 1)}-${pad(tomorrow.getDate())}T${pad(tomorrow.getHours())}:${pad(tomorrow.getMinutes())}`;
+      setNewEvent(f => ({ ...f, ...(city ? { city } : {}), startsAt: f.startsAt || defaultDate }));
     }
   }, [isCreateOpen]);
   const { isSupported, isSubscribed, subscribe } = usePushNotifications();
