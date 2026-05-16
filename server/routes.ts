@@ -1440,6 +1440,25 @@ export async function registerRoutes(
     res.json(uniqueCities);
   });
 
+  // Top-rated events (for EventsPage featured section) — must be before /:id
+  app.get('/api/events/top-rated', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const rows = await db.execute(sql`
+      SELECT e.id, e.title, e.category, e.city, e.starts_at, e.image_url, e.location,
+             ROUND(AVG(er.rating)::numeric, 1) AS avg_rating,
+             COUNT(er.id) AS rating_count,
+             COUNT(ep.id) AS participant_count
+      FROM events e
+      JOIN event_ratings er ON er.event_id = e.id
+      LEFT JOIN event_participants ep ON ep.event_id = e.id
+      GROUP BY e.id
+      HAVING COUNT(er.id) >= 1
+      ORDER BY avg_rating DESC, rating_count DESC
+      LIMIT 8
+    `);
+    res.json({ events: rows.rows });
+  });
+
   // ============ SINGLE EVENT (must be after named routes) ============
 
   app.get('/api/events/:id', async (req, res) => {
@@ -1782,25 +1801,6 @@ export async function registerRoutes(
       average: average ? Math.round(average * 10) / 10 : null,
       count: allRatings.length,
     });
-  });
-
-  // Top-rated events (for EventsPage featured section)
-  app.get('/api/events/top-rated', async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-    const rows = await db.execute(sql`
-      SELECT e.id, e.title, e.category, e.city, e.starts_at, e.image_url, e.location,
-             ROUND(AVG(er.rating)::numeric, 1) AS avg_rating,
-             COUNT(er.id) AS rating_count,
-             COUNT(ep.id) AS participant_count
-      FROM events e
-      JOIN event_ratings er ON er.event_id = e.id
-      LEFT JOIN event_participants ep ON ep.event_id = e.id
-      GROUP BY e.id
-      HAVING COUNT(er.id) >= 1
-      ORDER BY avg_rating DESC, rating_count DESC
-      LIMIT 8
-    `);
-    res.json({ events: rows.rows });
   });
 
   // Adventure photos — community album
