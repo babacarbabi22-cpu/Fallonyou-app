@@ -37,23 +37,50 @@ export default function AuthPage() {
       return;
     }
     setIsLoading(true);
-    try {
+
+    const attemptLogin = async (attempt: number): Promise<void> => {
       const endpoint = isLogin ? "/api/login" : "/api/register";
-      const response = await fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...formData, lastName: "", ageConfirmed }),
-        credentials: "include",
-      });
+      let response: Response;
+      try {
+        response = await fetch(endpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ...formData, lastName: "", ageConfirmed }),
+          credentials: "include",
+        });
+      } catch {
+        // Network error — server may be restarting, retry once after 2 seconds
+        if (attempt < 2) {
+          await new Promise(r => setTimeout(r, 2000));
+          return attemptLogin(attempt + 1);
+        }
+        throw new Error("No se pudo conectar con el servidor. Inténtalo de nuevo en unos segundos.");
+      }
 
       const data = await response.json();
 
-      if (!response.ok) throw new Error(data.error || "Authentication failed");
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error("Email o contraseña incorrectos.");
+        }
+        if (response.status >= 500) {
+          if (attempt < 2) {
+            await new Promise(r => setTimeout(r, 2000));
+            return attemptLogin(attempt + 1);
+          }
+          throw new Error("El servidor tuvo un problema. Inténtalo de nuevo en unos segundos.");
+        }
+        throw new Error(data.error || "Error al iniciar sesión.");
+      }
 
       toast({ title: isLogin ? t.auth.welcomeBack : "¡Bienvenido/a! 🎉", description: isLogin ? t.auth.loginSuccess : t.auth.registerSuccess });
       window.location.href = "/";
+    };
+
+    try {
+      await attemptLogin(1);
     } catch (error: any) {
-      toast({ title: "Error", description: error.message || "Something went wrong", variant: "destructive" });
+      toast({ title: "Error", description: error.message || "Algo salió mal. Inténtalo de nuevo.", variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
