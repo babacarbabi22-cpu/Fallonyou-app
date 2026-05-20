@@ -44,6 +44,8 @@ export const profiles = pgTable("profiles", {
   availableUntil: timestamp("available_until"),
   nextAdventure: text("next_adventure"),
   availableAsGuide: boolean("available_as_guide").default(false),
+  speaksLanguages: text("speaks_languages").array().default([]),
+  learningLanguages: text("learning_languages").array().default([]),
 });
 
 export const photos = pgTable("photos", {

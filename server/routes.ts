@@ -2580,5 +2580,57 @@ export async function registerRoutes(
     }
   });
 
+  // ── Language Hub ────────────────────────────────────────────────────────────
+
+  // Update user language preferences
+  app.patch("/api/profile/languages", async (req, res) => {
+    if (!req.user) return res.status(401).json({ error: "Not authenticated" });
+    const userId = (req.user as any).id;
+    const { speaksLanguages, learningLanguages } = req.body;
+    await db.update(profiles)
+      .set({ speaksLanguages: speaksLanguages ?? [], learningLanguages: learningLanguages ?? [] })
+      .where(eq(profiles.userId, userId));
+    res.json({ ok: true });
+  });
+
+  // Get native speakers of a given language (exclude self + blocked)
+  app.get("/api/language/natives", async (req, res) => {
+    if (!req.user) return res.status(401).json({ error: "Not authenticated" });
+    const userId = (req.user as any).id;
+    const lang = (req.query.lang as string) || "en";
+    const blocked = await getBlockedIds(userId);
+    const rows = await db.execute(sql`
+      SELECT u.id, u."firstName", u."profileImageUrl", p.speaks_languages, p.learning_languages,
+             p.current_city, p.home_city, p.bio
+      FROM users u
+      JOIN profiles p ON p.user_id = u.id
+      WHERE u.id != ${userId}
+        AND u."isBanned" = false
+        AND ${lang} = ANY(p.speaks_languages)
+      LIMIT 20
+    `);
+    const natives = (rows.rows as any[])
+      .filter(r => !blocked.has(r.id))
+      .map(r => ({
+        id: r.id,
+        firstName: r.firstName,
+        profileImageUrl: r.profileImageUrl,
+        speaksLanguages: r.speaks_languages || [],
+        learningLanguages: r.learning_languages || [],
+        city: r.current_city || r.home_city || null,
+        bio: r.bio ? r.bio.slice(0, 100) : null,
+      }));
+    res.json(natives);
+  });
+
+  // Get user language preferences
+  app.get("/api/profile/languages", async (req, res) => {
+    if (!req.user) return res.status(401).json({ error: "Not authenticated" });
+    const userId = (req.user as any).id;
+    const rows = await db.select({ speaksLanguages: profiles.speaksLanguages, learningLanguages: profiles.learningLanguages })
+      .from(profiles).where(eq(profiles.userId, userId)).limit(1);
+    res.json(rows[0] || { speaksLanguages: [], learningLanguages: [] });
+  });
+
   return httpServer;
 }
