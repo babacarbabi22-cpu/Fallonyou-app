@@ -4,9 +4,12 @@ import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { MapPin, Plus, X, Users, TrendingUp, Compass, Search } from "lucide-react";
+import { MapPin, Plus, X, Users, TrendingUp, Compass, Search, Lock, Crown, Infinity } from "lucide-react";
 import { BottomNav } from "@/components/BottomNav";
 import { motion, AnimatePresence } from "framer-motion";
+import { useLocation } from "wouter";
+
+const FREE_LIMIT = 3;
 
 interface MyDestination {
   id: number;
@@ -33,6 +36,10 @@ interface Traveler {
   bio: string | null;
 }
 
+interface PremiumStatus {
+  isPremium: boolean;
+}
+
 const POPULAR_SUGGESTIONS = [
   { destination: "Tokio", country: "Japón", emoji: "🇯🇵" },
   { destination: "Bali", country: "Indonesia", emoji: "🇮🇩" },
@@ -48,14 +55,58 @@ const POPULAR_SUGGESTIONS = [
   { destination: "Jordania", country: "Jordania", emoji: "🇯🇴" },
 ];
 
+function PremiumLockOverlay({ compact = false, onUpgrade }: { compact?: boolean; onUpgrade: () => void }) {
+  if (compact) {
+    return (
+      <button
+        onClick={onUpgrade}
+        data-testid="btn-upgrade-travelers"
+        className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-gradient-to-r from-amber-500 to-yellow-400 text-white text-xs font-semibold shadow-sm hover:shadow-md transition-all"
+      >
+        <Crown className="w-3 h-3" />
+        Premium
+      </button>
+    );
+  }
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="rounded-2xl border border-amber-500/30 bg-gradient-to-br from-amber-500/5 to-yellow-500/5 p-5 text-center"
+    >
+      <div className="w-12 h-12 rounded-full bg-amber-500/10 flex items-center justify-center mx-auto mb-3">
+        <Lock className="w-5 h-5 text-amber-500" />
+      </div>
+      <p className="font-semibold text-sm mb-1">Función Premium</p>
+      <p className="text-xs text-muted-foreground mb-4 leading-relaxed">
+        Descubre qué usuarios quieren visitar el mismo destino que tú y conéctate con ellos.
+      </p>
+      <button
+        onClick={onUpgrade}
+        data-testid="btn-upgrade-cta"
+        className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-amber-500 to-yellow-400 text-white text-sm font-semibold shadow-md hover:shadow-lg hover:scale-105 transition-all"
+      >
+        <Crown className="w-4 h-4" />
+        Activar Premium
+      </button>
+    </motion.div>
+  );
+}
+
 export default function DestinationsPage() {
   const { toast } = useToast();
+  const [, navigate] = useLocation();
   const [tab, setTab] = useState<"mine" | "trending">("mine");
   const [input, setInput] = useState("");
   const [countryInput, setCountryInput] = useState("");
   const [selectedTravelers, setSelectedTravelers] = useState<string | null>(null);
   const [showAdd, setShowAdd] = useState(false);
   const [searchFilter, setSearchFilter] = useState("");
+
+  const { data: premiumStatus } = useQuery<PremiumStatus>({
+    queryKey: ["/api/premium/status"],
+  });
+  const isPremium = premiumStatus?.isPremium ?? false;
 
   const { data: myList = [], isLoading: loadingMine } = useQuery<MyDestination[]>({
     queryKey: ["/api/dream-destinations/mine"],
@@ -72,7 +123,7 @@ export default function DestinationsPage() {
       fetch(`/api/dream-destinations/travelers?destination=${encodeURIComponent(selectedTravelers!)}`, {
         credentials: "include",
       }).then((r) => r.json()),
-    enabled: !!selectedTravelers,
+    enabled: !!selectedTravelers && isPremium,
   });
 
   const addMutation = useMutation({
@@ -102,11 +153,27 @@ export default function DestinationsPage() {
   const handleAdd = (dest?: string, country?: string, emoji?: string) => {
     const destination = dest || input.trim();
     if (!destination) return;
+    if (!isPremium && myList.length >= FREE_LIMIT) {
+      toast({
+        title: "Límite alcanzado",
+        description: `Con la versión gratuita puedes guardar hasta ${FREE_LIMIT} destinos. Activa Premium para añadir ilimitados.`,
+        variant: "destructive",
+      });
+      return;
+    }
     addMutation.mutate({
       destination,
       country: country || countryInput.trim(),
       emoji: emoji || "✈️",
     });
+  };
+
+  const handleTravelersClick = (destination: string) => {
+    if (!isPremium) {
+      setSelectedTravelers("__premium_gate__");
+      return;
+    }
+    setSelectedTravelers(selectedTravelers === destination ? null : destination);
   };
 
   const myDestSet = new Set(myList.map((d) => d.destination.toLowerCase()));
@@ -118,13 +185,27 @@ export default function DestinationsPage() {
       (d.country || "").toLowerCase().includes(searchFilter.toLowerCase())
   );
 
+  const atFreeLimit = !isPremium && myList.length >= FREE_LIMIT;
+
   return (
     <div className="min-h-screen bg-background pb-28">
       {/* Header */}
       <div className="sticky top-0 z-10 bg-background/95 backdrop-blur border-b px-4 py-3">
-        <div className="flex items-center gap-3 mb-3">
-          <Compass className="w-5 h-5 text-amber-500" />
-          <h1 className="text-xl font-bold">Destinos soñados</h1>
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-3">
+            <Compass className="w-5 h-5 text-amber-500" />
+            <h1 className="text-xl font-bold">Destinos soñados</h1>
+          </div>
+          {isPremium ? (
+            <span className="flex items-center gap-1 text-xs text-amber-600 font-semibold bg-amber-500/10 px-2.5 py-1 rounded-full">
+              <Crown className="w-3.5 h-3.5" /> Premium
+            </span>
+          ) : (
+            <span className="flex items-center gap-1 text-xs text-muted-foreground bg-muted px-2.5 py-1 rounded-full">
+              <Infinity className="w-3.5 h-3.5" />
+              {myList.length}/{FREE_LIMIT} gratis
+            </span>
+          )}
         </div>
         {/* Tabs */}
         <div className="flex gap-1 bg-muted rounded-full p-1">
@@ -155,19 +236,46 @@ export default function DestinationsPage() {
         {/* MY LIST TAB */}
         {tab === "mine" && (
           <div className="space-y-4">
-            {/* Add button */}
-            <button
-              onClick={() => setShowAdd(!showAdd)}
-              data-testid="btn-add-destination"
-              className="w-full flex items-center justify-center gap-2 py-3 border-2 border-dashed border-amber-500/40 rounded-2xl text-amber-600 hover:border-amber-500/70 hover:bg-amber-500/5 transition-all font-medium text-sm"
-            >
-              <Plus className="w-4 h-4" />
-              Añadir destino
-            </button>
+
+            {/* Free limit banner */}
+            {atFreeLimit && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.97 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="rounded-2xl border border-amber-500/30 bg-gradient-to-br from-amber-500/8 to-yellow-500/5 p-4 flex items-center gap-3"
+              >
+                <div className="w-10 h-10 rounded-full bg-amber-500/15 flex items-center justify-center flex-shrink-0">
+                  <Crown className="w-5 h-5 text-amber-500" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-sm">Límite de {FREE_LIMIT} destinos</p>
+                  <p className="text-xs text-muted-foreground">Activa Premium para añadir destinos ilimitados y ver quién quiere ir contigo</p>
+                </div>
+                <button
+                  onClick={() => navigate("/premium")}
+                  data-testid="btn-upgrade-limit"
+                  className="flex-shrink-0 px-3 py-1.5 rounded-full bg-amber-500 text-white text-xs font-semibold hover:bg-amber-600 transition-colors"
+                >
+                  Ver
+                </button>
+              </motion.div>
+            )}
+
+            {/* Add button — disabled at free limit */}
+            {!atFreeLimit && (
+              <button
+                onClick={() => setShowAdd(!showAdd)}
+                data-testid="btn-add-destination"
+                className="w-full flex items-center justify-center gap-2 py-3 border-2 border-dashed border-amber-500/40 rounded-2xl text-amber-600 hover:border-amber-500/70 hover:bg-amber-500/5 transition-all font-medium text-sm"
+              >
+                <Plus className="w-4 h-4" />
+                Añadir destino
+              </button>
+            )}
 
             {/* Add form */}
             <AnimatePresence>
-              {showAdd && (
+              {showAdd && !atFreeLimit && (
                 <motion.div
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: "auto" }}
@@ -202,8 +310,6 @@ export default function DestinationsPage() {
                     >
                       {addMutation.isPending ? "Guardando..." : "Guardar"}
                     </Button>
-
-                    {/* Quick add suggestions */}
                     <div>
                       <p className="text-xs text-muted-foreground mb-2">O elige uno popular:</p>
                       <div className="flex flex-wrap gap-1.5">
@@ -253,14 +359,25 @@ export default function DestinationsPage() {
                       <p className="text-xs text-muted-foreground">{d.country}</p>
                     )}
                   </div>
-                  <button
-                    onClick={() => setSelectedTravelers(selectedTravelers === d.destination ? null : d.destination)}
-                    data-testid={`btn-see-travelers-${d.id}`}
-                    className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-700 text-xs font-medium hover:bg-amber-500/20 transition-colors"
-                  >
-                    <Users className="w-3 h-3" />
-                    Ver viajeros
-                  </button>
+                  {isPremium ? (
+                    <button
+                      onClick={() => setSelectedTravelers(selectedTravelers === d.destination ? null : d.destination)}
+                      data-testid={`btn-see-travelers-${d.id}`}
+                      className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-700 text-xs font-medium hover:bg-amber-500/20 transition-colors"
+                    >
+                      <Users className="w-3 h-3" />
+                      Viajeros
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => navigate("/premium")}
+                      data-testid={`btn-travelers-locked-${d.id}`}
+                      className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-muted text-muted-foreground text-xs font-medium hover:bg-amber-500/10 hover:text-amber-700 transition-colors"
+                    >
+                      <Lock className="w-3 h-3" />
+                      Viajeros
+                    </button>
+                  )}
                   <button
                     onClick={() => deleteMutation.mutate(d.id)}
                     data-testid={`btn-delete-destination-${d.id}`}
@@ -272,9 +389,14 @@ export default function DestinationsPage() {
               ))}
             </AnimatePresence>
 
-            {/* Travelers panel */}
+            {/* Premium upsell if not premium and has destinations */}
+            {!isPremium && myList.length > 0 && (
+              <PremiumLockOverlay onUpgrade={() => navigate("/premium")} />
+            )}
+
+            {/* Travelers panel (premium only) */}
             <AnimatePresence>
-              {selectedTravelers && (
+              {isPremium && selectedTravelers && selectedTravelers !== "__premium_gate__" && (
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -293,26 +415,19 @@ export default function DestinationsPage() {
                       <X className="w-4 h-4" />
                     </button>
                   </div>
-
                   {loadingTravelers && (
                     <div className="flex justify-center py-4">
                       <div className="w-6 h-6 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
                     </div>
                   )}
-
                   {!loadingTravelers && travelers.length === 0 && (
                     <p className="text-sm text-muted-foreground text-center py-3">
                       Todavía nadie más quiere ir aquí — ¡sé el primero!
                     </p>
                   )}
-
                   <div className="space-y-2">
                     {travelers.map((t) => (
-                      <div
-                        key={t.id}
-                        className="flex items-center gap-3"
-                        data-testid={`traveler-${t.id}`}
-                      >
+                      <div key={t.id} className="flex items-center gap-3" data-testid={`traveler-${t.id}`}>
                         <div className="w-10 h-10 rounded-full bg-muted overflow-hidden flex-shrink-0">
                           {t.profileImageUrl ? (
                             <img src={t.profileImageUrl} alt={t.firstName} className="w-full h-full object-cover" />
@@ -340,7 +455,6 @@ export default function DestinationsPage() {
         {/* TRENDING TAB */}
         {tab === "trending" && (
           <div className="space-y-3">
-            {/* Search */}
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
@@ -368,6 +482,7 @@ export default function DestinationsPage() {
 
             {filteredTrending.map((d, i) => {
               const alreadyAdded = myDestSet.has(d.destination.toLowerCase());
+              const isExpanded = selectedTravelers === d.destination;
               return (
                 <motion.div
                   key={d.destination}
@@ -388,19 +503,11 @@ export default function DestinationsPage() {
                           </span>
                         )}
                       </div>
-                      {d.country && (
-                        <p className="text-xs text-muted-foreground">{d.country}</p>
-                      )}
+                      {d.country && <p className="text-xs text-muted-foreground">{d.country}</p>}
                       <div className="flex items-center gap-1.5 mt-1.5">
-                        {/* Avatars */}
                         <div className="flex -space-x-1.5">
                           {d.avatars.slice(0, 4).map((av, j) => (
-                            <img
-                              key={j}
-                              src={av}
-                              alt=""
-                              className="w-5 h-5 rounded-full border border-background object-cover"
-                            />
+                            <img key={j} src={av} alt="" className="w-5 h-5 rounded-full border border-background object-cover" />
                           ))}
                         </div>
                         <span className="text-xs text-muted-foreground">
@@ -412,28 +519,43 @@ export default function DestinationsPage() {
                       {!alreadyAdded ? (
                         <button
                           onClick={() => handleAdd(d.destination, d.country || "", d.emoji)}
-                          disabled={addMutation.isPending}
+                          disabled={addMutation.isPending || atFreeLimit}
                           data-testid={`btn-add-trending-${i}`}
-                          className="flex items-center gap-1 px-2.5 py-1 bg-amber-500 text-white rounded-full text-xs font-semibold hover:bg-amber-600 transition-colors"
+                          className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold transition-colors ${
+                            atFreeLimit
+                              ? "bg-muted text-muted-foreground cursor-not-allowed"
+                              : "bg-amber-500 text-white hover:bg-amber-600"
+                          }`}
                         >
-                          <Plus className="w-3 h-3" /> Añadir
+                          {atFreeLimit ? <Lock className="w-3 h-3" /> : <Plus className="w-3 h-3" />}
+                          {atFreeLimit ? "Límite" : "Añadir"}
                         </button>
                       ) : (
                         <span className="text-xs text-green-600 font-medium px-2 py-1">✓ En tu lista</span>
                       )}
-                      <button
-                        onClick={() => setSelectedTravelers(selectedTravelers === d.destination ? null : d.destination)}
-                        data-testid={`btn-see-trending-travelers-${i}`}
-                        className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-                      >
-                        Ver quiénes
-                      </button>
+                      {isPremium ? (
+                        <button
+                          onClick={() => setSelectedTravelers(isExpanded ? null : d.destination)}
+                          data-testid={`btn-see-trending-travelers-${i}`}
+                          className="text-xs text-amber-600 hover:text-amber-700 transition-colors font-medium"
+                        >
+                          {isExpanded ? "Ocultar" : "Ver quiénes"}
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => navigate("/premium")}
+                          data-testid={`btn-trending-travelers-locked-${i}`}
+                          className="flex items-center gap-0.5 text-xs text-muted-foreground hover:text-amber-600 transition-colors"
+                        >
+                          <Lock className="w-3 h-3" /> Ver quiénes
+                        </button>
+                      )}
                     </div>
                   </div>
 
-                  {/* Travelers expandable */}
+                  {/* Travelers expandable (premium only) */}
                   <AnimatePresence>
-                    {selectedTravelers === d.destination && (
+                    {isPremium && isExpanded && (
                       <motion.div
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: "auto" }}
@@ -477,6 +599,28 @@ export default function DestinationsPage() {
                 </motion.div>
               );
             })}
+
+            {/* Premium banner at bottom of trending if not premium */}
+            {!isPremium && filteredTrending.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="rounded-2xl border border-amber-500/30 bg-gradient-to-br from-amber-500/8 to-yellow-500/5 p-4 flex items-center gap-3 mt-2"
+              >
+                <Crown className="w-8 h-8 text-amber-500 flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-sm">Ve quién quiere ir contigo</p>
+                  <p className="text-xs text-muted-foreground">Conecta con viajeros que sueñan con los mismos destinos</p>
+                </div>
+                <button
+                  onClick={() => navigate("/premium")}
+                  data-testid="btn-upgrade-trending"
+                  className="flex-shrink-0 px-3 py-1.5 rounded-full bg-amber-500 text-white text-xs font-semibold hover:bg-amber-600 transition-colors"
+                >
+                  Premium
+                </button>
+              </motion.div>
+            )}
           </div>
         )}
       </div>
