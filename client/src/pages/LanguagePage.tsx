@@ -1,12 +1,13 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Languages, BookOpen, Users, Volume2, ChevronDown, ChevronUp, Check, X } from "lucide-react";
+import { Languages, BookOpen, Users, Volume2, ChevronDown, Check } from "lucide-react";
 import { useCurrentUser } from "@/hooks/use-danceme";
 import { useLocation } from "wouter";
+import { BottomNav } from "@/components/BottomNav";
 
 // ── Static data ──────────────────────────────────────────────────────────────
 
@@ -1107,6 +1108,8 @@ export default function LanguagePage() {
           </div>
         </div>
       )}
+
+      <BottomNav />
     </div>
   );
 }
