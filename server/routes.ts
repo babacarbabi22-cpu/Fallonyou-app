@@ -2680,5 +2680,92 @@ export async function registerRoutes(
     res.json(rows.rows);
   });
 
+  // ── Dream Destinations ────────────────────────────────────────────────────
+
+  // Get my dream destinations
+  app.get("/api/dream-destinations/mine", async (req, res) => {
+    if (!req.user) return res.status(401).json({ error: "Not authenticated" });
+    const userId = (req.user as any).id;
+    const rows = await db.execute(sql`
+      SELECT id, destination, country, emoji, created_at
+      FROM dream_destinations
+      WHERE user_id = ${userId}
+      ORDER BY created_at DESC
+    `);
+    res.json(rows.rows);
+  });
+
+  // Add a dream destination
+  app.post("/api/dream-destinations", async (req, res) => {
+    if (!req.user) return res.status(401).json({ error: "Not authenticated" });
+    const userId = (req.user as any).id;
+    const { destination, country, emoji } = req.body;
+    if (!destination || typeof destination !== "string" || destination.trim().length < 2) {
+      return res.status(400).json({ error: "Destino inválido" });
+    }
+    const trimmed = destination.trim().slice(0, 120);
+    const trimmedCountry = (country || "").trim().slice(0, 80) || null;
+    const trimmedEmoji = (emoji || "✈️").trim().slice(0, 10);
+    try {
+      const result = await db.execute(sql`
+        INSERT INTO dream_destinations (user_id, destination, country, emoji)
+        VALUES (${userId}, ${trimmed}, ${trimmedCountry}, ${trimmedEmoji})
+        ON CONFLICT (user_id, destination) DO NOTHING
+        RETURNING id, destination, country, emoji, created_at
+      `);
+      if (result.rows.length === 0) return res.status(409).json({ error: "Ya tienes este destino en tu lista" });
+      res.json(result.rows[0]);
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  // Delete a dream destination
+  app.delete("/api/dream-destinations/:id", async (req, res) => {
+    if (!req.user) return res.status(401).json({ error: "Not authenticated" });
+    const userId = (req.user as any).id;
+    const destId = parseInt(req.params.id);
+    if (isNaN(destId)) return res.status(400).json({ error: "Invalid id" });
+    await db.execute(sql`
+      DELETE FROM dream_destinations WHERE id = ${destId} AND user_id = ${userId}
+    `);
+    res.json({ ok: true });
+  });
+
+  // Get trending destinations (most wanted)
+  app.get("/api/dream-destinations/trending", async (req, res) => {
+    if (!req.user) return res.status(401).json({ error: "Not authenticated" });
+    const rows = await db.execute(sql`
+      SELECT destination, country, emoji,
+             COUNT(*) AS traveler_count,
+             ARRAY_AGG(DISTINCT u."profileImageUrl") FILTER (WHERE u."profileImageUrl" IS NOT NULL) AS avatars
+      FROM dream_destinations dd
+      JOIN users u ON u.id = dd.user_id
+      GROUP BY destination, country, emoji
+      ORDER BY traveler_count DESC
+      LIMIT 20
+    `);
+    res.json(rows.rows);
+  });
+
+  // Get travelers who want the same destination
+  app.get("/api/dream-destinations/travelers", async (req, res) => {
+    if (!req.user) return res.status(401).json({ error: "Not authenticated" });
+    const userId = (req.user as any).id;
+    const destination = req.query.destination as string;
+    if (!destination) return res.status(400).json({ error: "destination required" });
+    const rows = await db.execute(sql`
+      SELECT u.id, u."firstName", u."profileImageUrl", p.city, p.age, p.bio
+      FROM dream_destinations dd
+      JOIN users u ON u.id = dd.user_id
+      LEFT JOIN profiles p ON p."userId" = u.id
+      WHERE LOWER(dd.destination) = LOWER(${destination})
+        AND dd.user_id != ${userId}
+      ORDER BY dd.created_at DESC
+      LIMIT 30
+    `);
+    res.json(rows.rows);
+  });
+
   return httpServer;
 }

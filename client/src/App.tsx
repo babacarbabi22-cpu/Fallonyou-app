@@ -28,6 +28,7 @@ import HowItWorksPage from "@/pages/HowItWorksPage";
 import AlbumPage from "@/pages/AlbumPage";
 import CityGuidePage from "@/pages/CityGuidePage";
 import LanguagePage from "@/pages/LanguagePage";
+import DestinationsPage from "@/pages/DestinationsPage";
 import { useCurrentUser } from "@/hooks/use-danceme";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
@@ -223,6 +224,9 @@ function Router() {
       </Route>
       <Route path="/languages">
         {() => <ProtectedRoute component={LanguagePage} />}
+      </Route>
+      <Route path="/destinations">
+        {() => <ProtectedRoute component={DestinationsPage} />}
       </Route>
       <Route path="/reset-password" component={ResetPasswordPage} />
       <Route path="/delete-account" component={DeleteAccountPage} />
