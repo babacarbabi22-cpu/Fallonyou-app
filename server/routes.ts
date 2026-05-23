@@ -2632,5 +2632,53 @@ export async function registerRoutes(
     res.json(rows[0] || { speaksLanguages: [], learningLanguages: [] });
   });
 
+  // ── Language Quiz ────────────────────────────────────────────────────────────
+
+  // Get today's quiz result for current user
+  app.get("/api/language/quiz/today", async (req, res) => {
+    if (!req.user) return res.status(401).json({ error: "Not authenticated" });
+    const userId = (req.user as any).id;
+    const lang = (req.query.lang as string) || "en";
+    const rows = await db.execute(sql`
+      SELECT score, total, completed_at FROM language_quiz_results
+      WHERE user_id = ${userId} AND quiz_date = CURRENT_DATE AND language = ${lang}
+      LIMIT 1
+    `);
+    if (rows.rows.length === 0) return res.json({ completed: false });
+    const r = rows.rows[0] as any;
+    res.json({ completed: true, score: r.score, total: r.total, completedAt: r.completed_at });
+  });
+
+  // Save quiz result
+  app.post("/api/language/quiz/result", async (req, res) => {
+    if (!req.user) return res.status(401).json({ error: "Not authenticated" });
+    const userId = (req.user as any).id;
+    const { lang, score, total } = req.body;
+    if (typeof score !== "number" || typeof total !== "number" || !lang) {
+      return res.status(400).json({ error: "Invalid data" });
+    }
+    await db.execute(sql`
+      INSERT INTO language_quiz_results (user_id, quiz_date, language, score, total)
+      VALUES (${userId}, CURRENT_DATE, ${lang}, ${score}, ${total})
+      ON CONFLICT (user_id, quiz_date, language) DO UPDATE SET score = ${score}, completed_at = NOW()
+    `);
+    res.json({ ok: true });
+  });
+
+  // Get quiz leaderboard (top scorers today)
+  app.get("/api/language/quiz/leaderboard", async (req, res) => {
+    if (!req.user) return res.status(401).json({ error: "Not authenticated" });
+    const lang = (req.query.lang as string) || "en";
+    const rows = await db.execute(sql`
+      SELECT u."firstName", u."profileImageUrl", r.score, r.total
+      FROM language_quiz_results r
+      JOIN users u ON u.id = r.user_id
+      WHERE r.quiz_date = CURRENT_DATE AND r.language = ${lang}
+      ORDER BY r.score DESC
+      LIMIT 10
+    `);
+    res.json(rows.rows);
+  });
+
   return httpServer;
 }

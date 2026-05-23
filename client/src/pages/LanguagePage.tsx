@@ -4,10 +4,11 @@ import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Languages, BookOpen, Users, Volume2, ChevronDown, Check } from "lucide-react";
+import { Languages, BookOpen, Users, Volume2, ChevronDown, Check, Zap } from "lucide-react";
 import { useCurrentUser } from "@/hooks/use-danceme";
 import { useLocation } from "wouter";
 import { BottomNav } from "@/components/BottomNav";
+import { LanguageQuiz } from "@/components/LanguageQuiz";
 
 // ── Static data ──────────────────────────────────────────────────────────────
 
@@ -758,6 +759,12 @@ export default function LanguagePage() {
   const [selectedLang, setSelectedLang] = useState<LangCode>("en");
   const [selectedCat, setSelectedCat] = useState<CatId>("greetings");
   const [flipped, setFlipped] = useState<number | null>(null);
+  const [quizOpen, setQuizOpen] = useState(false);
+
+  const { data: quizToday } = useQuery<{ completed: boolean; score?: number; total?: number }>({
+    queryKey: ["/api/language/quiz/today", selectedLang],
+    queryFn: () => fetch(`/api/language/quiz/today?lang=${selectedLang}`, { credentials: "include" }).then(r => r.json()),
+  });
   const [speaksExpanded, setSpeaksExpanded] = useState(false);
   const [learningExpanded, setLearningExpanded] = useState(false);
 
@@ -808,9 +815,23 @@ export default function LanguagePage() {
     <div className="min-h-screen bg-background pb-24">
       {/* Header */}
       <div className="sticky top-0 z-10 bg-background/95 backdrop-blur border-b px-4 py-3">
-        <div className="flex items-center gap-3">
-          <Languages className="w-5 h-5 text-amber-500" />
-          <h1 className="text-xl font-bold">Idiomas</h1>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Languages className="w-5 h-5 text-amber-500" />
+            <h1 className="text-xl font-bold">Idiomas</h1>
+          </div>
+          <button
+            onClick={() => setQuizOpen(true)}
+            data-testid="btn-open-quiz"
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
+              quizToday?.completed
+                ? "bg-green-500/10 text-green-600 border border-green-500/30"
+                : "bg-amber-500 text-white shadow-md hover:bg-amber-600"
+            }`}
+          >
+            <Zap className="w-3.5 h-3.5" />
+            {quizToday?.completed ? `✓ ${quizToday.score}/${quizToday.total}` : "Quiz diario"}
+          </button>
         </div>
         {/* Language selector */}
         <div className="flex gap-2 overflow-x-auto pb-1 mt-3 scrollbar-hide">
@@ -1110,6 +1131,15 @@ export default function LanguagePage() {
       )}
 
       <BottomNav />
+
+      {quizOpen && (
+        <LanguageQuiz
+          lang={selectedLang}
+          langName={langMeta.name}
+          langFlag={langMeta.flag}
+          onClose={() => setQuizOpen(false)}
+        />
+      )}
     </div>
   );
 }
