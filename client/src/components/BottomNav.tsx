@@ -11,8 +11,8 @@ export function BottomNav() {
     { href: "/",             icon: Calendar,      label: t.nav.events || "Planes" },
     { href: "/discover",     icon: Plane,         label: t.nav.discover },
     { href: "/matches",      icon: MessageCircle, label: t.nav.matches },
-    { href: "/tips",         icon: Lightbulb,     label: "Tips" },
-    { href: "/languages",    icon: Languages,     label: "Idiomas" },
+    { href: "/tips",         icon: Lightbulb,     label: t.nav.tips },
+    { href: "/languages",    icon: Languages,     label: t.nav.languages },
     { href: "/premium",      icon: Crown,         label: "Premium" },
     { href: "/profile",      icon: UserIcon,      label: t.nav.profile },
   ];

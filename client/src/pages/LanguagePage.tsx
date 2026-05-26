@@ -9,6 +9,7 @@ import { useCurrentUser } from "@/hooks/use-danceme";
 import { useLocation } from "wouter";
 import { BottomNav } from "@/components/BottomNav";
 import { LanguageQuiz } from "@/components/LanguageQuiz";
+import { useTranslation } from "@/lib/i18n";
 
 // ── Static data ──────────────────────────────────────────────────────────────
 
@@ -754,6 +755,7 @@ export default function LanguagePage() {
   const { toast } = useToast();
   const [, navigate] = useLocation();
   const { currentUser } = useCurrentUser();
+  const t = useTranslation();
 
   const [tab, setTab] = useState<"phrases" | "lesson" | "natives">("phrases");
   const [selectedLang, setSelectedLang] = useState<LangCode>("en");
@@ -818,7 +820,7 @@ export default function LanguagePage() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Languages className="w-5 h-5 text-amber-500" />
-            <h1 className="text-xl font-bold">Idiomas</h1>
+            <h1 className="text-xl font-bold">{t.languagePage.title}</h1>
           </div>
           <button
             onClick={() => setQuizOpen(true)}
@@ -830,7 +832,7 @@ export default function LanguagePage() {
             }`}
           >
             <Zap className="w-3.5 h-3.5" />
-            {quizToday?.completed ? `✓ ${quizToday.score}/${quizToday.total}` : "Quiz diario"}
+            {quizToday?.completed ? `✓ ${quizToday.score}/${quizToday.total}` : t.languagePage.quizButton}
           </button>
         </div>
         {/* Language selector */}
@@ -854,9 +856,9 @@ export default function LanguagePage() {
         {/* Tabs */}
         <div className="flex gap-1 mt-3">
           {[
-            { id: "phrases" as const, icon: BookOpen, label: "Frases" },
-            { id: "lesson"  as const, icon: Languages, label: "Lección del día" },
-            { id: "natives" as const, icon: Users, label: "Nativos" },
+            { id: "phrases" as const, icon: BookOpen, label: t.languagePage.phrasesTab },
+            { id: "lesson"  as const, icon: Languages, label: t.languagePage.lessonTab },
+            { id: "natives" as const, icon: Users, label: t.languagePage.nativesTab },
           ].map(({ id, icon: Icon, label }) => (
             <button
               key={id}

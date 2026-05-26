@@ -4,6 +4,7 @@ import { BottomNav } from "@/components/BottomNav";
 import { Link, useLocation } from "wouter";
 import { ArrowLeft, Lightbulb, MapPin, Shield, Globe, Zap, ChevronDown, ChevronUp, Users, ExternalLink, Backpack, Crown, Lock, X, Phone, Plane, AlertTriangle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTranslation } from "@/lib/i18n";
 
 // ── A: Daily travel tips (deterministic by day of year) ──────────────────────
 const DAILY_TIPS = [
@@ -326,6 +327,7 @@ export default function TipsPage() {
   const [selectedLang, setSelectedLang] = useState<string>("en");
   const [selectedCity, setSelectedCity] = useState<string | null>(null);
   const [, navigate] = useLocation();
+  const t = useTranslation();
 
   const dailyTip = getDailyTip();
   const challenge = getWeeklyChallenge();
@@ -362,8 +364,8 @@ export default function TipsPage() {
           </button>
         </Link>
         <div>
-          <h1 className="text-base font-bold leading-tight">Consejos de viaje</h1>
-          <p className="text-xs text-muted-foreground">Para que cada aventura salga bien</p>
+          <h1 className="text-base font-bold leading-tight">{t.tipsPage.title}</h1>
+          <p className="text-xs text-muted-foreground">{t.tipsPage.subtitle}</p>
         </div>
       </div>
 

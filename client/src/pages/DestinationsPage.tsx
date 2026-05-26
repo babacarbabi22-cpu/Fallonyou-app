@@ -8,6 +8,7 @@ import { MapPin, Plus, X, Users, TrendingUp, Compass, Search, Lock, Crown, Infin
 import { BottomNav } from "@/components/BottomNav";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLocation } from "wouter";
+import { useTranslation } from "@/lib/i18n";
 
 const FREE_LIMIT = 3;
 
@@ -96,6 +97,7 @@ function PremiumLockOverlay({ compact = false, onUpgrade }: { compact?: boolean;
 export default function DestinationsPage() {
   const { toast } = useToast();
   const [, navigate] = useLocation();
+  const t = useTranslation();
   const [tab, setTab] = useState<"mine" | "trending">("mine");
   const [input, setInput] = useState("");
   const [countryInput, setCountryInput] = useState("");
@@ -194,7 +196,7 @@ export default function DestinationsPage() {
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-3">
             <Compass className="w-5 h-5 text-amber-500" />
-            <h1 className="text-xl font-bold">Destinos soñados</h1>
+            <h1 className="text-xl font-bold">{t.destinations.title}</h1>
           </div>
           {isPremium ? (
             <span className="flex items-center gap-1 text-xs text-amber-600 font-semibold bg-amber-500/10 px-2.5 py-1 rounded-full">
@@ -216,7 +218,7 @@ export default function DestinationsPage() {
               tab === "mine" ? "bg-background shadow text-foreground" : "text-muted-foreground"
             }`}
           >
-            Mi lista {myList.length > 0 && `(${myList.length})`}
+            {t.destinations.myList} {myList.length > 0 && `(${myList.length})`}
           </button>
           <button
             onClick={() => setTab("trending")}
@@ -226,7 +228,7 @@ export default function DestinationsPage() {
             }`}
           >
             <span className="flex items-center justify-center gap-1">
-              <TrendingUp className="w-3.5 h-3.5" /> Tendencias
+              <TrendingUp className="w-3.5 h-3.5" /> {t.destinations.trending}
             </span>
           </button>
         </div>
@@ -269,7 +271,7 @@ export default function DestinationsPage() {
                 className="w-full flex items-center justify-center gap-2 py-3 border-2 border-dashed border-amber-500/40 rounded-2xl text-amber-600 hover:border-amber-500/70 hover:bg-amber-500/5 transition-all font-medium text-sm"
               >
                 <Plus className="w-4 h-4" />
-                Añadir destino
+                {t.destinations.addDestination}
               </button>
             )}
 
