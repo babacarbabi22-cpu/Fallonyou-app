@@ -237,7 +237,8 @@ export default function SwipePage() {
   }
 
   // Photo gate — must have a profile photo to discover others
-  if (!isAuthLoading && currentUser && !currentUser.profileImageUrl) {
+  const hasAnyPhoto = currentUser?.profileImageUrl || (currentUser?.photos && currentUser.photos.length > 0);
+  if (!isAuthLoading && currentUser && !hasAnyPhoto) {
     return (
       <div className="min-h-screen bg-background flex flex-col">
         <div className="flex-1 flex flex-col items-center justify-center p-8 text-center gap-6">
