@@ -728,30 +728,48 @@ export default function ProfilePage() {
               {showNotifPrefs && (
                 <div className="mt-4 pt-4 border-t space-y-3" onClick={e => e.stopPropagation()}>
                   {([
-                    { key: "profileViews", label: "Alguien ve mi perfil", desc: "Push cuando visitan tu perfil", icon: <Eye className="w-4 h-4 text-amber-500" /> },
-                    { key: "newTravelers", label: "Nuevo viajero en mi ciudad", desc: "Alerta cuando alguien llega a tu ciudad", icon: <Plane className="w-4 h-4 text-sky-500" /> },
-                    { key: "matches",      label: "Nuevas conexiones",      desc: "Cuando alguien hace match contigo",   icon: <Heart className="w-4 h-4 text-rose-500" /> },
-                    { key: "messages",     label: "Mensajes",               desc: "Nuevos mensajes de tus conexiones",   icon: <Mail className="w-4 h-4 text-blue-500" /> },
-                    { key: "events",       label: "Actividades",            desc: "Eventos nuevos o recordatorios",      icon: <Sparkles className="w-4 h-4 text-green-500" /> },
-                  ] as const).map(({ key, label, desc, icon }) => {
-                    const enabled = notifPrefs ? notifPrefs[key] !== false : true;
+                    { key: "profileViews", label: "Alguien ve mi perfil",       desc: "Push cuando visitan tu perfil",            icon: <Eye className="w-4 h-4 text-amber-500" />,  premium: true  },
+                    { key: "newTravelers", label: "Nuevo viajero en mi ciudad", desc: "Alerta cuando alguien llega a tu ciudad",   icon: <Plane className="w-4 h-4 text-sky-500" />,  premium: true  },
+                    { key: "matches",      label: "Nuevas conexiones",           desc: "Cuando alguien hace match contigo",         icon: <Heart className="w-4 h-4 text-rose-500" />, premium: false },
+                    { key: "messages",     label: "Mensajes",                    desc: "Nuevos mensajes de tus conexiones",         icon: <Mail className="w-4 h-4 text-blue-500" />,  premium: false },
+                    { key: "events",       label: "Actividades",                 desc: "Eventos nuevos o recordatorios",            icon: <Sparkles className="w-4 h-4 text-green-500" />, premium: false },
+                  ] as const).map(({ key, label, desc, icon, premium }) => {
+                    const isPremiumUser = user?.isPremium === 'true';
+                    const locked = premium && !isPremiumUser;
+                    const enabled = !locked && (notifPrefs ? notifPrefs[key] !== false : true);
                     return (
-                      <div key={key} className="flex items-center justify-between gap-3" data-testid={`notif-pref-${key}`}>
-                        <div className="flex items-center gap-2.5">
-                          <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center">{icon}</div>
-                          <div>
-                            <p className="text-sm font-medium leading-none">{label}</p>
-                            <p className="text-xs text-muted-foreground mt-0.5">{desc}</p>
+                      <div key={key} className={`flex items-center justify-between gap-3 ${locked ? "opacity-60" : ""}`} data-testid={`notif-pref-${key}`}>
+                        <div className="flex items-center gap-2.5 flex-1 min-w-0">
+                          <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center shrink-0">{icon}</div>
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-1.5">
+                              <p className="text-sm font-medium leading-none">{label}</p>
+                              {premium && (
+                                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-400 shrink-0">PREMIUM</span>
+                              )}
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-0.5">{locked ? "Solo disponible en Premium" : desc}</p>
                           </div>
                         </div>
-                        <button
-                          onClick={() => notifPrefsMutation.mutate({ [key]: !enabled })}
-                          className={`relative w-11 h-6 rounded-full transition-colors duration-200 focus:outline-none ${enabled ? "bg-sky-500" : "bg-muted-foreground/30"}`}
-                          aria-label={enabled ? "Desactivar" : "Activar"}
-                          data-testid={`toggle-notif-${key}`}
-                        >
-                          <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform duration-200 ${enabled ? "translate-x-5" : "translate-x-0"}`} />
-                        </button>
+                        {locked ? (
+                          <Link href="/premium">
+                            <button
+                              className="text-xs text-amber-600 dark:text-amber-400 font-semibold border border-amber-500/30 rounded-full px-2.5 py-1 hover:bg-amber-500/10 transition-colors shrink-0"
+                              data-testid={`unlock-notif-${key}`}
+                            >
+                              Mejorar
+                            </button>
+                          </Link>
+                        ) : (
+                          <button
+                            onClick={() => notifPrefsMutation.mutate({ [key]: !enabled })}
+                            className={`relative w-11 h-6 rounded-full transition-colors duration-200 focus:outline-none shrink-0 ${enabled ? "bg-sky-500" : "bg-muted-foreground/30"}`}
+                            aria-label={enabled ? "Desactivar" : "Activar"}
+                            data-testid={`toggle-notif-${key}`}
+                          >
+                            <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform duration-200 ${enabled ? "translate-x-5" : "translate-x-0"}`} />
+                          </button>
+                        )}
                       </div>
                     );
                   })}

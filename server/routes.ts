@@ -186,9 +186,11 @@ export async function registerRoutes(
             ))
             .limit(50);
           for (const target of usersInCity) {
-            // Check prefs
-            const [targetUser] = await db.select({ notificationPrefs: (users as any).notificationPrefs })
+            // Only notify Premium users about new travelers
+            const [targetUser] = await db.select({ isPremium: users.isPremium, notificationPrefs: (users as any).notificationPrefs })
               .from(users).where(eq(users.id, target.userId));
+            if (targetUser?.isPremium !== 'true') continue;
+            // Check prefs
             const prefs = targetUser?.notificationPrefs ? JSON.parse(targetUser.notificationPrefs as string) : { newTravelers: true };
             if (prefs.newTravelers === false) continue;
             // In-app notification
@@ -2133,28 +2135,31 @@ export async function registerRoutes(
         ));
       if (!existing) {
         await db.insert(profileViews).values({ viewerId, viewedId });
-        // Notify the viewed user (if they're premium they'll see who)
-        await db.insert(notifications).values({
-          userId: viewedId,
-          type: "view",
-          title: "Alguien vio tu perfil",
-          body: "Una persona ha visitado tu perfil hoy.",
-          link: "/premium",
-          read: false,
-        });
-        // Fire-and-forget push notification (respects user prefs)
-        try {
-          const [viewedUser] = await db.select({ notificationPrefs: (users as any).notificationPrefs })
-            .from(users).where(eq(users.id, viewedId));
-          const prefs = viewedUser?.notificationPrefs ? JSON.parse(viewedUser.notificationPrefs as string) : { profileViews: true };
-          if (prefs.profileViews !== false) {
-            sendPushNotification(viewedId, {
-              title: "👀 Alguien vio tu perfil",
-              body: "Una persona ha visitado tu perfil hoy. ¡Abre FallonYou para verlo!",
-              url: "/premium",
-            }).catch(() => {});
-          }
-        } catch { /* non-fatal */ }
+        // Only notify Premium users about profile views
+        const [viewedUser] = await db.select({ isPremium: users.isPremium, notificationPrefs: (users as any).notificationPrefs })
+          .from(users).where(eq(users.id, viewedId));
+        const isViewedUserPremium = viewedUser?.isPremium === 'true';
+        if (isViewedUserPremium) {
+          await db.insert(notifications).values({
+            userId: viewedId,
+            type: "view",
+            title: "👀 Alguien vio tu perfil",
+            body: "Una persona ha visitado tu perfil hoy. ¡Toca para ver quién fue!",
+            link: "/premium",
+            read: false,
+          });
+          // Push notification (respects user prefs)
+          try {
+            const prefs = viewedUser?.notificationPrefs ? JSON.parse(viewedUser.notificationPrefs as string) : { profileViews: true };
+            if (prefs.profileViews !== false) {
+              sendPushNotification(viewedId, {
+                title: "👀 Alguien vio tu perfil",
+                body: "Una persona ha visitado tu perfil hoy. ¡Abre FallonYou para verlo!",
+                url: "/premium",
+              }).catch(() => {});
+            }
+          } catch { /* non-fatal */ }
+        }
       }
       res.json({ ok: true });
     } catch { res.json({ ok: true }); }
