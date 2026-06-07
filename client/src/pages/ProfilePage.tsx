@@ -6,7 +6,7 @@ import { useUpload } from "@/hooks/use-upload";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Camera, LogOut, Shield, User, Star, Plane, MapPin, Heart, Trash2, FileText, Mail, Briefcase, Eye, Sparkles, Lightbulb, ChevronRight, Flame, Trophy, Zap, Globe2, Smartphone, ChevronDown, Share2, Download } from "lucide-react";
+import { Loader2, Camera, LogOut, Shield, User, Star, Plane, MapPin, Heart, Trash2, FileText, Mail, Briefcase, Eye, Sparkles, Lightbulb, ChevronRight, Flame, Trophy, Zap, Globe2, Smartphone, ChevronDown, Share2, Download, Bell, BellOff } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { api } from "@shared/routes";
@@ -70,12 +70,29 @@ export default function ProfilePage() {
   const [isSettingProfilePic, setIsSettingProfilePic] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [showInstallGuide, setShowInstallGuide] = useState(false);
+  const [showNotifPrefs, setShowNotifPrefs] = useState(false);
   const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
   const isStandalone = window.matchMedia("(display-mode: standalone)").matches || (window.navigator as any).standalone === true;
 
   const { data: connectedCities } = useQuery<{ cities: string[] }>({
     queryKey: ["/api/my-connected-cities"],
     enabled: !!user,
+  });
+
+  type NotifPrefs = { profileViews: boolean; newTravelers: boolean; matches: boolean; messages: boolean; events: boolean };
+  const { data: notifPrefs } = useQuery<NotifPrefs>({
+    queryKey: ["/api/notifications/preferences"],
+    enabled: !!user,
+  });
+  const notifPrefsMutation = useMutation({
+    mutationFn: (patch: Partial<NotifPrefs>) =>
+      fetch("/api/notifications/preferences", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(patch),
+      }).then(r => r.json()),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["/api/notifications/preferences"] }),
   });
 
   const { mutate: toggleGuide, isPending: isTogglingGuide } = useMutation({
@@ -689,6 +706,59 @@ export default function ProfilePage() {
           }} />
 
           <NotificationToggle />
+
+          {/* Notification preferences */}
+          <Card
+            className="cursor-pointer hover:bg-muted/50 transition-colors"
+            onClick={() => setShowNotifPrefs(v => !v)}
+            data-testid="card-notif-prefs"
+          >
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-full bg-sky-500/10 flex items-center justify-center flex-shrink-0">
+                  <Bell className="w-4 h-4 text-sky-500" />
+                </div>
+                <div className="flex-1">
+                  <p className="font-medium text-sm">Preferencias de notificación</p>
+                  <p className="text-xs text-muted-foreground">Elige qué alertas quieres recibir</p>
+                </div>
+                <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform duration-200 ${showNotifPrefs ? "rotate-180" : ""}`} />
+              </div>
+
+              {showNotifPrefs && (
+                <div className="mt-4 pt-4 border-t space-y-3" onClick={e => e.stopPropagation()}>
+                  {([
+                    { key: "profileViews", label: "Alguien ve mi perfil", desc: "Push cuando visitan tu perfil", icon: <Eye className="w-4 h-4 text-amber-500" /> },
+                    { key: "newTravelers", label: "Nuevo viajero en mi ciudad", desc: "Alerta cuando alguien llega a tu ciudad", icon: <Plane className="w-4 h-4 text-sky-500" /> },
+                    { key: "matches",      label: "Nuevas conexiones",      desc: "Cuando alguien hace match contigo",   icon: <Heart className="w-4 h-4 text-rose-500" /> },
+                    { key: "messages",     label: "Mensajes",               desc: "Nuevos mensajes de tus conexiones",   icon: <Mail className="w-4 h-4 text-blue-500" /> },
+                    { key: "events",       label: "Actividades",            desc: "Eventos nuevos o recordatorios",      icon: <Sparkles className="w-4 h-4 text-green-500" /> },
+                  ] as const).map(({ key, label, desc, icon }) => {
+                    const enabled = notifPrefs ? notifPrefs[key] !== false : true;
+                    return (
+                      <div key={key} className="flex items-center justify-between gap-3" data-testid={`notif-pref-${key}`}>
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center">{icon}</div>
+                          <div>
+                            <p className="text-sm font-medium leading-none">{label}</p>
+                            <p className="text-xs text-muted-foreground mt-0.5">{desc}</p>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => notifPrefsMutation.mutate({ [key]: !enabled })}
+                          className={`relative w-11 h-6 rounded-full transition-colors duration-200 focus:outline-none ${enabled ? "bg-sky-500" : "bg-muted-foreground/30"}`}
+                          aria-label={enabled ? "Desactivar" : "Activar"}
+                          data-testid={`toggle-notif-${key}`}
+                        >
+                          <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform duration-200 ${enabled ? "translate-x-5" : "translate-x-0"}`} />
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
           <Link href="/ambassadors">
             <Card className="cursor-pointer hover:bg-muted/50 transition-colors border-amber-500/25 bg-gradient-to-r from-amber-950/20 to-transparent">

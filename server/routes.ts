@@ -164,8 +164,51 @@ export async function registerRoutes(
       const { nextAdventure } = req.body;
       if (nextAdventure !== undefined) profileData.nextAdventure = nextAdventure;
       
+      // Get old city before updating (for new-traveler notification)
+      const [oldProfile] = await db.select({ currentCity: profiles.currentCity })
+        .from(profiles).where(eq(profiles.userId, req.user!.id));
+      const oldCity = oldProfile?.currentCity;
+
       const updated = await storage.upsertProfile(req.user!.id, profileData);
       res.json({ ...updated, displayName });
+
+      // Fire-and-forget: notify users in new city that a traveler arrived
+      const newCity = currentCity as string | undefined;
+      if (newCity && newCity.trim() && newCity !== oldCity) {
+        try {
+          const moverName = req.user!.firstName || "Alguien";
+          // Find users in that city (excluding the mover)
+          const usersInCity = await db.select({ userId: profiles.userId })
+            .from(profiles)
+            .where(and(
+              eq(profiles.currentCity, newCity.trim()),
+              ne(profiles.userId, req.user!.id)
+            ))
+            .limit(50);
+          for (const target of usersInCity) {
+            // Check prefs
+            const [targetUser] = await db.select({ notificationPrefs: (users as any).notificationPrefs })
+              .from(users).where(eq(users.id, target.userId));
+            const prefs = targetUser?.notificationPrefs ? JSON.parse(targetUser.notificationPrefs as string) : { newTravelers: true };
+            if (prefs.newTravelers === false) continue;
+            // In-app notification
+            await db.insert(notifications).values({
+              userId: target.userId,
+              type: "new_traveler",
+              title: `✈️ Nuevo viajero en ${newCity}`,
+              body: `${moverName} acaba de llegar a tu ciudad. ¡Conéctate con él!`,
+              link: "/swipe",
+              read: false,
+            });
+            // Push notification (fire-and-forget)
+            sendPushNotification(target.userId, {
+              title: `✈️ Nuevo viajero en ${newCity}`,
+              body: `${moverName} acaba de llegar. ¡Abre FallonYou para conocerle!`,
+              url: "/swipe",
+            }).catch(() => {});
+          }
+        } catch { /* non-fatal */ }
+      }
     } catch (err) {
       console.error("[updateProfile] Error saving profile:", err);
       res.status(500).json({ error: "No se pudo guardar el perfil. Por favor inténtalo de nuevo." });
@@ -2099,6 +2142,19 @@ export async function registerRoutes(
           link: "/premium",
           read: false,
         });
+        // Fire-and-forget push notification (respects user prefs)
+        try {
+          const [viewedUser] = await db.select({ notificationPrefs: (users as any).notificationPrefs })
+            .from(users).where(eq(users.id, viewedId));
+          const prefs = viewedUser?.notificationPrefs ? JSON.parse(viewedUser.notificationPrefs as string) : { profileViews: true };
+          if (prefs.profileViews !== false) {
+            sendPushNotification(viewedId, {
+              title: "👀 Alguien vio tu perfil",
+              body: "Una persona ha visitado tu perfil hoy. ¡Abre FallonYou para verlo!",
+              url: "/premium",
+            }).catch(() => {});
+          }
+        } catch { /* non-fatal */ }
       }
       res.json({ ok: true });
     } catch { res.json({ ok: true }); }
@@ -2746,6 +2802,36 @@ export async function registerRoutes(
       LIMIT 20
     `);
     res.json(rows.rows);
+  });
+
+  // ─── Notification Preferences ──────────────────────────────────────────────
+  app.get("/api/notifications/preferences", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const [u] = await db.select({ notificationPrefs: (users as any).notificationPrefs })
+      .from(users).where(eq(users.id, req.user!.id));
+    const defaultPrefs = { profileViews: true, newTravelers: true, matches: true, messages: true, events: true };
+    try {
+      const prefs = u?.notificationPrefs ? { ...defaultPrefs, ...JSON.parse(u.notificationPrefs as string) } : defaultPrefs;
+      res.json(prefs);
+    } catch {
+      res.json(defaultPrefs);
+    }
+  });
+
+  app.patch("/api/notifications/preferences", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const allowed = ["profileViews", "newTravelers", "matches", "messages", "events"];
+    const patch: Record<string, boolean> = {};
+    for (const key of allowed) {
+      if (typeof req.body[key] === "boolean") patch[key] = req.body[key];
+    }
+    // Merge with existing prefs
+    const [u] = await db.select({ notificationPrefs: (users as any).notificationPrefs })
+      .from(users).where(eq(users.id, req.user!.id));
+    const existing = u?.notificationPrefs ? JSON.parse(u.notificationPrefs as string) : {};
+    const merged = { ...existing, ...patch };
+    await db.execute(sql`UPDATE users SET notification_prefs = ${JSON.stringify(merged)} WHERE id = ${req.user!.id}`);
+    res.json(merged);
   });
 
   // Get travelers who want the same destination

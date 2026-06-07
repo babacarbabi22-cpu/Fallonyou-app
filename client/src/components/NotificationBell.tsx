@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Bell, X, Check, Eye, Heart, MessageCircle, CalendarDays, Tag, Sparkles, ChevronRight, ShieldCheck } from "lucide-react";
+import { Bell, X, Check, Eye, Heart, MessageCircle, CalendarDays, Tag, Sparkles, ChevronRight, ShieldCheck, Plane } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
@@ -16,15 +16,16 @@ interface Notification {
 }
 
 const typeIcon: Record<string, any> = {
-  match:   { Icon: Heart,          color: "text-rose-500",   bg: "bg-rose-500/10" },
-  message: { Icon: MessageCircle,  color: "text-blue-500",   bg: "bg-blue-500/10" },
-  like:    { Icon: Heart,          color: "text-pink-500",   bg: "bg-pink-500/10" },
-  view:    { Icon: Eye,            color: "text-amber-500",  bg: "bg-amber-500/10" },
-  event:     { Icon: CalendarDays,   color: "text-green-600",  bg: "bg-green-500/10" },
-  new_event: { Icon: CalendarDays,   color: "text-green-600",  bg: "bg-green-500/10" },
-  offer:   { Icon: Tag,            color: "text-amber-600",  bg: "bg-amber-500/10" },
-  system:       { Icon: Sparkles,    color: "text-purple-500", bg: "bg-purple-500/10" },
-  admin_message:{ Icon: ShieldCheck, color: "text-blue-600",   bg: "bg-blue-600/10" },
+  match:        { Icon: Heart,          color: "text-rose-500",   bg: "bg-rose-500/10" },
+  message:      { Icon: MessageCircle,  color: "text-blue-500",   bg: "bg-blue-500/10" },
+  like:         { Icon: Heart,          color: "text-pink-500",   bg: "bg-pink-500/10" },
+  view:         { Icon: Eye,            color: "text-amber-500",  bg: "bg-amber-500/10" },
+  event:        { Icon: CalendarDays,   color: "text-green-600",  bg: "bg-green-500/10" },
+  new_event:    { Icon: CalendarDays,   color: "text-green-600",  bg: "bg-green-500/10" },
+  offer:        { Icon: Tag,            color: "text-amber-600",  bg: "bg-amber-500/10" },
+  new_traveler: { Icon: Plane,          color: "text-sky-500",    bg: "bg-sky-500/10" },
+  system:       { Icon: Sparkles,       color: "text-purple-500", bg: "bg-purple-500/10" },
+  admin_message:{ Icon: ShieldCheck,    color: "text-blue-600",   bg: "bg-blue-600/10" },
 };
 
 function timeAgo(dateStr: string): string {
