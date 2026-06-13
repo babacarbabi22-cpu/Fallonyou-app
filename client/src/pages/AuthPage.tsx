@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Mail, Lock, User, Eye, EyeOff, Loader2, Heart, Star, Plane, ChevronDown, ShieldCheck, Camera, Ban, UserX, Scale, Hand } from "lucide-react";
+import { Mail, Lock, User, Eye, EyeOff, Loader2, Heart, Star, Plane, ChevronDown, ShieldCheck, Camera, Ban, UserX, Scale, Hand, Globe } from "lucide-react";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { useTranslation } from "@/lib/i18n";
 import { Link } from "wouter";
@@ -135,8 +135,14 @@ export default function AuthPage() {
         })}
       </div>
 
-      {/* Language selector */}
-      <div className="absolute top-4 right-4 z-20"><LanguageSelector /></div>
+      {/* Language selector — prominent pill at top */}
+      <div className="absolute top-4 right-4 z-20 flex flex-col items-end gap-1.5">
+        <LanguageSelector />
+        <div className="flex items-center gap-1.5 bg-black/40 backdrop-blur-sm border border-white/10 rounded-full px-3 py-1 pointer-events-none">
+          <Globe className="w-3 h-3 text-amber-400" />
+          <span className="text-[11px] text-white/70 font-medium tracking-wide">EN · ES · FR</span>
+        </div>
+      </div>
 
       {/* Content */}
       <div className="relative z-10 w-full max-w-sm px-5 flex flex-col items-center gap-5">
@@ -169,7 +175,7 @@ export default function AuthPage() {
               animationDelay: "0.6s",
               display: "inline-block",
             }}>
-            FallonYou
+            FallOnyou
           </h1>
           {/* Golden hands that catch the ball */}
           <div style={{
