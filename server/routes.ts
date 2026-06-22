@@ -1602,12 +1602,28 @@ export async function registerRoutes(
     // Respond immediately — send notifications in background (non-blocking)
     res.json(newEvent);
 
-    // Fire-and-forget: in-app notifications for users in the same city (skip blocked)
-    if (nearbyUsers.length > 0) {
-      const creatorBlockedSet = await getBlockedIds(req.user!.id);
-      const eligibleUsers = nearbyUsers.filter(u => !creatorBlockedSet.has(u.id));
-      if (eligibleUsers.length > 0) {
-        const notifValues = eligibleUsers.map(u => ({
+    // Fire-and-forget: notify all users who have events notifications enabled
+    (async () => {
+      try {
+        const creatorBlockedSet = await getBlockedIds(req.user!.id);
+
+        // Get all users except creator, with their notification prefs
+        const allUsers = await db.select({ id: users.id, notificationPrefs: (users as any).notificationPrefs })
+          .from(users)
+          .where(ne(users.id, req.user!.id));
+
+        const eligible = allUsers.filter(u => {
+          if (creatorBlockedSet.has(u.id)) return false;
+          try {
+            const prefs = u.notificationPrefs ? JSON.parse(u.notificationPrefs as string) : {};
+            return prefs.events !== false; // default: true
+          } catch { return true; }
+        });
+
+        if (eligible.length === 0) return;
+
+        // In-app notification for all eligible users
+        const notifValues = eligible.map(u => ({
           userId: u.id,
           type: 'new_event',
           title: `${icon} Nueva actividad en ${city}`,
@@ -1615,18 +1631,22 @@ export async function registerRoutes(
           link: `/events`,
           read: false,
         }));
-        db.insert(notifications).values(notifValues).catch(err =>
+        await db.insert(notifications).values(notifValues).catch(err =>
           console.error('Error creating event notifications:', err)
         );
-      }
-    }
 
-    // Fire-and-forget: push notifications
-    sendPushToAllExcept(req.user!.id, {
-      title: `${icon} Nueva actividad en ${city}`,
-      body: `${creatorName} creó "${title}" — ¡únete!`,
-      url: '/',
-    }).catch(err => console.error('Push notification error:', err));
+        // Push notification for each eligible user (respects prefs)
+        for (const u of eligible) {
+          sendPushNotification(u.id, {
+            title: `${icon} Nueva actividad en ${city}`,
+            body: `${creatorName} creó "${title}" — ¡únete!`,
+            url: '/events',
+          }).catch(() => {});
+        }
+      } catch (err) {
+        console.error('Event notification background error:', err);
+      }
+    })();
   });
 
   // Join event
