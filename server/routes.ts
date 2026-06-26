@@ -735,20 +735,21 @@ export async function registerRoutes(
       return res.status(403).json({ error: 'No puedes enviar mensajes a este usuario' });
     }
     
-    const { content } = req.body;
-    if (!content?.trim()) return res.status(400).json({ error: 'Message content required' });
+    const { content, imageUrl } = req.body;
+    if (!content?.trim() && !imageUrl) return res.status(400).json({ error: 'Message content or image required' });
     
     const message = await storage.createMessage({
       matchId,
       senderId: req.user!.id,
-      content: content.trim()
+      content: content?.trim() || '',
+      imageUrl: imageUrl || null,
     });
 
     const senderProfile = await storage.getProfile(req.user!.id);
     const senderName = senderProfile?.displayName || 'Someone';
     sendPushNotification(recipientId, {
       title: `${senderName} ✉️`,
-      body: content.trim().substring(0, 100),
+      body: imageUrl ? '📸 Te envió una foto' : content.trim().substring(0, 100),
       url: `/matches`,
     }).catch(() => {});
 

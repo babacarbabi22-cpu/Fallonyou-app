@@ -78,6 +78,7 @@ export const messages = pgTable("messages", {
   matchId: integer("match_id").notNull().references(() => matches.id),
   senderId: varchar("sender_id").notNull().references(() => users.id),
   content: text("content").notNull(),
+  imageUrl: text("image_url"),
   readAt: timestamp("read_at"),
   createdAt: timestamp("created_at").defaultNow(),
 });

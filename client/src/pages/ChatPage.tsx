@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
-import { ArrowLeft, Send, MoreVertical, Shield, Flag, Ban, CheckCheck, Check, XCircle } from "lucide-react";
+import { ArrowLeft, Send, MoreVertical, Shield, Flag, Ban, CheckCheck, Check, XCircle, ImagePlus, X, Loader2 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "@/lib/i18n";
@@ -32,6 +32,7 @@ interface Message {
   matchId: number;
   senderId: string;
   content: string;
+  imageUrl?: string | null;
   readAt: string | null;
   createdAt: string;
 }
@@ -50,11 +51,33 @@ interface MatchUser {
 
 type ActionType = "report" | "block" | "end" | null;
 
+async function uploadImageToGCS(file: File): Promise<string> {
+  const res = await apiRequest('POST', '/api/uploads/request-url', {
+    name: file.name,
+    size: file.size,
+    contentType: file.type,
+  });
+  const { uploadURL, objectPath } = await res.json();
+
+  await fetch(uploadURL, {
+    method: 'PUT',
+    body: file,
+    headers: { 'Content-Type': file.type },
+  });
+
+  return objectPath;
+}
+
 export default function ChatPage() {
   const [, params] = useRoute("/chat/:matchId");
   const matchId = parseInt(params?.matchId || "0");
   const [message, setMessage] = useState("");
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const t = useTranslation();
   const [, navigate] = useLocation();
@@ -81,18 +104,20 @@ export default function ChatPage() {
   });
 
   const sendMutation = useMutation({
-    mutationFn: async (content: string) => {
-      const res = await apiRequest('POST', `/api/matches/${matchId}/messages`, { content });
+    mutationFn: async ({ content, imageUrl }: { content: string; imageUrl?: string }) => {
+      const res = await apiRequest('POST', `/api/matches/${matchId}/messages`, { content, imageUrl });
       return res.json();
     },
     onSuccess: () => {
       setMessage("");
+      setImagePreview(null);
+      setImageFile(null);
       queryClient.invalidateQueries({ queryKey: ['/api/matches', matchId, 'messages'] });
     },
     onError: () => {
       toast({
         title: "Error",
-        description: "Failed to send message",
+        description: "No se pudo enviar el mensaje",
         variant: "destructive",
       });
     }
@@ -106,7 +131,6 @@ export default function ChatPage() {
       toast({ title: t.chat.userBlocked, description: t.chat.thankYou });
       setActionDialog(null);
       setSelectedReason("");
-      // Invalidate ALL caches so the blocked user disappears everywhere immediately
       queryClient.invalidateQueries({ queryKey: ['/api/users'] });
       queryClient.invalidateQueries({ queryKey: ['/api/matches'] });
       queryClient.invalidateQueries({ queryKey: ['/api/daily-spark'] });
@@ -149,14 +173,45 @@ export default function ChatPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const handleSend = () => {
-    if (message.trim()) {
-      sendMutation.mutate(message.trim());
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      toast({ title: "Solo imágenes", description: "Selecciona un archivo de imagen", variant: "destructive" });
+      return;
     }
+    if (file.size > 10 * 1024 * 1024) {
+      toast({ title: "Imagen muy grande", description: "Máximo 10 MB", variant: "destructive" });
+      return;
+    }
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
+    // Clear the input so same file can be re-selected
+    e.target.value = '';
+  };
+
+  const handleSend = async () => {
+    if (!message.trim() && !imageFile) return;
+
+    let imageUrl: string | undefined;
+    if (imageFile) {
+      setIsUploadingImage(true);
+      try {
+        imageUrl = await uploadImageToGCS(imageFile);
+      } catch {
+        toast({ title: "Error al subir imagen", description: "Inténtalo de nuevo", variant: "destructive" });
+        setIsUploadingImage(false);
+        return;
+      }
+      setIsUploadingImage(false);
+    }
+
+    sendMutation.mutate({ content: message.trim(), imageUrl });
   };
 
   const otherUser = matchData?.otherUser;
   const userPhoto = otherUser?.photos?.[0]?.url || otherUser?.profileImageUrl;
+  const isSending = sendMutation.isPending || isUploadingImage;
 
   return (
     <div className="flex flex-col h-screen bg-background">
@@ -225,7 +280,6 @@ export default function ChatPage() {
           </div>
         ) : messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full px-2 py-6 gap-5">
-            {/* Avatar + greeting */}
             <div className="flex flex-col items-center gap-2 text-center">
               <div className="text-3xl">👋</div>
               <p className="text-base font-semibold">
@@ -235,7 +289,6 @@ export default function ChatPage() {
                 Toca uno de estos mensajes para enviarlo directamente, o escribe el tuyo propio abajo.
               </p>
             </div>
-            {/* Starter chips */}
             <div className="flex flex-col gap-2 w-full max-w-sm">
               {[
                 { emoji: "👋", text: `¡Hola ${otherUser?.firstName || ""}! Vi tu perfil y me pareció genial, ¿cómo estás?` },
@@ -269,15 +322,29 @@ export default function ChatPage() {
                 className={`flex ${isMe ? "justify-end" : "justify-start"}`}
               >
                 <Card
-                  className={`max-w-[75%] px-4 py-2 ${
+                  className={`max-w-[75%] overflow-hidden ${
+                    msg.imageUrl && !msg.content ? "p-0" : "px-4 py-2"
+                  } ${
                     isMe
                       ? "bg-primary text-primary-foreground"
                       : "bg-muted"
                   }`}
                   data-testid={`message-${msg.id}`}
                 >
-                  <p className="break-words">{msg.content}</p>
-                  <div className={`text-xs mt-1 flex items-center gap-1 ${isMe ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
+                  {msg.imageUrl && (
+                    <img
+                      src={msg.imageUrl}
+                      alt="Imagen compartida"
+                      className={`max-w-full rounded-lg cursor-pointer hover:opacity-90 transition-opacity ${msg.content ? "mb-2 mt-1 mx-1" : "w-full"}`}
+                      style={{ maxHeight: "280px", objectFit: "cover" }}
+                      onClick={() => setLightboxUrl(msg.imageUrl!)}
+                      data-testid={`message-image-${msg.id}`}
+                    />
+                  )}
+                  {msg.content && (
+                    <p className={`break-words ${msg.imageUrl ? "px-3 pb-1" : ""}`}>{msg.content}</p>
+                  )}
+                  <div className={`text-xs mt-1 flex items-center gap-1 ${msg.imageUrl && !msg.content ? "px-3 pb-2" : ""} ${isMe ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
                     {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     {isMe && (
                       msg.readAt ? (
@@ -295,30 +362,93 @@ export default function ChatPage() {
         <div ref={messagesEndRef} />
       </main>
 
+      {/* Image preview strip */}
+      {imagePreview && (
+        <div className="px-4 pb-2 bg-background border-t pt-2">
+          <div className="relative inline-block">
+            <img
+              src={imagePreview}
+              alt="Vista previa"
+              className="h-20 w-20 object-cover rounded-xl border-2 border-primary"
+            />
+            <button
+              onClick={() => { setImagePreview(null); setImageFile(null); }}
+              className="absolute -top-1.5 -right-1.5 bg-destructive text-destructive-foreground rounded-full p-0.5"
+              data-testid="button-remove-image-preview"
+            >
+              <X className="w-3 h-3" />
+            </button>
+          </div>
+          <p className="text-xs text-muted-foreground mt-1">Imagen lista para enviar</p>
+        </div>
+      )}
+
       <footer className="sticky bottom-0 bg-background border-t p-4">
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={handleFileSelect}
+          data-testid="input-image-file"
+        />
         <form
           onSubmit={(e) => {
             e.preventDefault();
             handleSend();
           }}
-          className="flex gap-2"
+          className="flex gap-2 items-center"
         >
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isSending}
+            data-testid="button-attach-image"
+            className="shrink-0 text-muted-foreground hover:text-primary"
+          >
+            <ImagePlus className="w-5 h-5" />
+          </Button>
           <Input
             value={message}
             onChange={(e) => setMessage(e.target.value)}
-            placeholder="Escribe un mensaje..."
+            placeholder={imageFile ? "Añade un texto (opcional)..." : "Escribe un mensaje..."}
             className="flex-1"
             data-testid="input-message"
           />
           <Button 
             type="submit" 
-            disabled={!message.trim() || sendMutation.isPending}
+            disabled={(!message.trim() && !imageFile) || isSending}
             data-testid="button-send-message"
+            className="shrink-0"
           >
-            <Send className="w-5 h-5" />
+            {isSending ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
           </Button>
         </form>
       </footer>
+
+      {/* Lightbox */}
+      {lightboxUrl && (
+        <div
+          className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4"
+          onClick={() => setLightboxUrl(null)}
+          data-testid="lightbox-overlay"
+        >
+          <button
+            className="absolute top-4 right-4 text-white bg-black/50 rounded-full p-2"
+            onClick={() => setLightboxUrl(null)}
+          >
+            <X className="w-5 h-5" />
+          </button>
+          <img
+            src={lightboxUrl}
+            alt="Imagen ampliada"
+            className="max-w-full max-h-full rounded-lg object-contain"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
 
       <Dialog open={actionDialog === "report"} onOpenChange={(open) => !open && setActionDialog(null)}>
         <DialogContent>
