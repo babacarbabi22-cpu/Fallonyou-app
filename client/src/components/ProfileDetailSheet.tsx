@@ -135,11 +135,11 @@ export function ProfileDetailSheet({ user, open, onOpenChange }: ProfileDetailSh
 
   const getRelationshipTypeLabel = (key: string) => {
     const relationshipMap: Record<string, string> = {
-      longTerm: t.relationshipTypes?.longTerm || "Long-term relationship",
-      shortTerm: t.relationshipTypes?.shortTerm || "Something casual",
-      friends: t.relationshipTypes?.friends || "New friends",
-      figuring: t.relationshipTypes?.figuring || "Still figuring it out",
-      marriage: t.relationshipTypes?.marriage || "Marriage",
+      longTerm: t.relationshipTypes?.longTerm || "Local friends",
+      shortTerm: t.relationshipTypes?.shortTerm || "Travel companion",
+      friends: t.relationshipTypes?.friends || "Meet new people",
+      figuring: t.relationshipTypes?.figuring || "Group activities",
+      marriage: t.relationshipTypes?.marriage || "Explore the city",
     };
     return relationshipMap[key] || key;
   };

@@ -35,9 +35,9 @@ const cityAds: CityAd[] = [
     city: "París",
     country: { es: "Francia", en: "France", fr: "France" },
     tagline: {
-      es: "El amor empieza en una actividad inesperada",
-      en: "Love begins at an unexpected event",
-      fr: "L'amour commence lors d'une activité inattendue",
+      es: "Las mejores amistades nacen en una actividad inesperada",
+      en: "The best friendships start at an unexpected event",
+      fr: "Les meilleures amitiés naissent lors d'une activité inattendue",
     },
     cta: { es: "Descubrir", en: "Discover", fr: "Découvrir" },
     image: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=900&q=80",
