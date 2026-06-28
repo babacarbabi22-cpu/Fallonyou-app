@@ -4,7 +4,7 @@ import type { Server } from "http";
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
 import { db } from "./db";
-import { users, profiles, photos, events, eventParticipants, eventComments, eventRatings, matches, preferences, referrals, profileViews, stories, businessPartners, localOffers, notifications, swipes, ambassadorApplications, appSessions, blockedUsers, adventurePhotos, cityTips, cityTipVotes } from "@shared/schema";
+import { users, profiles, photos, events, eventParticipants, eventComments, eventRatings, matches, preferences, referrals, profileViews, stories, businessPartners, localOffers, notifications, swipes, ambassadorApplications, appSessions, blockedUsers, adventurePhotos, cityTips, cityTipVotes, localHelpRequests, localHelpOffers } from "@shared/schema";
 import { eq, and, desc, ilike, gte, inArray, or, sql, lt, ne, count } from "drizzle-orm";
 import { api } from "@shared/routes";
 import { z } from "zod";
@@ -2877,6 +2877,150 @@ export async function registerRoutes(
       LIMIT 30
     `);
     res.json(rows.rows);
+  });
+
+  // ── Local Help Requests ────────────────────────────────────────────────────
+
+  // GET all open requests (optionally filter by city)
+  app.get('/api/local-help', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const city = req.query.city as string | undefined;
+    const blockedSet = await getBlockedIds(req.user!.id);
+
+    let query = db
+      .select({
+        id: localHelpRequests.id,
+        userId: localHelpRequests.userId,
+        city: localHelpRequests.city,
+        category: localHelpRequests.category,
+        description: localHelpRequests.description,
+        status: localHelpRequests.status,
+        createdAt: localHelpRequests.createdAt,
+        firstName: users.firstName,
+        profileImageUrl: users.profileImageUrl,
+      })
+      .from(localHelpRequests)
+      .leftJoin(users, eq(localHelpRequests.userId, users.id))
+      .where(eq(localHelpRequests.status, 'open'))
+      .orderBy(desc(localHelpRequests.createdAt))
+      .limit(50);
+
+    const rows = await query;
+    const filtered = rows.filter(r => !blockedSet.has(r.userId));
+    const cityFiltered = city ? filtered.filter(r => r.city.toLowerCase().includes(city.toLowerCase())) : filtered;
+
+    // Add offerCount and whether current user already offered
+    const withCounts = await Promise.all(cityFiltered.map(async (r) => {
+      const [offerRow] = await db.select({ count: count() }).from(localHelpOffers).where(eq(localHelpOffers.requestId, r.id));
+      const myOffer = await db.select().from(localHelpOffers).where(and(eq(localHelpOffers.requestId, r.id), eq(localHelpOffers.helperId, req.user!.id))).limit(1);
+      return { ...r, offerCount: Number(offerRow?.count || 0), iOffered: myOffer.length > 0 };
+    }));
+
+    res.json(withCounts);
+  });
+
+  // GET my own requests
+  app.get('/api/local-help/mine', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const rows = await db
+      .select()
+      .from(localHelpRequests)
+      .where(eq(localHelpRequests.userId, req.user!.id))
+      .orderBy(desc(localHelpRequests.createdAt));
+    res.json(rows);
+  });
+
+  // POST create a new request
+  app.post('/api/local-help', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const { city, category, description } = req.body;
+    if (!city || !category || !description?.trim()) {
+      return res.status(400).json({ error: 'city, category and description required' });
+    }
+    const [row] = await db.insert(localHelpRequests).values({
+      userId: req.user!.id,
+      city: city.trim(),
+      category,
+      description: description.trim(),
+    }).returning();
+    res.status(201).json(row);
+  });
+
+  // PATCH mark as resolved
+  app.patch('/api/local-help/:id/resolve', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const id = parseInt(req.params.id);
+    const [row] = await db.select().from(localHelpRequests).where(eq(localHelpRequests.id, id)).limit(1);
+    if (!row) return res.sendStatus(404);
+    if (row.userId !== req.user!.id) return res.sendStatus(403);
+    await db.update(localHelpRequests).set({ status: 'resolved' }).where(eq(localHelpRequests.id, id));
+    res.json({ ok: true });
+  });
+
+  // DELETE own request
+  app.delete('/api/local-help/:id', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const id = parseInt(req.params.id);
+    const [row] = await db.select().from(localHelpRequests).where(eq(localHelpRequests.id, id)).limit(1);
+    if (!row) return res.sendStatus(404);
+    if (row.userId !== req.user!.id) return res.sendStatus(403);
+    await db.delete(localHelpRequests).where(eq(localHelpRequests.id, id));
+    res.json({ ok: true });
+  });
+
+  // POST offer to help — sends notification to requester
+  app.post('/api/local-help/:id/offer', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const id = parseInt(req.params.id);
+    const [row] = await db.select().from(localHelpRequests).where(eq(localHelpRequests.id, id)).limit(1);
+    if (!row) return res.sendStatus(404);
+    if (row.userId === req.user!.id) return res.status(400).json({ error: 'Cannot offer on your own request' });
+
+    // Upsert offer
+    await db.insert(localHelpOffers).values({ requestId: id, helperId: req.user!.id }).onConflictDoNothing();
+
+    // In-app notification to requester
+    const helperProfile = await storage.getProfile(req.user!.id);
+    const helperName = helperProfile?.displayName || req.user!.firstName || 'Alguien';
+    await db.insert(notifications).values({
+      userId: row.userId,
+      type: 'local_help_offer',
+      title: `🤝 ${helperName} quiere ayudarte`,
+      body: `Ha respondido a tu petición de ayuda en ${row.city}`,
+      link: `/local-help`,
+      read: false,
+    }).catch(() => {});
+
+    sendPushNotification(row.userId, {
+      title: `🤝 ${helperName} quiere ayudarte`,
+      body: `Ha respondido a tu petición en ${row.city}`,
+      url: '/local-help',
+    }).catch(() => {});
+
+    res.json({ ok: true });
+  });
+
+  // GET offers received on my requests (to see who wants to help me)
+  app.get('/api/local-help/:id/offers', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const id = parseInt(req.params.id);
+    const [row] = await db.select().from(localHelpRequests).where(eq(localHelpRequests.id, id)).limit(1);
+    if (!row) return res.sendStatus(404);
+    if (row.userId !== req.user!.id) return res.sendStatus(403);
+
+    const offers = await db
+      .select({
+        id: localHelpOffers.id,
+        helperId: localHelpOffers.helperId,
+        createdAt: localHelpOffers.createdAt,
+        firstName: users.firstName,
+        profileImageUrl: users.profileImageUrl,
+      })
+      .from(localHelpOffers)
+      .leftJoin(users, eq(localHelpOffers.helperId, users.id))
+      .where(eq(localHelpOffers.requestId, id));
+
+    res.json(offers);
   });
 
   return httpServer;

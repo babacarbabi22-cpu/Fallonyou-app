@@ -449,3 +449,25 @@ export const ambassadorApplications = pgTable("ambassador_applications", {
 export type AmbassadorApplication = typeof ambassadorApplications.$inferSelect;
 export const insertAmbassadorApplicationSchema = createInsertSchema(ambassadorApplications).omit({ id: true, createdAt: true, status: true });
 export type InsertAmbassadorApplication = z.infer<typeof insertAmbassadorApplicationSchema>;
+
+// Local Help Requests — travelers ask for help, locals respond
+export const localHelpRequests = pgTable("local_help_requests", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  city: text("city").notNull(),
+  category: text("category").notNull(), // recommendation | companion | translator | transport | accommodation | other
+  description: text("description").notNull(),
+  status: text("status").default("open"), // open | resolved
+  createdAt: timestamp("created_at").defaultNow(),
+});
+export type LocalHelpRequest = typeof localHelpRequests.$inferSelect;
+export const insertLocalHelpRequestSchema = createInsertSchema(localHelpRequests).omit({ id: true, createdAt: true, status: true });
+export type InsertLocalHelpRequest = z.infer<typeof insertLocalHelpRequestSchema>;
+
+export const localHelpOffers = pgTable("local_help_offers", {
+  id: serial("id").primaryKey(),
+  requestId: integer("request_id").notNull().references(() => localHelpRequests.id, { onDelete: "cascade" }),
+  helperId: varchar("helper_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+export type LocalHelpOffer = typeof localHelpOffers.$inferSelect;
