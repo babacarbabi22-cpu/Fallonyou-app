@@ -6,7 +6,7 @@ import { useUpload } from "@/hooks/use-upload";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Camera, LogOut, Shield, User, Star, Plane, MapPin, Heart, Trash2, FileText, Mail, Briefcase, Eye, Sparkles, Lightbulb, ChevronRight, Flame, Trophy, Zap, Globe2, Smartphone, ChevronDown, Share2, Download, Bell, BellOff } from "lucide-react";
+import { Loader2, Camera, LogOut, Shield, User, Star, Plane, MapPin, Heart, Trash2, FileText, Mail, Briefcase, Eye, Sparkles, Lightbulb, ChevronRight, Flame, Trophy, Zap, Globe2, Smartphone, ChevronDown, Share2, Download, Bell, BellOff, Languages } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { api } from "@shared/routes";
@@ -805,6 +805,23 @@ export default function ProfilePage() {
                   <div className="flex-1">
                     <p className="font-bold text-sm">{t.howItWorks?.title || "Cómo funciona"}</p>
                     <p className="text-xs text-muted-foreground">{t.howItWorks?.heroDesc || "Guía completa para sacar el máximo partido"}</p>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+
+          <Link href="/languages">
+            <Card className="cursor-pointer hover:bg-muted/50 transition-colors border-purple-500/20 bg-gradient-to-r from-purple-950/10 to-transparent">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-full bg-purple-500/15 flex items-center justify-center flex-shrink-0">
+                    <Languages className="w-4 h-4 text-purple-500" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-bold text-sm">Frases de Viaje</p>
+                    <p className="text-xs text-muted-foreground">Aprende frases esenciales en 10 idiomas</p>
                   </div>
                   <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                 </div>

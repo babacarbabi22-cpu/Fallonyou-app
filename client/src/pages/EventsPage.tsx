@@ -11,7 +11,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Calendar, MapPin, Users, Plus, Clock, Loader2, Trash2, Pencil, ImagePlus, X, Search, MessageCircle, Image, Sparkles, Bell, ArrowRight, Building2, ChevronRight, Tag, Copy, Check, Store, Star, Camera, HandHeart } from "lucide-react";
+import { Calendar, MapPin, Users, Plus, Clock, Loader2, Trash2, Pencil, ImagePlus, X, Search, MessageCircle, Image, Sparkles, Bell, ArrowRight, Building2, ChevronRight, Tag, Copy, Check, Store, Star, Camera, HandHeart, Languages } from "lucide-react";
 import { BottomNav } from "@/components/BottomNav";
 import { NotificationBell } from "@/components/NotificationBell";
 import { StoriesRow } from "@/components/StoriesRow";
@@ -578,11 +578,11 @@ function FeatureDiscoveryBanner() {
             <X className="w-4 h-4" />
           </button>
         </div>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-hide">
           {/* Events feature */}
           <button
-            onClick={() => setDismissed(false)}
-            className="flex flex-col gap-2 rounded-xl p-3 text-left transition-all active:scale-98"
+            onClick={() => {}}
+            className="flex-shrink-0 flex flex-col gap-2 rounded-xl p-3 text-left transition-all active:scale-98 w-[44%]"
             style={{ background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.2)" }}
             data-testid="feature-card-events"
           >
@@ -597,7 +597,7 @@ function FeatureDiscoveryBanner() {
           {/* Local Help feature */}
           <button
             onClick={() => navigate("/local-help")}
-            className="flex flex-col gap-2 rounded-xl p-3 text-left transition-all active:scale-98"
+            className="flex-shrink-0 flex flex-col gap-2 rounded-xl p-3 text-left transition-all active:scale-98 w-[44%]"
             style={{ background: "rgba(59,130,246,0.08)", border: "1px solid rgba(59,130,246,0.2)" }}
             data-testid="feature-card-local-help"
           >
@@ -607,6 +607,21 @@ function FeatureDiscoveryBanner() {
             <div>
               <p className="text-xs font-semibold">Ayuda Local</p>
               <p className="text-xs text-muted-foreground leading-tight mt-0.5">Pide o ofrece ayuda en cualquier ciudad</p>
+            </div>
+          </button>
+          {/* Languages feature */}
+          <button
+            onClick={() => navigate("/languages")}
+            className="flex-shrink-0 flex flex-col gap-2 rounded-xl p-3 text-left transition-all active:scale-98 w-[44%]"
+            style={{ background: "rgba(168,85,247,0.08)", border: "1px solid rgba(168,85,247,0.2)" }}
+            data-testid="feature-card-languages"
+          >
+            <div className="w-8 h-8 rounded-full bg-purple-500/15 flex items-center justify-center">
+              <Languages className="w-4 h-4 text-purple-500" />
+            </div>
+            <div>
+              <p className="text-xs font-semibold">Frases de Viaje</p>
+              <p className="text-xs text-muted-foreground leading-tight mt-0.5">Aprende frases útiles en 10 idiomas</p>
             </div>
           </button>
         </div>
