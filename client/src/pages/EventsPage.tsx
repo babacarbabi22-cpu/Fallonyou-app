@@ -11,7 +11,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Calendar, MapPin, Users, Plus, Clock, Loader2, Trash2, Pencil, ImagePlus, X, Search, MessageCircle, Image, Sparkles, Bell, ArrowRight, Building2, ChevronRight, Tag, Copy, Check, Store, Star, Camera } from "lucide-react";
+import { Calendar, MapPin, Users, Plus, Clock, Loader2, Trash2, Pencil, ImagePlus, X, Search, MessageCircle, Image, Sparkles, Bell, ArrowRight, Building2, ChevronRight, Tag, Copy, Check, Store, Star, Camera, HandHeart } from "lucide-react";
 import { BottomNav } from "@/components/BottomNav";
 import { NotificationBell } from "@/components/NotificationBell";
 import { StoriesRow } from "@/components/StoriesRow";
@@ -551,6 +551,74 @@ function AlbumPromo() {
   );
 }
 
+function FeatureDiscoveryBanner() {
+  const [, navigate] = useLocation();
+  const [dismissed, setDismissed] = useState(() =>
+    !!localStorage.getItem("fallonyou_feature_banner_v1")
+  );
+
+  if (dismissed) return null;
+
+  return (
+    <div className="mx-4 mt-3 mb-1 rounded-2xl border border-amber-500/20 bg-gradient-to-br from-amber-500/8 via-background to-background overflow-hidden">
+      <div className="p-4">
+        <div className="flex items-start justify-between mb-3">
+          <div>
+            <p className="font-bold text-sm">👋 ¿Qué puedes hacer aquí?</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Descubre todo lo que FallOnyou tiene para ti</p>
+          </div>
+          <button
+            onClick={() => {
+              localStorage.setItem("fallonyou_feature_banner_v1", "1");
+              setDismissed(true);
+            }}
+            className="text-muted-foreground hover:text-foreground p-1 -mr-1 -mt-1"
+            data-testid="button-dismiss-feature-banner"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          {/* Events feature */}
+          <button
+            onClick={() => setDismissed(false)}
+            className="flex flex-col gap-2 rounded-xl p-3 text-left transition-all active:scale-98"
+            style={{ background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.2)" }}
+            data-testid="feature-card-events"
+          >
+            <div className="w-8 h-8 rounded-full bg-amber-500/15 flex items-center justify-center">
+              <Calendar className="w-4 h-4 text-amber-500" />
+            </div>
+            <div>
+              <p className="text-xs font-semibold">Planes & Eventos</p>
+              <p className="text-xs text-muted-foreground leading-tight mt-0.5">Crea actividades o únete a las de otros</p>
+            </div>
+          </button>
+          {/* Local Help feature */}
+          <button
+            onClick={() => navigate("/local-help")}
+            className="flex flex-col gap-2 rounded-xl p-3 text-left transition-all active:scale-98"
+            style={{ background: "rgba(59,130,246,0.08)", border: "1px solid rgba(59,130,246,0.2)" }}
+            data-testid="feature-card-local-help"
+          >
+            <div className="w-8 h-8 rounded-full bg-blue-500/15 flex items-center justify-center">
+              <HandHeart className="w-4 h-4 text-blue-500" />
+            </div>
+            <div>
+              <p className="text-xs font-semibold">Ayuda Local</p>
+              <p className="text-xs text-muted-foreground leading-tight mt-0.5">Pide o ofrece ayuda en cualquier ciudad</p>
+            </div>
+          </button>
+        </div>
+        <div className="mt-3 flex items-center gap-1.5 text-xs text-muted-foreground">
+          <ArrowRight className="w-3 h-3 text-amber-500" />
+          <span>Toca <span className="font-medium text-foreground">Discover</span> para conocer gente nueva o <span className="font-medium text-foreground">Matches</span> para chatear</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function EventsPage() {
   const t = useTranslation();
   const { data: currentUser } = useCurrentUser();
@@ -872,6 +940,9 @@ export default function EventsPage() {
       <div className="px-4 pt-3 pb-1">
         <StoriesRow />
       </div>
+
+      {/* Feature discovery banner */}
+      <FeatureDiscoveryBanner />
 
       {/* City inspirations carousel */}
       <CityAdsCarousel />
