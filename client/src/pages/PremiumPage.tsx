@@ -7,7 +7,10 @@ import {
   Loader2, Crown, Heart, Eye, Sparkles, Check, Shield,
   Star, HelpCircle, Rocket, Users, Zap, Store, Mail,
   Tag, ArrowRight, Lock, X, Infinity as InfinityIcon,
+  Globe2, Languages, Lightbulb, Plane, MapPin, Utensils, ShieldCheck, MessageSquare,
 } from "lucide-react";
+import { LanguageSelector } from "@/components/LanguageSelector";
+import { useI18n } from "@/lib/i18n";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
@@ -100,6 +103,7 @@ function markTeaserSeen() {
 
 export default function PremiumPage() {
   const { toast } = useToast();
+  const { language } = useI18n();
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [billingInterval, setBillingInterval] = useState<"month" | "year">("year");
   const [showPricing, setShowPricing] = useState(false);
@@ -635,6 +639,76 @@ export default function PremiumPage() {
                 </div>
               </a>
               <p className="text-xs text-center text-muted-foreground">fallonyouapp@hotmail.com</p>
+            </div>
+          </div>
+        </motion.section>
+
+        {/* ── Idiomas ── */}
+        <motion.section initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}>
+          <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid rgba(99,102,241,0.25)" }}>
+            <div
+              className="px-5 py-4 flex items-center justify-between gap-3"
+              style={{ background: "linear-gradient(135deg,rgba(99,102,241,0.12),rgba(139,92,246,0.06))" }}
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-indigo-500/15 flex items-center justify-center shrink-0">
+                  <Globe2 className="w-5 h-5 text-indigo-400" />
+                </div>
+                <div>
+                  <p className="font-bold text-base">Idioma de la app</p>
+                  <p className="text-xs text-muted-foreground">Español · English · Français</p>
+                </div>
+              </div>
+              <LanguageSelector />
+            </div>
+            <div className="px-5 py-4 bg-card space-y-2">
+              {[
+                { flag: "🇪🇸", lang: "Español", active: language === "es" },
+                { flag: "🇬🇧", lang: "English", active: language === "en" },
+                { flag: "🇫🇷", lang: "Français", active: language === "fr" },
+              ].map(({ flag, lang, active }) => (
+                <div key={lang} className={`flex items-center gap-3 rounded-xl px-3 py-2.5 ${active ? "bg-indigo-500/10 border border-indigo-500/20" : "bg-muted/40"}`}>
+                  <span className="text-xl">{flag}</span>
+                  <p className="text-sm font-medium flex-1">{lang}</p>
+                  {active && <span className="text-[11px] font-semibold text-indigo-400 uppercase tracking-wide">Activo</span>}
+                </div>
+              ))}
+              <p className="text-xs text-center text-muted-foreground pt-1">Cambia el idioma desde el selector arriba a la derecha</p>
+            </div>
+          </div>
+        </motion.section>
+
+        {/* ── Ideas útiles para viajeros ── */}
+        <motion.section initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
+          <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid rgba(16,185,129,0.25)" }}>
+            <div
+              className="px-5 py-4 flex items-center gap-3"
+              style={{ background: "linear-gradient(135deg,rgba(16,185,129,0.12),rgba(16,185,129,0.04))" }}
+            >
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/15 flex items-center justify-center shrink-0">
+                <Lightbulb className="w-5 h-5 text-emerald-400" />
+              </div>
+              <div>
+                <p className="font-bold text-base">Ideas útiles para viajeros</p>
+                <p className="text-xs text-muted-foreground">Consejos de la comunidad FallonYou</p>
+              </div>
+            </div>
+            <div className="px-5 py-4 bg-card space-y-3">
+              {[
+                { icon: Plane,          color: "text-sky-400",     bg: "bg-sky-500/10",     tip: "Activa «Estoy disponible hoy» en tu perfil para que otros viajeros te encuentren al llegar a tu ciudad." },
+                { icon: MapPin,         color: "text-rose-400",    bg: "bg-rose-500/10",    tip: "Comparte tu próxima aventura en el perfil — otros podrán unirse o darte ideas sobre ese destino." },
+                { icon: Users,          color: "text-amber-400",   bg: "bg-amber-500/10",   tip: "Usa «Ayuda Local» para pedir o ofrecer ayuda a conexiones ya establecidas. La comunidad funciona porque todos aportamos." },
+                { icon: MessageSquare,  color: "text-indigo-400",  bg: "bg-indigo-500/10",  tip: "Rompe el hielo con algo específico: menciona un plan concreto en la ciudad, no solo «hola». Funciona mejor." },
+                { icon: ShieldCheck,    color: "text-emerald-400", bg: "bg-emerald-500/10", tip: "Para quedadas, elige siempre un lugar público la primera vez. Tu seguridad es lo primero." },
+                { icon: Utensils,       color: "text-orange-400",  bg: "bg-orange-500/10",  tip: "Los mejores locales los conocen los residentes. Pregunta en tu chat de conexiones antes de buscar en Google." },
+              ].map(({ icon: Icon, color, bg, tip }, i) => (
+                <div key={i} className="flex items-start gap-3">
+                  <div className={`w-8 h-8 rounded-lg ${bg} flex items-center justify-center shrink-0 mt-0.5`}>
+                    <Icon className={`w-4 h-4 ${color}`} />
+                  </div>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{tip}</p>
+                </div>
+              ))}
             </div>
           </div>
         </motion.section>
