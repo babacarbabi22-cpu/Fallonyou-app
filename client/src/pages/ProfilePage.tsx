@@ -923,6 +923,30 @@ export default function ProfilePage() {
             </Card>
           )}
 
+          {/* Premium access card */}
+          <Link href="/premium">
+            <Card className="cursor-pointer hover:opacity-90 transition-opacity border-amber-500/30 bg-gradient-to-r from-amber-500/10 to-yellow-500/5" data-testid="card-premium-access">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-full bg-amber-500/15 flex items-center justify-center flex-shrink-0">
+                    <span className="text-lg">👑</span>
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-semibold text-sm text-amber-600 dark:text-amber-400">
+                      {user.isPremium === 'true' ? 'Gestionar Premium' : 'Hazte Premium'}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {user.isPremium === 'true'
+                        ? 'Gestiona tu suscripción y beneficios'
+                        : 'Likes ilimitados · Ver quién te visita · Sin límites'}
+                    </p>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-amber-500/70 flex-shrink-0" />
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+
           <Link href="/legal">
             <Card className="cursor-pointer hover:bg-muted/50 transition-colors">
               <CardContent className="p-4">
