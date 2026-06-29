@@ -11,7 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { BottomNav } from "@/components/BottomNav";
 import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
-import { Plus, X, HandHeart, MapPin, Search, CheckCircle2, Trash2, Users, ChevronDown, ChevronUp } from "lucide-react";
+import { Plus, X, HandHeart, MapPin, Search, CheckCircle2, Trash2, Users, ChevronDown, ChevronUp, Euro } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Dialog,
@@ -35,6 +35,7 @@ interface HelpRequest {
   category: string;
   description: string;
   status: string;
+  budget: number | null;
   createdAt: string;
   firstName: string | null;
   profileImageUrl: string | null;
@@ -135,6 +136,19 @@ function RequestCard({ req, currentUserId }: { req: HelpRequest; currentUserId: 
       {/* Description */}
       <p className="text-sm leading-relaxed text-foreground/90">{req.description}</p>
 
+      {/* Budget badge */}
+      {req.budget && req.budget > 0 && (
+        <div className="flex items-center gap-1.5">
+          <span
+            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-600 border border-emerald-500/25"
+            data-testid={`badge-budget-${req.id}`}
+          >
+            <Euro className="w-3 h-3" />
+            Se paga · {req.budget}€
+          </span>
+        </div>
+      )}
+
       {/* Footer actions */}
       <div className="flex items-center gap-2 pt-1">
         {isOwn ? (
@@ -182,11 +196,11 @@ function RequestCard({ req, currentUserId }: { req: HelpRequest; currentUserId: 
               size="sm"
               onClick={() => offerMutation.mutate()}
               disabled={req.iOffered || offerMutation.isPending}
-              className={`ml-auto h-8 text-xs gap-1.5 ${req.iOffered ? "bg-green-600 hover:bg-green-600" : ""}`}
+              className={`ml-auto h-8 text-xs gap-1.5 ${req.iOffered ? "bg-green-600 hover:bg-green-600" : req.budget ? "bg-emerald-600 hover:bg-emerald-700 text-white" : ""}`}
               data-testid={`button-offer-${req.id}`}
             >
               <HandHeart className="w-3.5 h-3.5" />
-              {req.iOffered ? "Oferta enviada ✓" : "Puedo ayudar"}
+              {req.iOffered ? "Oferta enviada ✓" : req.budget ? `Ayudar · ${req.budget}€` : "Puedo ayudar"}
             </Button>
           </>
         )}
@@ -237,7 +251,7 @@ export default function LocalHelpPage() {
   const [cityFilter, setCityFilter] = useState("");
   const [tab, setTab] = useState<"all" | "mine">("all");
 
-  const [form, setForm] = useState({ city: "", category: "", description: "" });
+  const [form, setForm] = useState({ city: "", category: "", description: "", budget: "" });
 
   const { data: currentUser } = useQuery<{ id: string }>({ queryKey: ['/api/user'] });
 
@@ -259,7 +273,7 @@ export default function LocalHelpPage() {
     onSuccess: () => {
       toast({ title: "¡Solicitud publicada! 🌍", description: "Los locales verán tu petición y podrán ayudarte." });
       setShowForm(false);
-      setForm({ city: "", category: "", description: "" });
+      setForm({ city: "", category: "", description: "", budget: "" });
       queryClient.invalidateQueries({ queryKey: ['/api/local-help'] });
       queryClient.invalidateQueries({ queryKey: ['/api/local-help/mine'] });
     },
@@ -416,6 +430,27 @@ export default function LocalHelpPage() {
                 data-testid="textarea-help-description"
               />
               <p className="text-xs text-muted-foreground mt-1">{form.description.length}/300</p>
+            </div>
+            <div>
+              <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
+                ¿Ofreces pago? <span className="text-muted-foreground/60">(opcional)</span>
+              </label>
+              <div className="relative">
+                <Euro className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  type="number"
+                  min="1"
+                  max="9999"
+                  placeholder="Ej: 20"
+                  value={form.budget}
+                  onChange={e => setForm(f => ({ ...f, budget: e.target.value }))}
+                  className="pl-9"
+                  data-testid="input-help-budget"
+                />
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Si indicas un importe, aparecerá un badge "Se paga · X€" para atraer más ayuda.
+              </p>
             </div>
           </div>
           <DialogFooter className="gap-2">

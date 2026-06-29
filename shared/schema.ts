@@ -458,6 +458,7 @@ export const localHelpRequests = pgTable("local_help_requests", {
   category: text("category").notNull(), // recommendation | companion | translator | transport | accommodation | other
   description: text("description").notNull(),
   status: text("status").default("open"), // open | resolved
+  budget: integer("budget"), // optional €amount the requester will pay
   createdAt: timestamp("created_at").defaultNow(),
 });
 export type LocalHelpRequest = typeof localHelpRequests.$inferSelect;

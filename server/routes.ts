@@ -2895,6 +2895,7 @@ export async function registerRoutes(
         category: localHelpRequests.category,
         description: localHelpRequests.description,
         status: localHelpRequests.status,
+        budget: localHelpRequests.budget,
         createdAt: localHelpRequests.createdAt,
         firstName: users.firstName,
         profileImageUrl: users.profileImageUrl,
@@ -2933,15 +2934,17 @@ export async function registerRoutes(
   // POST create a new request
   app.post('/api/local-help', async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
-    const { city, category, description } = req.body;
+    const { city, category, description, budget } = req.body;
     if (!city || !category || !description?.trim()) {
       return res.status(400).json({ error: 'city, category and description required' });
     }
+    const budgetVal = budget && !isNaN(parseInt(budget)) && parseInt(budget) > 0 ? parseInt(budget) : null;
     const [row] = await db.insert(localHelpRequests).values({
       userId: req.user!.id,
       city: city.trim(),
       category,
       description: description.trim(),
+      budget: budgetVal,
     }).returning();
     res.status(201).json(row);
   });
