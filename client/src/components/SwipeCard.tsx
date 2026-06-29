@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion, useMotionValue, useTransform, PanInfo } from "framer-motion";
 import { UserWithPhotos } from "@/hooks/use-danceme";
-import { X, Heart, MapPin, Briefcase, Ruler, GraduationCap, Star, User, Zap, Plane, BookOpen } from "lucide-react";
+import { X, MapPin, Briefcase, Ruler, GraduationCap, Star, User, Zap, Plane, BookOpen, UserPlus } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 
 // Global image cache for faster loading
@@ -45,8 +45,8 @@ export function SwipeCard({ user, onSwipe, onTap }: SwipeCardProps) {
   const opacity = useTransform(x, [-200, -150, 0, 150, 200], [0.5, 1, 1, 1, 0.5]);
   
   // Color overlays based on drag direction
-  const likeOpacity = useTransform(x, [0, 150], [0, 1]);
-  const nopeOpacity = useTransform(x, [0, -150], [0, 1]);
+  const connectOpacity = useTransform(x, [0, 150], [0, 1]);
+  const passOpacity = useTransform(x, [0, -150], [0, 1]);
 
   const handleDrag = (_: unknown, info: PanInfo) => {
     setDragDistance(Math.abs(info.offset.x));
@@ -132,18 +132,20 @@ export function SwipeCard({ user, onSwipe, onTap }: SwipeCardProps) {
           <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/20 via-secondary/10 to-primary/5">
             <div className="text-center">
               <User className="w-32 h-32 text-white/40 mx-auto" />
-              <p className="text-white/60 mt-4 text-lg">No photo available</p>
+              <p className="text-white/60 mt-4 text-lg">Sin foto</p>
             </div>
           </div>
         )}
 
-        {/* Overlays */}
-        <motion.div style={{ opacity: likeOpacity }} className="absolute top-8 left-8 border-4 border-green-500 rounded-lg px-4 py-2 -rotate-12 z-20">
-          <span className="text-4xl font-bold text-green-500 uppercase tracking-widest">¡Sí!</span>
+        {/* Swipe overlays */}
+        <motion.div style={{ opacity: connectOpacity }} className="absolute top-8 left-8 border-4 border-amber-400 rounded-xl px-4 py-2 -rotate-12 z-20 bg-black/20 backdrop-blur-sm">
+          <span className="text-3xl font-black text-amber-400 uppercase tracking-widest flex items-center gap-2">
+            <Plane className="w-7 h-7 fill-amber-400" /> ¡Conectar!
+          </span>
         </motion.div>
         
-        <motion.div style={{ opacity: nopeOpacity }} className="absolute top-8 right-8 border-4 border-red-500 rounded-lg px-4 py-2 rotate-12 z-20">
-          <span className="text-4xl font-bold text-red-500 uppercase tracking-widest">Pasar</span>
+        <motion.div style={{ opacity: passOpacity }} className="absolute top-8 right-8 border-4 border-white/60 rounded-xl px-4 py-2 rotate-12 z-20 bg-black/20 backdrop-blur-sm">
+          <span className="text-3xl font-black text-white/80 uppercase tracking-widest">Seguir</span>
         </motion.div>
 
         {/* Gradient Overlay - pointer-events-none to allow clicking through */}
@@ -176,28 +178,28 @@ export function SwipeCard({ user, onSwipe, onTap }: SwipeCardProps) {
             <h2 className="text-4xl font-display font-bold text-shadow">
               {displayName}{profile?.age ? <>, <span className="text-3xl font-medium opacity-90">{profile.age}</span></> : null}
             </h2>
-            {/* Action buttons embedded in card for tap interaction */}
-            <div className="flex gap-4 mb-2 relative z-30">
+            {/* Action buttons */}
+            <div className="flex gap-3 mb-2 relative z-30">
               <button 
                 onClick={(e) => { e.stopPropagation(); setExitX(-200); onSwipe("left"); }}
-                className="w-12 h-12 flex items-center justify-center rounded-full bg-white/20 backdrop-blur-md border border-white/30 text-red-400 hover:bg-white hover:scale-110 transition-all"
+                className="w-12 h-12 flex items-center justify-center rounded-full bg-white/20 backdrop-blur-md border border-white/30 text-white hover:bg-white/30 hover:scale-110 transition-all"
                 data-testid="button-pass"
               >
-                <X size={24} strokeWidth={3} />
+                <X size={22} strokeWidth={2.5} />
               </button>
               <button 
                 onClick={(e) => { e.stopPropagation(); setExitX(200); onSwipe("right"); }}
-                className="w-12 h-12 flex items-center justify-center rounded-full bg-primary text-white shadow-lg hover:scale-110 transition-all"
+                className="w-12 h-12 flex items-center justify-center rounded-full bg-amber-500 text-white shadow-lg shadow-amber-900/40 hover:bg-amber-400 hover:scale-110 transition-all"
                 data-testid="button-like"
               >
-                <Heart size={24} fill="currentColor" />
+                <UserPlus size={22} strokeWidth={2} />
               </button>
             </div>
           </div>
 
           <div className="space-y-2 opacity-90">
             {profile?.bio && (
-              <p className="text-lg leading-relaxed line-clamp-2 text-shadow">
+              <p className="text-base leading-relaxed line-clamp-2 text-shadow">
                 {profile.bio}
               </p>
             )}

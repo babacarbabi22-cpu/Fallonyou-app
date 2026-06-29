@@ -435,10 +435,10 @@ export default function SwipePage() {
               <div>
                 <p className="text-white font-bold text-sm">
                   {(likesReceived as any).count === 1
-                    ? '¡1 persona está interesada en ti!'
-                    : `¡${(likesReceived as any).count} personas están interesadas en ti!`}
+                    ? '¡1 persona quiere conectar contigo!'
+                    : `¡${(likesReceived as any).count} personas quieren conectar contigo!`}
                 </p>
-                <p className="text-white/80 text-xs">Sigue deslizando para hacer match</p>
+                <p className="text-white/80 text-xs">Sigue descubriendo para hacer nuevos amigos</p>
               </div>
             </div>
           </div>
@@ -624,8 +624,8 @@ export default function SwipePage() {
                 <div className="w-20 h-20 bg-muted rounded-full flex items-center justify-center mb-4">
                   <Sparkles className="w-10 h-10 text-muted-foreground" />
                 </div>
-                <h3 className="text-xl font-bold">Sin más perfiles</h3>
-                <p className="text-muted-foreground mt-2 mb-6">Vuelve pronto para ver más personas cerca de ti.</p>
+                <h3 className="text-xl font-bold">Has visto a todos por ahora</h3>
+                <p className="text-muted-foreground mt-2 mb-6">Vuelve pronto — hay gente nueva llegando a la comunidad cada día. 🌍</p>
                 <Button onClick={() => refetch()} variant="outline" data-testid="button-refresh">
                   Actualizar
                 </Button>
@@ -637,23 +637,25 @@ export default function SwipePage() {
 
       {/* Action Buttons */}
       {(!premiumStatus || premiumStatus.isPremium || premiumStatus.canLike) && !showPromoCard && activeUsers && activeUsers.length > 0 && (
-        <div className="flex justify-center gap-6 mt-4">
-          <Button
-            variant="outline"
-            size="icon"
-            className="w-14 h-14 rounded-full border-2 border-red-200 text-red-500 hover:bg-red-50"
+        <div className="flex justify-center items-center gap-4 mt-4 px-4">
+          {/* Pass */}
+          <button
+            className="flex flex-col items-center gap-1 group"
             onClick={() => {
               const topUser = activeUsers[activeUsers.length - 1];
               if (topUser) handleSwipe(topUser.id, 'left');
             }}
             data-testid="button-pass"
           >
-            <X className="w-7 h-7" />
-          </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            className="w-14 h-14 rounded-full border-2 border-blue-200 text-blue-500 hover:bg-blue-50"
+            <div className="w-14 h-14 rounded-full border-2 border-border bg-card flex items-center justify-center text-muted-foreground group-hover:border-foreground/30 group-hover:scale-110 transition-all shadow-sm">
+              <X className="w-6 h-6" strokeWidth={2} />
+            </div>
+            <span className="text-[10px] text-muted-foreground font-medium">Seguir</span>
+          </button>
+
+          {/* Super Like / Destacar */}
+          <button
+            className="flex flex-col items-center gap-1 group"
             onClick={() => {
               const topUser = activeUsers[activeUsers.length - 1];
               if (topUser) {
@@ -663,20 +665,26 @@ export default function SwipePage() {
             disabled={!(superLikeStatus as any)?.canSuperLike || superLikeMutation.isPending}
             data-testid="button-super-like"
           >
-            <Star className="w-7 h-7" />
-          </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            className="w-14 h-14 rounded-full border-2 border-amber-300 text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-950"
+            <div className="w-14 h-14 rounded-full border-2 border-amber-300/50 bg-amber-500/10 flex items-center justify-center text-amber-500 group-hover:bg-amber-500/20 group-hover:scale-110 transition-all shadow-sm disabled:opacity-40">
+              <Star className="w-6 h-6 fill-amber-400 text-amber-400" />
+            </div>
+            <span className="text-[10px] text-amber-500 font-medium">Destacar</span>
+          </button>
+
+          {/* Connect — main CTA */}
+          <button
+            className="flex flex-col items-center gap-1 group"
             onClick={() => {
               const topUser = activeUsers[activeUsers.length - 1];
               if (topUser) handleSwipe(topUser.id, 'right');
             }}
             data-testid="button-like"
           >
-            <Star className="w-7 h-7 fill-current" />
-          </Button>
+            <div className="w-16 h-16 rounded-full bg-amber-500 flex items-center justify-center text-white shadow-lg shadow-amber-900/30 group-hover:bg-amber-400 group-hover:scale-110 transition-all">
+              <Plane className="w-7 h-7" />
+            </div>
+            <span className="text-[10px] text-amber-600 font-bold">Conectar</span>
+          </button>
         </div>
       )}
 
@@ -698,7 +706,7 @@ export default function SwipePage() {
             data-testid="button-can-help"
           >
             <HandHeart className="w-4 h-4" />
-            También puedo ayudarte
+            Puedo ayudar a esta persona
           </button>
         </div>
       )}
