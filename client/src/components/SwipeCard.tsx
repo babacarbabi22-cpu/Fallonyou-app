@@ -139,11 +139,11 @@ export function SwipeCard({ user, onSwipe, onTap }: SwipeCardProps) {
 
         {/* Overlays */}
         <motion.div style={{ opacity: likeOpacity }} className="absolute top-8 left-8 border-4 border-green-500 rounded-lg px-4 py-2 -rotate-12 z-20">
-          <span className="text-4xl font-bold text-green-500 uppercase tracking-widest">Like</span>
+          <span className="text-4xl font-bold text-green-500 uppercase tracking-widest">¡Sí!</span>
         </motion.div>
         
         <motion.div style={{ opacity: nopeOpacity }} className="absolute top-8 right-8 border-4 border-red-500 rounded-lg px-4 py-2 rotate-12 z-20">
-          <span className="text-4xl font-bold text-red-500 uppercase tracking-widest">Nope</span>
+          <span className="text-4xl font-bold text-red-500 uppercase tracking-widest">Pasar</span>
         </motion.div>
 
         {/* Gradient Overlay - pointer-events-none to allow clicking through */}

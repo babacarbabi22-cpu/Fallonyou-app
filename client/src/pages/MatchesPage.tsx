@@ -3,9 +3,14 @@ import { BottomNav } from "@/components/BottomNav";
 import { MatchRatingModal } from "@/components/MatchRatingModal";
 import { LocalHelpPanel } from "@/pages/LocalHelpPage";
 import { useState } from "react";
-import { Loader2, MessageCircle, Star, Shield, Heart, Camera, ArrowRight, CalendarDays, Users, Sparkles, MapPin, Plane, Store, Tag, ExternalLink, HandHeart, Plus } from "lucide-react";
+import { useMutation } from "@tanstack/react-query";
+import { Loader2, MessageCircle, Star, Shield, Heart, Camera, ArrowRight, CalendarDays, Users, Sparkles, MapPin, Plane, Store, Tag, ExternalLink, HandHeart, Euro } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "@/lib/i18n";
 
 // ── Recommendation cards shown between matches ──────────────────────────────
@@ -240,7 +245,24 @@ export default function MatchesPage() {
   const { data: matches, isLoading } = useMatches();
   const [selectedMatch, setSelectedMatch] = useState<{ id: number, user: any } | null>(null);
   const [activeTab, setActiveTab] = useState<"connections" | "help">("connections");
+  const [showHelpDialog, setShowHelpDialog] = useState(false);
+  const [helpTarget, setHelpTarget] = useState<{ id: string; name: string } | null>(null);
+  const [helpType, setHelpType] = useState<"free" | "paid" | null>(null);
+  const [helpAmount, setHelpAmount] = useState("");
+  const { toast } = useToast();
   const t = useTranslation();
+
+  const proactiveHelpMutation = useMutation({
+    mutationFn: ({ targetUserId, type, amount }: { targetUserId: string; type: "free" | "paid"; amount?: number }) =>
+      apiRequest('POST', `/api/proactive-help/${targetUserId}`, { type, amount }),
+    onSuccess: () => {
+      toast({ title: "🤝 ¡Oferta enviada!", description: "Le hemos notificado que puedes ayudarle." });
+      setShowHelpDialog(false);
+      setHelpType(null);
+      setHelpAmount("");
+    },
+    onError: () => toast({ title: "Error", description: "No se pudo enviar la oferta", variant: "destructive" }),
+  });
 
   if (!currentUser) return null;
 
@@ -343,6 +365,19 @@ export default function MatchesPage() {
                   </div>
 
                   <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="rounded-full border-emerald-500/30 text-emerald-600 hover:bg-emerald-500/10"
+                      title="También puedo ayudarte"
+                      onClick={() => {
+                        setHelpTarget({ id: match.otherUser.id, name: match.otherUser.firstName || "esta persona" });
+                        setShowHelpDialog(true);
+                      }}
+                      data-testid={`button-help-${match.id}`}
+                    >
+                      <HandHeart className="w-5 h-5" />
+                    </Button>
                     <Link href={`/chat/${match.id}`}>
                       <Button variant="default" size="icon" className="rounded-full" data-testid={`button-chat-${match.id}`}>
                         <MessageCircle className="w-5 h-5" />
@@ -380,6 +415,72 @@ export default function MatchesPage() {
 
       </div>
       )}
+
+      {/* Help offer dialog */}
+      <Dialog open={showHelpDialog} onOpenChange={(open) => { setShowHelpDialog(open); if (!open) { setHelpType(null); setHelpAmount(""); } }}>
+        <DialogContent className="max-w-sm rounded-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-base">🤝 Ofrecer ayuda a {helpTarget?.name}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <p className="text-sm text-muted-foreground">¿Cómo quieres ayudarle?</p>
+            <button
+              onClick={() => setHelpType("free")}
+              className={`w-full flex items-start gap-3 p-3.5 rounded-xl border-2 transition-all text-left ${helpType === "free" ? "border-emerald-500 bg-emerald-500/5" : "border-border hover:border-emerald-500/40"}`}
+              data-testid="match-help-option-free"
+            >
+              <span className="text-2xl">❤️</span>
+              <div>
+                <p className="font-semibold text-sm">Sin pedir nada a cambio</p>
+                <p className="text-xs text-muted-foreground mt-0.5">Ayudo porque sí. La comunidad funciona así.</p>
+              </div>
+            </button>
+            <button
+              onClick={() => setHelpType("paid")}
+              className={`w-full flex items-start gap-3 p-3.5 rounded-xl border-2 transition-all text-left ${helpType === "paid" ? "border-amber-500 bg-amber-500/5" : "border-border hover:border-amber-500/40"}`}
+              data-testid="match-help-option-paid"
+            >
+              <span className="text-2xl">💶</span>
+              <div>
+                <p className="font-semibold text-sm">A cambio de un mínimo</p>
+                <p className="text-xs text-muted-foreground mt-0.5">Mi tiempo también vale. Indico un precio mínimo.</p>
+              </div>
+            </button>
+            {helpType === "paid" && (
+              <div className="relative">
+                <Euro className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  type="number"
+                  min="1"
+                  placeholder="Mínimo (€)"
+                  value={helpAmount}
+                  onChange={e => setHelpAmount(e.target.value)}
+                  className="pl-9"
+                  data-testid="match-input-help-amount"
+                />
+              </div>
+            )}
+          </div>
+          <div className="flex gap-2 pt-1">
+            <Button variant="outline" onClick={() => setShowHelpDialog(false)} className="flex-1">Cancelar</Button>
+            <Button
+              onClick={() => {
+                if (!helpTarget || !helpType) return;
+                proactiveHelpMutation.mutate({
+                  targetUserId: helpTarget.id,
+                  type: helpType,
+                  amount: helpType === "paid" && helpAmount ? parseInt(helpAmount) : undefined,
+                });
+              }}
+              disabled={!helpType || (helpType === "paid" && !helpAmount) || proactiveHelpMutation.isPending}
+              className="flex-1"
+              data-testid="match-button-send-help"
+            >
+              {proactiveHelpMutation.isPending ? "Enviando..." : "Enviar oferta"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <BottomNav />
     </div>

@@ -3003,6 +3003,37 @@ export async function registerRoutes(
     res.json({ ok: true });
   });
 
+  // POST proactive help offer — user says "I can help you" to another user's profile
+  app.post('/api/proactive-help/:userId', async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const targetUserId = req.params.userId;
+    if (targetUserId === req.user!.id) return res.status(400).json({ error: 'Cannot offer help to yourself' });
+
+    const { type, amount } = req.body; // type: 'free' | 'paid', amount?: number
+    const helperProfile = await storage.getProfile(req.user!.id);
+    const helperName = helperProfile?.displayName || req.user!.firstName || 'Alguien';
+
+    const isFree = type === 'free';
+    const compensationText = isFree ? 'sin pedir nada a cambio ❤️' : `a cambio de un mínimo de ${amount || '?'}€ 💶`;
+
+    await db.insert(notifications).values({
+      userId: targetUserId,
+      type: 'proactive_help',
+      title: `🤝 ${helperName} puede ayudarte`,
+      body: `Se ha ofrecido a ayudarte ${compensationText}`,
+      link: `/matches`,
+      read: false,
+    }).catch(() => {});
+
+    sendPushNotification(targetUserId, {
+      title: `🤝 ${helperName} puede ayudarte`,
+      body: `Se ha ofrecido a ayudarte ${compensationText}`,
+      url: '/matches',
+    }).catch(() => {});
+
+    res.json({ ok: true });
+  });
+
   // GET offers received on my requests (to see who wants to help me)
   app.get('/api/local-help/:id/offers', async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);

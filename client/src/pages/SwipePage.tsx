@@ -8,9 +8,11 @@ import { MatchHeartCascade } from "@/components/HeartCascade";
 import { AnimatePresence, motion } from "framer-motion";
 import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Loader2, Sparkles, SlidersHorizontal, Star, X, Heart, Plane, Camera, MapPin, CalendarDays, Zap, Crown, Lock } from "lucide-react";
+import { Loader2, Sparkles, SlidersHorizontal, Star, X, Heart, Plane, Camera, MapPin, CalendarDays, Zap, Crown, Lock, HandHeart, Euro } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -138,6 +140,11 @@ export default function SwipePage() {
   const [swipeCount, setSwipeCount] = useState(0);
   const [showPromoCard, setShowPromoCard] = useState(false);
   const [sparkDismissed, setSparkDismissed] = useState(false);
+  const [showHelpDialog, setShowHelpDialog] = useState(false);
+  const [helpTargetUserId, setHelpTargetUserId] = useState<number | null>(null);
+  const [helpTargetName, setHelpTargetName] = useState<string>("");
+  const [helpType, setHelpType] = useState<"free" | "paid" | null>(null);
+  const [helpAmount, setHelpAmount] = useState("");
 
   const { data: dailySpark } = useQuery<any>({
     queryKey: ["/api/daily-spark"],
@@ -196,6 +203,18 @@ export default function SwipePage() {
       queryClient.invalidateQueries({ queryKey: ['/api/preferences'] });
       refetch();
     }
+  });
+
+  const proactiveHelpMutation = useMutation({
+    mutationFn: ({ targetUserId, type, amount }: { targetUserId: number; type: "free" | "paid"; amount?: number }) =>
+      apiRequest('POST', `/api/proactive-help/${targetUserId}`, { type, amount }),
+    onSuccess: () => {
+      toast({ title: "🤝 ¡Oferta enviada!", description: "Le hemos notificado que puedes ayudarle." });
+      setShowHelpDialog(false);
+      setHelpType(null);
+      setHelpAmount("");
+    },
+    onError: () => toast({ title: "Error", description: "No se pudo enviar la oferta", variant: "destructive" }),
   });
 
   const superLikeMutation = useMutation({
@@ -661,6 +680,104 @@ export default function SwipePage() {
         </div>
       )}
 
+      {/* "También puedo ayudarte" button */}
+      {!showPromoCard && activeUsers && activeUsers.length > 0 && (
+        <div className="flex justify-center mt-3">
+          <button
+            onClick={() => {
+              const topUser = activeUsers[activeUsers.length - 1];
+              if (topUser) {
+                setHelpTargetUserId(topUser.id);
+                setHelpTargetName(topUser.firstName || "esta persona");
+                setHelpType(null);
+                setHelpAmount("");
+                setShowHelpDialog(true);
+              }
+            }}
+            className="flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium text-muted-foreground border border-border hover:border-emerald-500/50 hover:text-emerald-600 hover:bg-emerald-500/5 transition-all"
+            data-testid="button-can-help"
+          >
+            <HandHeart className="w-4 h-4" />
+            También puedo ayudarte
+          </button>
+        </div>
+      )}
+
+      {/* Help offer dialog */}
+      <Dialog open={showHelpDialog} onOpenChange={setShowHelpDialog}>
+        <DialogContent className="max-w-sm rounded-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-base">🤝 Ofrecer ayuda a {helpTargetName}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <p className="text-sm text-muted-foreground">¿Cómo quieres ayudarle?</p>
+
+            {/* Free option */}
+            <button
+              onClick={() => setHelpType("free")}
+              className={`w-full flex items-start gap-3 p-3.5 rounded-xl border-2 transition-all text-left ${helpType === "free" ? "border-emerald-500 bg-emerald-500/5" : "border-border hover:border-emerald-500/40"}`}
+              data-testid="help-option-free"
+            >
+              <span className="text-2xl">❤️</span>
+              <div>
+                <p className="font-semibold text-sm">Sin pedir nada a cambio</p>
+                <p className="text-xs text-muted-foreground mt-0.5">Ayudo porque sí. La comunidad funciona así.</p>
+              </div>
+            </button>
+
+            {/* Paid option */}
+            <button
+              onClick={() => setHelpType("paid")}
+              className={`w-full flex items-start gap-3 p-3.5 rounded-xl border-2 transition-all text-left ${helpType === "paid" ? "border-amber-500 bg-amber-500/5" : "border-border hover:border-amber-500/40"}`}
+              data-testid="help-option-paid"
+            >
+              <span className="text-2xl">💶</span>
+              <div>
+                <p className="font-semibold text-sm">A cambio de un mínimo</p>
+                <p className="text-xs text-muted-foreground mt-0.5">Mi tiempo también vale. Indico un precio mínimo.</p>
+              </div>
+            </button>
+
+            {/* Amount input for paid */}
+            {helpType === "paid" && (
+              <div className="relative mt-1">
+                <Euro className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  type="number"
+                  min="1"
+                  placeholder="Mínimo (€)"
+                  value={helpAmount}
+                  onChange={e => setHelpAmount(e.target.value)}
+                  className="pl-9"
+                  data-testid="input-help-min-amount"
+                />
+              </div>
+            )}
+          </div>
+
+          <div className="flex gap-2 pt-1">
+            <Button variant="outline" onClick={() => setShowHelpDialog(false)} className="flex-1">
+              Cancelar
+            </Button>
+            <Button
+              onClick={() => {
+                if (!helpTargetUserId || !helpType) return;
+                proactiveHelpMutation.mutate({
+                  targetUserId: helpTargetUserId,
+                  type: helpType,
+                  amount: helpType === "paid" && helpAmount ? parseInt(helpAmount) : undefined,
+                });
+              }}
+              disabled={!helpType || (helpType === "paid" && !helpAmount) || proactiveHelpMutation.isPending}
+              className="flex-1"
+              data-testid="button-send-help-offer"
+            >
+              {proactiveHelpMutation.isPending ? "Enviando..." : "Enviar oferta"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
 
       {/* Match Overlay Animation with Heart Cascade */}
       <MatchHeartCascade isActive={matchAnimation} duration={3000} />
@@ -686,7 +803,7 @@ export default function SwipePage() {
                 transition={{ delay: 0.2 }}
                 className="text-5xl md:text-6xl font-display font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 drop-shadow-2xl"
               >
-                IT'S A MATCH!
+                ¡NUEVA CONEXIÓN!
               </motion.h2>
               <motion.p
                 initial={{ y: 20, opacity: 0 }}
