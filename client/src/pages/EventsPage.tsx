@@ -663,6 +663,7 @@ export default function EventsPage() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [showMyEvents, setShowMyEvents] = useState(false);
   const [showDeals, setShowDeals] = useState(false);
+  const [showPastEvents, setShowPastEvents] = useState(false);
   const [copiedCode, setCopiedCode] = useState<number | null>(null);
   const [citySearch, setCitySearch] = useState("");
   const [showCitySearch, setShowCitySearch] = useState(false);
@@ -820,12 +821,16 @@ export default function EventsPage() {
     }
   }, [events, currentUser]);
 
-  const filteredEvents = events?.filter((e) => {
+  const allFilteredEvents = events?.filter((e) => {
     if (showMyEvents) return isCreatorOrAdmin(e);
     if (selectedCategory && e.category !== selectedCategory) return false;
     if (citySearch.trim() && !e.city.toLowerCase().includes(citySearch.toLowerCase())) return false;
     return true;
   });
+
+  const upcomingEvents = allFilteredEvents?.filter(e => !isPastEvent(e.startsAt));
+  const pastEvents = allFilteredEvents?.filter(e => isPastEvent(e.startsAt));
+  const filteredEvents = showPastEvents ? allFilteredEvents : upcomingEvents;
 
   const getCategoryIcon = (category: string) => {
     const cat = eventCategories.find((c) => c.id === category);
@@ -1414,6 +1419,25 @@ export default function EventsPage() {
               </CardContent>
             </Card>
           ))
+        )}
+
+        {/* ── Botón ver eventos anteriores ── */}
+        {!showMyEvents && (pastEvents?.length ?? 0) > 0 && (
+          <button
+            onClick={() => setShowPastEvents(v => !v)}
+            className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-2xl border border-dashed border-border text-sm text-muted-foreground hover:border-amber-500/50 hover:text-amber-600 transition-all"
+            data-testid="button-toggle-past-events"
+          >
+            {showPastEvents ? (
+              <>
+                <span>↑</span> Ocultar eventos anteriores
+              </>
+            ) : (
+              <>
+                <span>🗂️</span> Ver eventos anteriores ({pastEvents!.length})
+              </>
+            )}
+          </button>
         )}
 
         {filteredEvents && filteredEvents.length > 0 && (
