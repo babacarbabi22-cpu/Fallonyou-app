@@ -9,7 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { BottomNav } from "@/components/BottomNav";
 import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
-import { Plus, X, HandHeart, MapPin, Search, CheckCircle2, Trash2, Users, ChevronDown, ChevronUp, Euro } from "lucide-react";
+import { Plus, X, HandHeart, MapPin, Search, CheckCircle2, Trash2, Users, ChevronDown, ChevronUp, Euro, Gift, Shirt, ShoppingBag, Package } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Dialog,
@@ -58,8 +58,20 @@ const CATEGORIES: { key: string; label: string; emoji: string; color: string }[]
   { key: "other",          label: "Otro",            emoji: "❓", color: "bg-muted text-muted-foreground border-border" },
 ];
 
+const DONATION_CATEGORIES: { key: string; label: string; emoji: string; color: string }[] = [
+  { key: "donation_clothes", label: "Ropa",           emoji: "👗", color: "bg-emerald-500/10 text-emerald-700 border-emerald-500/25" },
+  { key: "donation_food",    label: "Comida",          emoji: "🍱", color: "bg-emerald-500/10 text-emerald-700 border-emerald-500/25" },
+  { key: "donation_items",   label: "Objetos / Otros", emoji: "📦", color: "bg-emerald-500/10 text-emerald-700 border-emerald-500/25" },
+];
+
+const ALL_CATEGORIES = [...CATEGORIES, ...DONATION_CATEGORIES];
+
 function getCat(key: string) {
-  return CATEGORIES.find(c => c.key === key) || CATEGORIES[CATEGORIES.length - 1];
+  return ALL_CATEGORIES.find(c => c.key === key) || CATEGORIES[CATEGORIES.length - 1];
+}
+
+function isDonation(category: string) {
+  return category.startsWith("donation_");
 }
 
 function RequestCard({ req, currentUserId }: { req: HelpRequest; currentUserId: string }) {
@@ -100,15 +112,27 @@ function RequestCard({ req, currentUserId }: { req: HelpRequest; currentUserId: 
     enabled: isOwn && showOffers,
   });
 
+  const isDon = isDonation(req.category);
+
   return (
     <motion.div
       layout
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -8 }}
-      className="rounded-2xl border bg-card p-4 flex flex-col gap-3"
+      className={`rounded-2xl border p-4 flex flex-col gap-3 ${isDon ? "bg-emerald-500/5 border-emerald-500/20" : "bg-card"}`}
       data-testid={`help-request-${req.id}`}
     >
+      {/* Donation banner */}
+      {isDon && (
+        <div className="flex items-center gap-2 -mb-1">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-500 text-white">
+            <Gift className="w-3 h-3" /> DONACIÓN SOLIDARIA
+          </span>
+          <span className="text-[11px] text-emerald-600 font-medium">Gratis · Sin coste</span>
+        </div>
+      )}
+
       <div className="flex items-start gap-3">
         <Avatar className="w-10 h-10 shrink-0">
           <AvatarImage src={req.profileImageUrl || undefined} />
@@ -132,7 +156,7 @@ function RequestCard({ req, currentUserId }: { req: HelpRequest; currentUserId: 
 
       <p className="text-sm leading-relaxed text-foreground/90">{req.description}</p>
 
-      {req.budget && req.budget > 0 && (
+      {!isDon && req.budget && req.budget > 0 && (
         <div className="flex items-center gap-1.5">
           <span
             className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-600 border border-emerald-500/25"
@@ -153,7 +177,11 @@ function RequestCard({ req, currentUserId }: { req: HelpRequest; currentUserId: 
               data-testid={`button-show-offers-${req.id}`}
             >
               <Users className="w-3.5 h-3.5" />
-              <span>{req.offerCount} {req.offerCount === 1 ? "persona quiere ayudar" : "personas quieren ayudar"}</span>
+              <span>
+                {isDon
+                  ? `${req.offerCount} ${req.offerCount === 1 ? "persona interesada" : "personas interesadas"}`
+                  : `${req.offerCount} ${req.offerCount === 1 ? "persona quiere ayudar" : "personas quieren ayudar"}`}
+              </span>
               {showOffers ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
             </button>
             <div className="ml-auto flex gap-2">
@@ -165,7 +193,7 @@ function RequestCard({ req, currentUserId }: { req: HelpRequest; currentUserId: 
                 className="h-8 text-xs gap-1 text-green-600 border-green-500/30 hover:bg-green-500/10"
                 data-testid={`button-resolve-${req.id}`}
               >
-                <CheckCircle2 className="w-3.5 h-3.5" /> Resuelto
+                <CheckCircle2 className="w-3.5 h-3.5" /> {isDon ? "Donado ✓" : "Resuelto"}
               </Button>
               <Button
                 size="sm"
@@ -183,18 +211,20 @@ function RequestCard({ req, currentUserId }: { req: HelpRequest; currentUserId: 
           <>
             {req.offerCount > 0 && (
               <span className="text-xs text-muted-foreground flex items-center gap-1">
-                <Users className="w-3.5 h-3.5" /> {req.offerCount} ayudando
+                <Users className="w-3.5 h-3.5" /> {isDon ? `${req.offerCount} interesado/s` : `${req.offerCount} ayudando`}
               </span>
             )}
             <Button
               size="sm"
               onClick={() => offerMutation.mutate()}
               disabled={req.iOffered || offerMutation.isPending}
-              className={`ml-auto h-8 text-xs gap-1.5 ${req.iOffered ? "bg-green-600 hover:bg-green-600" : req.budget ? "bg-emerald-600 hover:bg-emerald-700 text-white" : ""}`}
+              className={`ml-auto h-8 text-xs gap-1.5 ${req.iOffered ? "bg-emerald-600 hover:bg-emerald-600" : isDon ? "bg-emerald-600 hover:bg-emerald-700 text-white" : req.budget ? "bg-emerald-600 hover:bg-emerald-700 text-white" : ""}`}
               data-testid={`button-offer-${req.id}`}
             >
-              <HandHeart className="w-3.5 h-3.5" />
-              {req.iOffered ? "Oferta enviada ✓" : req.budget ? `Ayudar · ${req.budget}€` : "Puedo ayudar"}
+              {isDon ? <Gift className="w-3.5 h-3.5" /> : <HandHeart className="w-3.5 h-3.5" />}
+              {req.iOffered
+                ? (isDon ? "Interés enviado ✓" : "Oferta enviada ✓")
+                : isDon ? "Me interesa" : req.budget ? `Ayudar · ${req.budget}€` : "Puedo ayudar"}
             </Button>
           </>
         )}
@@ -241,9 +271,12 @@ function RequestCard({ req, currentUserId }: { req: HelpRequest; currentUserId: 
 export function LocalHelpPanel() {
   const { toast } = useToast();
   const [showForm, setShowForm] = useState(false);
+  const [formMode, setFormMode] = useState<"help" | "donate">("help");
   const [cityFilter, setCityFilter] = useState("");
   const [tab, setTab] = useState<"all" | "mine">("all");
   const [form, setForm] = useState({ city: "", category: "", description: "", budget: "" });
+
+  const isDonateMode = formMode === "donate";
 
   const { data: currentUser } = useQuery<{ id: string }>({ queryKey: ['/api/user'] });
 
@@ -261,9 +294,13 @@ export function LocalHelpPanel() {
   });
 
   const createMutation = useMutation({
-    mutationFn: () => apiRequest('POST', '/api/local-help', form),
+    mutationFn: () => apiRequest('POST', '/api/local-help', { ...form, budget: isDonateMode ? "" : form.budget }),
     onSuccess: () => {
-      toast({ title: "¡Solicitud publicada! 🌍", description: "Los locales verán tu petición y podrán ayudarte." });
+      if (isDonateMode) {
+        toast({ title: "¡Donación publicada! 🎁", description: "La comunidad verá lo que ofreces. ¡Gracias por tu generosidad!" });
+      } else {
+        toast({ title: "¡Solicitud publicada! 🌍", description: "Los locales verán tu petición y podrán ayudarte." });
+      }
       setShowForm(false);
       setForm({ city: "", category: "", description: "", budget: "" });
       queryClient.invalidateQueries({ queryKey: ['/api/local-help'] });
@@ -319,11 +356,22 @@ export function LocalHelpPanel() {
       {/* Content */}
       <div className="flex-1 px-4 space-y-3 pb-4">
         {tab === "all" && !cityFilter && (
-          <div className="rounded-2xl bg-gradient-to-br from-amber-500/10 via-amber-400/5 to-transparent border border-amber-500/20 p-4">
-            <p className="text-sm font-semibold text-amber-600">¿Estás viajando o eres nuevo en la ciudad?</p>
-            <p className="text-xs text-muted-foreground mt-1">
-              Publica lo que necesitas — una recomendación, un acompañante, un traductor — y los locales de la comunidad responderán.
-            </p>
+          <div className="space-y-2">
+            <div className="rounded-2xl bg-gradient-to-br from-amber-500/10 via-amber-400/5 to-transparent border border-amber-500/20 p-4">
+              <p className="text-sm font-semibold text-amber-600">¿Estás viajando o eres nuevo en la ciudad?</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Publica lo que necesitas — una recomendación, un acompañante, un traductor — y los locales responderán.
+              </p>
+            </div>
+            <div className="rounded-2xl bg-gradient-to-br from-emerald-500/10 via-emerald-400/5 to-transparent border border-emerald-500/20 p-4 flex items-start gap-3">
+              <span className="text-2xl shrink-0">🎁</span>
+              <div>
+                <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-400">¿Tienes ropa o comida que donar?</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Publica tu donación y quien la necesite podrá contactarte. La comunidad solidaria.
+                </p>
+              </div>
+            </div>
           </div>
         )}
 
@@ -363,15 +411,38 @@ export function LocalHelpPanel() {
         )}
       </div>
 
-      {/* New request dialog */}
-      <Dialog open={showForm} onOpenChange={setShowForm}>
+      {/* New request / donation dialog */}
+      <Dialog open={showForm} onOpenChange={(open) => { setShowForm(open); if (!open) { setForm({ city: "", category: "", description: "", budget: "" }); setFormMode("help"); } }}>
         <DialogContent className="max-w-sm rounded-2xl">
           <DialogHeader>
-            <DialogTitle className="text-lg">🤝 Pedir ayuda local</DialogTitle>
+            <DialogTitle className="text-lg">
+              {isDonateMode ? "🎁 Publicar donación" : "🤝 Pedir ayuda local"}
+            </DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 py-2">
+
+          {/* Mode toggle */}
+          <div className="flex gap-1 bg-muted rounded-xl p-1">
+            <button
+              onClick={() => { setFormMode("help"); setForm(f => ({ ...f, category: "" })); }}
+              className={`flex-1 flex items-center justify-center gap-1.5 text-xs py-2 rounded-lg font-semibold transition-all ${!isDonateMode ? "bg-background shadow-sm text-foreground" : "text-muted-foreground"}`}
+              data-testid="form-mode-help"
+            >
+              <HandHeart className="w-3.5 h-3.5" /> Pedir ayuda
+            </button>
+            <button
+              onClick={() => { setFormMode("donate"); setForm(f => ({ ...f, category: "", budget: "" })); }}
+              className={`flex-1 flex items-center justify-center gap-1.5 text-xs py-2 rounded-lg font-semibold transition-all ${isDonateMode ? "bg-emerald-500 text-white shadow-sm" : "text-muted-foreground"}`}
+              data-testid="form-mode-donate"
+            >
+              <Gift className="w-3.5 h-3.5" /> Quiero donar
+            </button>
+          </div>
+
+          <div className="space-y-4 py-1">
             <div>
-              <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Ciudad donde necesitas ayuda</label>
+              <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
+                {isDonateMode ? "Ciudad donde puedes entregar" : "Ciudad donde necesitas ayuda"}
+              </label>
               <Input
                 placeholder="Ej: Barcelona, París, Tokio..."
                 value={form.city}
@@ -379,14 +450,17 @@ export function LocalHelpPanel() {
                 data-testid="input-help-city"
               />
             </div>
+
             <div>
-              <label className="text-xs font-medium text-muted-foreground mb-1.5 block">¿Qué tipo de ayuda necesitas?</label>
+              <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
+                {isDonateMode ? "¿Qué quieres donar?" : "¿Qué tipo de ayuda necesitas?"}
+              </label>
               <Select value={form.category} onValueChange={v => setForm(f => ({ ...f, category: v }))}>
                 <SelectTrigger data-testid="select-help-category">
                   <SelectValue placeholder="Selecciona una categoría" />
                 </SelectTrigger>
                 <SelectContent>
-                  {CATEGORIES.map(cat => (
+                  {(isDonateMode ? DONATION_CATEGORIES : CATEGORIES).map(cat => (
                     <SelectItem key={cat.key} value={cat.key}>
                       {cat.emoji} {cat.label}
                     </SelectItem>
@@ -394,10 +468,15 @@ export function LocalHelpPanel() {
                 </SelectContent>
               </Select>
             </div>
+
             <div>
-              <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Cuéntanos más</label>
+              <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
+                {isDonateMode ? "Describe lo que donas" : "Cuéntanos más"}
+              </label>
               <Textarea
-                placeholder="Ej: Busco a alguien que me recomiende restaurantes locales auténticos en el centro, nada turístico..."
+                placeholder={isDonateMode
+                  ? "Ej: Tengo ropa de invierno en buen estado: abrigos, jerséis talla M/L. Puedo quedar en el centro de Barcelona..."
+                  : "Ej: Busco a alguien que me recomiende restaurantes locales auténticos en el centro, nada turístico..."}
                 value={form.description}
                 onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
                 rows={3}
@@ -406,28 +485,41 @@ export function LocalHelpPanel() {
               />
               <p className="text-xs text-muted-foreground mt-1">{form.description.length}/300</p>
             </div>
-            <div>
-              <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
-                ¿Ofreces pago? <span className="text-muted-foreground/60">(opcional)</span>
-              </label>
-              <div className="relative">
-                <Euro className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  type="number"
-                  min="1"
-                  max="9999"
-                  placeholder="Ej: 20"
-                  value={form.budget}
-                  onChange={e => setForm(f => ({ ...f, budget: e.target.value }))}
-                  className="pl-9"
-                  data-testid="input-help-budget"
-                />
+
+            {!isDonateMode && (
+              <div>
+                <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
+                  ¿Ofreces pago? <span className="text-muted-foreground/60">(opcional)</span>
+                </label>
+                <div className="relative">
+                  <Euro className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    type="number"
+                    min="1"
+                    max="9999"
+                    placeholder="Ej: 20"
+                    value={form.budget}
+                    onChange={e => setForm(f => ({ ...f, budget: e.target.value }))}
+                    className="pl-9"
+                    data-testid="input-help-budget"
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Si indicas un importe, aparecerá un badge "Se paga · X€" para atraer más ayuda.
+                </p>
               </div>
-              <p className="text-xs text-muted-foreground mt-1">
-                Si indicas un importe, aparecerá un badge "Se paga · X€" para atraer más ayuda.
-              </p>
-            </div>
+            )}
+
+            {isDonateMode && (
+              <div className="rounded-xl bg-emerald-500/8 border border-emerald-500/20 p-3 flex items-start gap-2">
+                <span className="text-base shrink-0">💚</span>
+                <p className="text-xs text-emerald-700 dark:text-emerald-400 leading-relaxed">
+                  Tu donación es completamente gratuita. Quien esté interesado te contactará por el chat.
+                </p>
+              </div>
+            )}
           </div>
+
           <DialogFooter className="gap-2">
             <Button variant="outline" onClick={() => setShowForm(false)} data-testid="button-cancel-help">
               Cancelar
@@ -435,9 +527,12 @@ export function LocalHelpPanel() {
             <Button
               onClick={() => createMutation.mutate()}
               disabled={!form.city.trim() || !form.category || !form.description.trim() || createMutation.isPending}
+              className={isDonateMode ? "bg-emerald-600 hover:bg-emerald-700" : ""}
               data-testid="button-submit-help"
             >
-              {createMutation.isPending ? "Publicando..." : "Publicar petición"}
+              {createMutation.isPending
+                ? "Publicando..."
+                : isDonateMode ? "🎁 Publicar donación" : "Publicar petición"}
             </Button>
           </DialogFooter>
         </DialogContent>
