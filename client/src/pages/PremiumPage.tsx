@@ -365,292 +365,6 @@ export default function PremiumPage() {
           </motion.section>
         )}
 
-        {/* ── Quién quiere conocerte ── */}
-        {likedByData && (
-          <section>
-            <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-              <Users className="w-5 h-5 text-amber-500" />
-              {likedByData.count > 0
-                ? `${likedByData.count} ${likedByData.count === 1 ? "persona quiere conocerte" : "personas quieren conocerte"}`
-                : "¿Alguien quiere conocerte?"}
-            </h2>
-            {/* Teaser when count is 0 — only show when "intelligent" timing allows */}
-            {likedByData.count === 0 && teaserVisible && (() => {
-              // Build photo list: real users first, fall back to stock
-              const realPhotos = (teaserData?.users ?? []).map(u => u.photoUrl);
-              const photoSlots = Array.from({ length: 4 }, (_, i) =>
-                realPhotos[i] || BLUR_FALLBACK_PHOTOS[i]
-              );
-              // Mark as seen so it doesn't show again for 6h
-              markTeaserSeen();
-              return (
-                <div
-                  className="rounded-2xl overflow-hidden relative"
-                  style={{ border: "1px solid rgba(245,158,11,0.25)" }}
-                  data-testid="card-liked-by-teaser"
-                >
-                  <div className="grid grid-cols-2 gap-0.5 pointer-events-none select-none">
-                    {photoSlots.map((src, i) => (
-                      <div key={i} className="aspect-square overflow-hidden relative">
-                        <img
-                          src={src}
-                          alt=""
-                          className="w-full h-full object-cover"
-                          style={{ filter: "blur(16px)", transform: "scale(1.15)" }}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 px-5"
-                    style={{ background: "rgba(0,0,0,0.35)" }}>
-                    <div className="w-12 h-12 rounded-full flex items-center justify-center"
-                      style={{ background: "linear-gradient(135deg,#F59E0B,#D97706)" }}>
-                      <Sparkles className="w-6 h-6 text-white" />
-                    </div>
-                    <p className="text-base font-bold text-center text-white drop-shadow leading-snug">
-                      Es posible que alguien<br />quiera conocerte pronto
-                    </p>
-                    <p className="text-xs text-amber-200/80 text-center">
-                      {realPhotos.length > 0
-                        ? "Hay personas en la app que podrían querer conocerte"
-                        : "Activa Premium para saberlo en cuanto ocurra"}
-                    </p>
-                    <Button
-                      size="sm"
-                      className="font-bold mt-1"
-                      style={{ background: "linear-gradient(90deg,#D97706,#F59E0B)", color: "#000" }}
-                      onClick={() => { setShowPricing(true); window.scrollTo({ top: 0, behavior: "smooth" }); }}
-                      data-testid="button-unlock-teaser"
-                    >
-                      <Crown className="w-3.5 h-3.5 mr-1.5" /> Ver planes Premium
-                    </Button>
-                  </div>
-                </div>
-              );
-            })()}
-            {likedByData.count > 0 && (isPremium ? (
-              <div className="grid grid-cols-3 gap-3">
-                {likedByData.users?.map((user: any) => (
-                  <Card key={user.id} className="overflow-hidden">
-                    <img
-                      src={user.photos?.[0]?.url || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&auto=format&fit=crop&q=60"}
-                      alt={user.firstName}
-                      className="w-full aspect-square object-cover"
-                    />
-                    <CardContent className="p-2 text-center">
-                      <p className="font-medium text-xs truncate">{user.firstName || "Alguien"}</p>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            ) : (
-              <div
-                className="rounded-2xl overflow-hidden relative"
-                style={{ border: "1px solid rgba(245,158,11,0.25)" }}
-                data-testid="card-liked-by-locked"
-              >
-                {/* Blurred real photos */}
-                {(() => {
-                  const count = Math.min(likedByData.count, 6);
-                  const cols = count <= 2 ? count : count <= 4 ? 2 : 3;
-                  const slots = Array.from({ length: Math.max(count, 4) }, (_, i) => {
-                    const user = likedByData.users?.[i];
-                    return user?.photos?.[0]?.url || BLUR_FALLBACK_PHOTOS[i % BLUR_FALLBACK_PHOTOS.length];
-                  });
-                  const gridClass = cols === 1 ? "grid-cols-1" : cols === 2 ? "grid-cols-2" : "grid-cols-3";
-                  return (
-                    <div className={`grid ${gridClass} gap-0.5 pointer-events-none select-none`}>
-                      {slots.map((src, i) => (
-                        <div key={i} className="aspect-square overflow-hidden relative">
-                          <img
-                            src={src}
-                            alt=""
-                            className="w-full h-full object-cover"
-                            style={{ filter: "blur(14px)", transform: "scale(1.15)" }}
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  );
-                })()}
-                {/* Lock overlay */}
-                <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 px-4"
-                  style={{ background: "rgba(0,0,0,0.25)" }}>
-                  <div className="w-12 h-12 rounded-full flex items-center justify-center"
-                    style={{ background: "linear-gradient(135deg,#F59E0B,#D97706)" }}>
-                    <Lock className="w-6 h-6 text-white" />
-                  </div>
-                  <p className="text-sm font-semibold text-center text-white drop-shadow">
-                    Descubre quién quiere <span className="text-amber-300">conocerte</span>
-                  </p>
-                  <Button
-                    size="sm"
-                    className="font-bold"
-                    style={{ background: "linear-gradient(90deg,#D97706,#F59E0B)", color: "#000" }}
-                    onClick={() => { setShowPricing(true); window.scrollTo({ top: 0, behavior: "smooth" }); }}
-                    data-testid="button-unlock-liked-by"
-                  >
-                    <Crown className="w-3.5 h-3.5 mr-1.5" /> Desbloquear con Premium
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </section>
-        )}
-
-        {/* ── Quién vio tu perfil ── */}
-        {(viewersData?.count ?? 0) > 0 && (
-          <section>
-            <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-              <Eye className="w-5 h-5 text-amber-500" />
-              {viewersData!.count} {viewersData!.count === 1 ? "persona vio tu perfil" : "personas vieron tu perfil"}
-            </h2>
-            {isPremium && viewersData!.viewers.length > 0 ? (
-              <div className="grid grid-cols-3 gap-3">
-                {viewersData!.viewers.map((user: any) => (
-                  <Card key={user.id} className="overflow-hidden">
-                    <img
-                      src={user.photos?.[0]?.url || user.profileImageUrl || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&auto=format&fit=crop&q=60"}
-                      alt={user.firstName}
-                      className="w-full aspect-square object-cover"
-                    />
-                    <CardContent className="p-2 text-center">
-                      <p className="font-medium text-xs truncate">{user.firstName || "Alguien"}</p>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            ) : !isPremium ? (
-              <div
-                className="rounded-2xl overflow-hidden relative"
-                style={{ border: "1px solid rgba(245,158,11,0.25)" }}
-                data-testid="card-viewers-locked"
-              >
-                {/* Blurred real photos */}
-                {(() => {
-                  const count = Math.min(viewersData!.count, 6);
-                  const cols = count <= 2 ? count : count <= 4 ? 2 : 3;
-                  const slots = Array.from({ length: Math.max(count, 4) }, (_, i) => {
-                    const user = viewersData!.viewers?.[i];
-                    return user?.photos?.[0]?.url || user?.profileImageUrl || BLUR_FALLBACK_PHOTOS[(i + 2) % BLUR_FALLBACK_PHOTOS.length];
-                  });
-                  const gridClass = cols === 1 ? "grid-cols-1" : cols === 2 ? "grid-cols-2" : "grid-cols-3";
-                  return (
-                    <div className={`grid ${gridClass} gap-0.5 pointer-events-none select-none`}>
-                      {slots.map((src, i) => (
-                        <div key={i} className="aspect-square overflow-hidden relative">
-                          <img
-                            src={src}
-                            alt=""
-                            className="w-full h-full object-cover"
-                            style={{ filter: "blur(14px)", transform: "scale(1.15)" }}
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  );
-                })()}
-                <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 px-4"
-                  style={{ background: "rgba(0,0,0,0.25)" }}>
-                  <div className="w-12 h-12 rounded-full flex items-center justify-center"
-                    style={{ background: "linear-gradient(135deg,#F59E0B,#D97706)" }}>
-                    <Eye className="w-6 h-6 text-white" />
-                  </div>
-                  <p className="text-sm font-semibold text-center text-white drop-shadow">
-                    Ve quién ha <span className="text-amber-300">visitado tu perfil</span>
-                  </p>
-                  <Button
-                    size="sm"
-                    className="font-bold"
-                    style={{ background: "linear-gradient(90deg,#D97706,#F59E0B)", color: "#000" }}
-                    onClick={() => { setShowPricing(true); window.scrollTo({ top: 0, behavior: "smooth" }); }}
-                    data-testid="button-unlock-viewers"
-                  >
-                    <Crown className="w-3.5 h-3.5 mr-1.5" /> Desbloquear con Premium
-                  </Button>
-                </div>
-              </div>
-            ) : null}
-          </section>
-        )}
-
-        {/* ── Programa Embajador ── */}
-        <div
-          className="rounded-2xl overflow-hidden cursor-pointer group"
-          style={{ background: "linear-gradient(135deg,#1e1b4b,#312e81,#4338ca)", boxShadow: "0 8px 32px rgba(67,56,202,0.3)" }}
-          onClick={() => navigate("/ambassador")}
-          data-testid="card-ambassador-cta"
-        >
-          <div className="p-5 flex items-center gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-white/15 flex items-center justify-center shrink-0">
-              <Rocket className="w-6 h-6 text-white" />
-            </div>
-            <div className="flex-1">
-              <p className="text-white font-bold text-base">Programa Embajador</p>
-              <p className="text-white/65 text-xs mt-0.5 leading-relaxed">
-                Representa a FallonYou en tu ciudad y consigue Premium gratis.
-              </p>
-            </div>
-            <div className="w-8 h-8 rounded-full bg-white/15 flex items-center justify-center shrink-0 group-hover:bg-white/25 transition-colors">
-              <ArrowRight className="w-4 h-4 text-white" />
-            </div>
-          </div>
-        </div>
-
-        {/* ── Seguridad ── */}
-        <div
-          className="rounded-2xl p-4 flex items-center gap-3"
-          style={{ background: "rgba(34,197,94,0.06)", border: "1px solid rgba(34,197,94,0.2)" }}
-          data-testid="card-security"
-        >
-          <Shield className="w-8 h-8 text-green-600 shrink-0" />
-          <div>
-            <p className="font-semibold text-sm">Pagos seguros · RGPD</p>
-            <p className="text-xs text-muted-foreground">Procesado por Stripe. Tus datos están protegidos y nunca se venden.</p>
-          </div>
-        </div>
-
-        {/* ── Negocios locales ── */}
-        <motion.section initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
-          <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid rgba(245,158,11,0.25)" }}>
-            <div
-              className="px-5 py-4 flex items-center gap-3"
-              style={{ background: "linear-gradient(135deg,rgba(245,158,11,0.12),rgba(245,158,11,0.04))" }}
-            >
-              <div className="w-10 h-10 rounded-xl bg-amber-500/15 flex items-center justify-center shrink-0">
-                <Store className="w-5 h-5 text-amber-500" />
-              </div>
-              <div>
-                <p className="font-bold text-base">¿Tienes un local?</p>
-                <p className="text-xs text-muted-foreground">Colabora con FallonYou y llega a tu público</p>
-              </div>
-            </div>
-            <div className="px-5 py-4 space-y-3 bg-card">
-              {[
-                { icon: Users, text: "Enviamos nuestros usuarios a tu local — personas reales buscando planes y experiencias." },
-                { icon: Tag, text: "Tus clientes obtienen descuentos exclusivos por ser de la comunidad FallonYou." },
-                { icon: Rocket, text: "Tu negocio gana visibilidad dentro de la app ante miles de usuarios activos." },
-              ].map((item, i) => (
-                <div key={i} className="flex items-start gap-3">
-                  <div className="w-7 h-7 rounded-lg bg-amber-500/10 flex items-center justify-center shrink-0 mt-0.5">
-                    <item.icon className="w-4 h-4 text-amber-500" />
-                  </div>
-                  <p className="text-sm text-muted-foreground leading-relaxed">{item.text}</p>
-                </div>
-              ))}
-              <a href="mailto:fallonyouapp@hotmail.com?subject=Colaboración%20local%20FallonYou" className="block mt-2" data-testid="button-contact-business">
-                <div
-                  className="w-full rounded-xl py-3 px-4 flex items-center justify-center gap-2 font-semibold text-sm"
-                  style={{ background: "linear-gradient(90deg,#D97706,#F59E0B)", color: "#000" }}
-                >
-                  <Mail className="w-4 h-4" /> Contactar con nosotros
-                </div>
-              </a>
-              <p className="text-xs text-center text-muted-foreground">fallonyouapp@hotmail.com</p>
-            </div>
-          </div>
-        </motion.section>
-
         {/* ── Aprende idiomas ── */}
         {(() => {
           const LANGS = [
@@ -937,6 +651,293 @@ export default function PremiumPage() {
             </motion.section>
           );
         })()}
+
+        {/* ── Quién quiere conocerte ── */}
+        {likedByData && (
+          <section>
+            <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+              <Users className="w-5 h-5 text-amber-500" />
+              {likedByData.count > 0
+                ? `${likedByData.count} ${likedByData.count === 1 ? "persona quiere conocerte" : "personas quieren conocerte"}`
+                : "¿Alguien quiere conocerte?"}
+            </h2>
+            {/* Teaser when count is 0 — only show when "intelligent" timing allows */}
+            {likedByData.count === 0 && teaserVisible && (() => {
+              // Build photo list: real users first, fall back to stock
+              const realPhotos = (teaserData?.users ?? []).map(u => u.photoUrl);
+              const photoSlots = Array.from({ length: 4 }, (_, i) =>
+                realPhotos[i] || BLUR_FALLBACK_PHOTOS[i]
+              );
+              // Mark as seen so it doesn't show again for 6h
+              markTeaserSeen();
+              return (
+                <div
+                  className="rounded-2xl overflow-hidden relative"
+                  style={{ border: "1px solid rgba(245,158,11,0.25)" }}
+                  data-testid="card-liked-by-teaser"
+                >
+                  <div className="grid grid-cols-2 gap-0.5 pointer-events-none select-none">
+                    {photoSlots.map((src, i) => (
+                      <div key={i} className="aspect-square overflow-hidden relative">
+                        <img
+                          src={src}
+                          alt=""
+                          className="w-full h-full object-cover"
+                          style={{ filter: "blur(16px)", transform: "scale(1.15)" }}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 px-5"
+                    style={{ background: "rgba(0,0,0,0.35)" }}>
+                    <div className="w-12 h-12 rounded-full flex items-center justify-center"
+                      style={{ background: "linear-gradient(135deg,#F59E0B,#D97706)" }}>
+                      <Sparkles className="w-6 h-6 text-white" />
+                    </div>
+                    <p className="text-base font-bold text-center text-white drop-shadow leading-snug">
+                      Es posible que alguien<br />quiera conocerte pronto
+                    </p>
+                    <p className="text-xs text-amber-200/80 text-center">
+                      {realPhotos.length > 0
+                        ? "Hay personas en la app que podrían querer conocerte"
+                        : "Activa Premium para saberlo en cuanto ocurra"}
+                    </p>
+                    <Button
+                      size="sm"
+                      className="font-bold mt-1"
+                      style={{ background: "linear-gradient(90deg,#D97706,#F59E0B)", color: "#000" }}
+                      onClick={() => { setShowPricing(true); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                      data-testid="button-unlock-teaser"
+                    >
+                      <Crown className="w-3.5 h-3.5 mr-1.5" /> Ver planes Premium
+                    </Button>
+                  </div>
+                </div>
+              );
+            })()}
+            {likedByData.count > 0 && (isPremium ? (
+              <div className="grid grid-cols-3 gap-3">
+                {likedByData.users?.map((user: any) => (
+                  <Card key={user.id} className="overflow-hidden">
+                    <img
+                      src={user.photos?.[0]?.url || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&auto=format&fit=crop&q=60"}
+                      alt={user.firstName}
+                      className="w-full aspect-square object-cover"
+                    />
+                    <CardContent className="p-2 text-center">
+                      <p className="font-medium text-xs truncate">{user.firstName || "Alguien"}</p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <div
+                className="rounded-2xl overflow-hidden relative"
+                style={{ border: "1px solid rgba(245,158,11,0.25)" }}
+                data-testid="card-liked-by-locked"
+              >
+                {/* Blurred real photos */}
+                {(() => {
+                  const count = Math.min(likedByData.count, 6);
+                  const cols = count <= 2 ? count : count <= 4 ? 2 : 3;
+                  const slots = Array.from({ length: Math.max(count, 4) }, (_, i) => {
+                    const user = likedByData.users?.[i];
+                    return user?.photos?.[0]?.url || BLUR_FALLBACK_PHOTOS[i % BLUR_FALLBACK_PHOTOS.length];
+                  });
+                  const gridClass = cols === 1 ? "grid-cols-1" : cols === 2 ? "grid-cols-2" : "grid-cols-3";
+                  return (
+                    <div className={`grid ${gridClass} gap-0.5 pointer-events-none select-none`}>
+                      {slots.map((src, i) => (
+                        <div key={i} className="aspect-square overflow-hidden relative">
+                          <img
+                            src={src}
+                            alt=""
+                            className="w-full h-full object-cover"
+                            style={{ filter: "blur(14px)", transform: "scale(1.15)" }}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })()}
+                {/* Lock overlay */}
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 px-4"
+                  style={{ background: "rgba(0,0,0,0.25)" }}>
+                  <div className="w-12 h-12 rounded-full flex items-center justify-center"
+                    style={{ background: "linear-gradient(135deg,#F59E0B,#D97706)" }}>
+                    <Lock className="w-6 h-6 text-white" />
+                  </div>
+                  <p className="text-sm font-semibold text-center text-white drop-shadow">
+                    Descubre quién quiere <span className="text-amber-300">conocerte</span>
+                  </p>
+                  <Button
+                    size="sm"
+                    className="font-bold"
+                    style={{ background: "linear-gradient(90deg,#D97706,#F59E0B)", color: "#000" }}
+                    onClick={() => { setShowPricing(true); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                    data-testid="button-unlock-liked-by"
+                  >
+                    <Crown className="w-3.5 h-3.5 mr-1.5" /> Desbloquear con Premium
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </section>
+        )}
+
+        {/* ── Quién vio tu perfil ── */}
+        {(viewersData?.count ?? 0) > 0 && (
+          <section>
+            <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+              <Eye className="w-5 h-5 text-amber-500" />
+              {viewersData!.count} {viewersData!.count === 1 ? "persona vio tu perfil" : "personas vieron tu perfil"}
+            </h2>
+            {isPremium && viewersData!.viewers.length > 0 ? (
+              <div className="grid grid-cols-3 gap-3">
+                {viewersData!.viewers.map((user: any) => (
+                  <Card key={user.id} className="overflow-hidden">
+                    <img
+                      src={user.photos?.[0]?.url || user.profileImageUrl || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&auto=format&fit=crop&q=60"}
+                      alt={user.firstName}
+                      className="w-full aspect-square object-cover"
+                    />
+                    <CardContent className="p-2 text-center">
+                      <p className="font-medium text-xs truncate">{user.firstName || "Alguien"}</p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : !isPremium ? (
+              <div
+                className="rounded-2xl overflow-hidden relative"
+                style={{ border: "1px solid rgba(245,158,11,0.25)" }}
+                data-testid="card-viewers-locked"
+              >
+                {/* Blurred real photos */}
+                {(() => {
+                  const count = Math.min(viewersData!.count, 6);
+                  const cols = count <= 2 ? count : count <= 4 ? 2 : 3;
+                  const slots = Array.from({ length: Math.max(count, 4) }, (_, i) => {
+                    const user = viewersData!.viewers?.[i];
+                    return user?.photos?.[0]?.url || user?.profileImageUrl || BLUR_FALLBACK_PHOTOS[(i + 2) % BLUR_FALLBACK_PHOTOS.length];
+                  });
+                  const gridClass = cols === 1 ? "grid-cols-1" : cols === 2 ? "grid-cols-2" : "grid-cols-3";
+                  return (
+                    <div className={`grid ${gridClass} gap-0.5 pointer-events-none select-none`}>
+                      {slots.map((src, i) => (
+                        <div key={i} className="aspect-square overflow-hidden relative">
+                          <img
+                            src={src}
+                            alt=""
+                            className="w-full h-full object-cover"
+                            style={{ filter: "blur(14px)", transform: "scale(1.15)" }}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })()}
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 px-4"
+                  style={{ background: "rgba(0,0,0,0.25)" }}>
+                  <div className="w-12 h-12 rounded-full flex items-center justify-center"
+                    style={{ background: "linear-gradient(135deg,#F59E0B,#D97706)" }}>
+                    <Eye className="w-6 h-6 text-white" />
+                  </div>
+                  <p className="text-sm font-semibold text-center text-white drop-shadow">
+                    Ve quién ha <span className="text-amber-300">visitado tu perfil</span>
+                  </p>
+                  <Button
+                    size="sm"
+                    className="font-bold"
+                    style={{ background: "linear-gradient(90deg,#D97706,#F59E0B)", color: "#000" }}
+                    onClick={() => { setShowPricing(true); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                    data-testid="button-unlock-viewers"
+                  >
+                    <Crown className="w-3.5 h-3.5 mr-1.5" /> Desbloquear con Premium
+                  </Button>
+                </div>
+              </div>
+            ) : null}
+          </section>
+        )}
+
+        {/* ── Programa Embajador ── */}
+        <div
+          className="rounded-2xl overflow-hidden cursor-pointer group"
+          style={{ background: "linear-gradient(135deg,#1e1b4b,#312e81,#4338ca)", boxShadow: "0 8px 32px rgba(67,56,202,0.3)" }}
+          onClick={() => navigate("/ambassador")}
+          data-testid="card-ambassador-cta"
+        >
+          <div className="p-5 flex items-center gap-4">
+            <div className="w-12 h-12 rounded-2xl bg-white/15 flex items-center justify-center shrink-0">
+              <Rocket className="w-6 h-6 text-white" />
+            </div>
+            <div className="flex-1">
+              <p className="text-white font-bold text-base">Programa Embajador</p>
+              <p className="text-white/65 text-xs mt-0.5 leading-relaxed">
+                Representa a FallonYou en tu ciudad y consigue Premium gratis.
+              </p>
+            </div>
+            <div className="w-8 h-8 rounded-full bg-white/15 flex items-center justify-center shrink-0 group-hover:bg-white/25 transition-colors">
+              <ArrowRight className="w-4 h-4 text-white" />
+            </div>
+          </div>
+        </div>
+
+        {/* ── Seguridad ── */}
+        <div
+          className="rounded-2xl p-4 flex items-center gap-3"
+          style={{ background: "rgba(34,197,94,0.06)", border: "1px solid rgba(34,197,94,0.2)" }}
+          data-testid="card-security"
+        >
+          <Shield className="w-8 h-8 text-green-600 shrink-0" />
+          <div>
+            <p className="font-semibold text-sm">Pagos seguros · RGPD</p>
+            <p className="text-xs text-muted-foreground">Procesado por Stripe. Tus datos están protegidos y nunca se venden.</p>
+          </div>
+        </div>
+
+        {/* ── Negocios locales ── */}
+        <motion.section initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
+          <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid rgba(245,158,11,0.25)" }}>
+            <div
+              className="px-5 py-4 flex items-center gap-3"
+              style={{ background: "linear-gradient(135deg,rgba(245,158,11,0.12),rgba(245,158,11,0.04))" }}
+            >
+              <div className="w-10 h-10 rounded-xl bg-amber-500/15 flex items-center justify-center shrink-0">
+                <Store className="w-5 h-5 text-amber-500" />
+              </div>
+              <div>
+                <p className="font-bold text-base">¿Tienes un local?</p>
+                <p className="text-xs text-muted-foreground">Colabora con FallonYou y llega a tu público</p>
+              </div>
+            </div>
+            <div className="px-5 py-4 space-y-3 bg-card">
+              {[
+                { icon: Users, text: "Enviamos nuestros usuarios a tu local — personas reales buscando planes y experiencias." },
+                { icon: Tag, text: "Tus clientes obtienen descuentos exclusivos por ser de la comunidad FallonYou." },
+                { icon: Rocket, text: "Tu negocio gana visibilidad dentro de la app ante miles de usuarios activos." },
+              ].map((item, i) => (
+                <div key={i} className="flex items-start gap-3">
+                  <div className="w-7 h-7 rounded-lg bg-amber-500/10 flex items-center justify-center shrink-0 mt-0.5">
+                    <item.icon className="w-4 h-4 text-amber-500" />
+                  </div>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{item.text}</p>
+                </div>
+              ))}
+              <a href="mailto:fallonyouapp@hotmail.com?subject=Colaboración%20local%20FallonYou" className="block mt-2" data-testid="button-contact-business">
+                <div
+                  className="w-full rounded-xl py-3 px-4 flex items-center justify-center gap-2 font-semibold text-sm"
+                  style={{ background: "linear-gradient(90deg,#D97706,#F59E0B)", color: "#000" }}
+                >
+                  <Mail className="w-4 h-4" /> Contactar con nosotros
+                </div>
+              </a>
+              <p className="text-xs text-center text-muted-foreground">fallonyouapp@hotmail.com</p>
+            </div>
+          </div>
+        </motion.section>
+
 
         {/* ── Ideas útiles para viajeros ── */}
         <motion.section initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
