@@ -46,7 +46,19 @@ title = "generated_image"
 id = "nrWzzP27pafiDoY0eIrJx"
 uri = "file://client/public/app-icon.png"
 type = "image"
-title = "generated_image"
+title = "fallonyou travel app icon gold black"
+
+[[generated]]
+id = "meu9H1ktQa-qjDYED-QOY"
+uri = "file://attached_assets/app-icon-v2.png"
+type = "image"
+title = "fallonyou icon airplane stars"
+
+[[generated]]
+id = "SxgmYqt651imCZOD-vrTs"
+uri = "file://attached_assets/app-icon-v3.png"
+type = "image"
+title = "fallonyou icon hands stars luxury"
 
 [[outputs]]
 id = "0Ko7QF5xas7_n14GgocyH"
