@@ -6,7 +6,7 @@ import { useUpload } from "@/hooks/use-upload";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Camera, LogOut, Shield, User, Star, Plane, MapPin, Heart, Trash2, FileText, Mail, Briefcase, Eye, Sparkles, Lightbulb, ChevronRight, Flame, Trophy, Zap, Globe2, Smartphone, ChevronDown, Share2, Download, Bell, BellOff, Languages } from "lucide-react";
+import { Loader2, Camera, LogOut, Shield, User, Star, Plane, MapPin, Users, Trash2, FileText, Mail, Briefcase, Eye, Sparkles, Lightbulb, ChevronRight, Flame, Trophy, Zap, Globe2, Smartphone, ChevronDown, Share2, Download, Bell, BellOff, Languages } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { api } from "@shared/routes";
@@ -201,19 +201,19 @@ export default function ProfilePage() {
 
         {/* Scattered background particles */}
         <div className="absolute inset-0 pointer-events-none">
-          <Heart  className="absolute text-amber-400 fill-amber-400 w-4 h-4 animate-slowblink"   style={{ top: '12%', left:  '6%' }} />
+          <Plane  className="absolute text-amber-400 fill-amber-400 w-4 h-4 animate-slowblink"   style={{ top: '12%', left:  '6%' }} />
           <Star   className="absolute text-yellow-400 fill-yellow-400 w-3 h-3 animate-slowblink-1" style={{ top: '18%', left: '18%' }} />
-          <Heart  className="absolute text-amber-300 fill-amber-300 w-3 h-3 animate-slowblink-2" style={{ top:  '8%', left: '32%' }} />
+          <Plane  className="absolute text-amber-300 fill-amber-300 w-3 h-3 animate-slowblink-2" style={{ top:  '8%', left: '32%' }} />
           <Star   className="absolute text-amber-500 fill-amber-500 w-4 h-4 animate-slowblink-3" style={{ top: '22%', left: '50%' }} />
-          <Heart  className="absolute text-yellow-300 fill-yellow-300 w-3 h-3 animate-slowblink-4" style={{ top:  '9%', left: '65%' }} />
+          <Plane  className="absolute text-yellow-300 fill-yellow-300 w-3 h-3 animate-slowblink-4" style={{ top:  '9%', left: '65%' }} />
           <Star   className="absolute text-amber-400 fill-amber-400 w-4 h-4 animate-slowblink-5" style={{ top: '20%', left: '80%' }} />
-          <Heart  className="absolute text-amber-300 fill-amber-300 w-3 h-3 animate-slowblink-6" style={{ top: '15%', left: '92%' }} />
+          <Plane  className="absolute text-amber-300 fill-amber-300 w-3 h-3 animate-slowblink-6" style={{ top: '15%', left: '92%' }} />
           <Star   className="absolute text-yellow-500 fill-yellow-500 w-3 h-3 animate-slowblink-7" style={{ top: '62%', left:  '3%' }} />
-          <Heart  className="absolute text-amber-400 fill-amber-400 w-5 h-5 animate-slowblink-3" style={{ top: '70%', left: '22%' }} />
+          <Plane  className="absolute text-amber-400 fill-amber-400 w-5 h-5 animate-slowblink-3" style={{ top: '70%', left: '22%' }} />
           <Star   className="absolute text-amber-300 fill-amber-300 w-3 h-3 animate-slowblink-1" style={{ top: '55%', left: '42%' }} />
-          <Heart  className="absolute text-yellow-400 fill-yellow-400 w-3 h-3 animate-slowblink-5" style={{ top: '75%', left: '60%' }} />
+          <Plane  className="absolute text-yellow-400 fill-yellow-400 w-3 h-3 animate-slowblink-5" style={{ top: '75%', left: '60%' }} />
           <Star   className="absolute text-amber-500 fill-amber-500 w-4 h-4 animate-slowblink-2" style={{ top: '58%', left: '76%' }} />
-          <Heart  className="absolute text-amber-300 fill-amber-300 w-3 h-3 animate-slowblink-6" style={{ top: '68%', left: '90%' }} />
+          <Plane  className="absolute text-amber-300 fill-amber-300 w-3 h-3 animate-slowblink-6" style={{ top: '68%', left: '90%' }} />
           <Sparkles className="absolute text-yellow-300 fill-yellow-300 w-4 h-4 animate-slowblink-4" style={{ top: '35%', left: '12%' }} />
           <Sparkles className="absolute text-amber-400 fill-amber-400 w-3 h-3 animate-slowblink-7" style={{ top: '40%', left: '87%' }} />
         </div>
@@ -221,7 +221,7 @@ export default function ProfilePage() {
         {/* Name + icons row */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
           <div className="flex items-center gap-3">
-            <Heart className="w-9 h-9 text-amber-400 fill-amber-400 animate-twinkle" />
+            <Star className="w-9 h-9 text-amber-400 fill-amber-400 animate-twinkle" />
             <Plane className="w-9 h-9 text-amber-400 fill-amber-400 animate-twinkle-delay-1 -rotate-45" />
             <span
               className="font-black uppercase tracking-[0.2em] animate-goldglow select-none"
@@ -239,7 +239,7 @@ export default function ProfilePage() {
               {formState.displayName || user.firstName || "You"}
             </span>
             <Plane className="w-9 h-9 text-amber-400 fill-amber-400 animate-twinkle-delay-2 rotate-45" />
-            <Heart className="w-9 h-9 text-amber-400 fill-amber-400 animate-twinkle-delay-3" />
+            <Star className="w-9 h-9 text-amber-400 fill-amber-400 animate-twinkle-delay-3" />
           </div>
         </div>
 
@@ -730,7 +730,7 @@ export default function ProfilePage() {
                   {([
                     { key: "profileViews", label: "Alguien ve mi perfil",       desc: "Push cuando visitan tu perfil",            icon: <Eye className="w-4 h-4 text-amber-500" />,  premium: true  },
                     { key: "newTravelers", label: "Nuevo viajero en mi ciudad", desc: "Alerta cuando alguien llega a tu ciudad",   icon: <Plane className="w-4 h-4 text-sky-500" />,  premium: true  },
-                    { key: "matches",      label: "Nuevas conexiones",           desc: "Cuando alguien hace match contigo",         icon: <Heart className="w-4 h-4 text-rose-500" />, premium: false },
+                    { key: "matches",      label: "Nuevas conexiones",           desc: "Cuando alguien hace match contigo",         icon: <Users className="w-4 h-4 text-amber-500" />, premium: false },
                     { key: "messages",     label: "Mensajes",                    desc: "Nuevos mensajes de tus conexiones",         icon: <Mail className="w-4 h-4 text-blue-500" />,  premium: false },
                     { key: "events",       label: "Actividades",                 desc: "Eventos nuevos o recordatorios",            icon: <Sparkles className="w-4 h-4 text-green-500" />, premium: false },
                   ] as const).map(({ key, label, desc, icon, premium }) => {

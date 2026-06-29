@@ -4,7 +4,7 @@ import { BottomNav } from "@/components/BottomNav";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
-  Loader2, Crown, Heart, Eye, Sparkles, Check, Shield,
+  Loader2, Crown, Eye, Sparkles, Check, Shield,
   Star, HelpCircle, Rocket, Users, Zap, Store, Mail,
   Tag, ArrowRight, Lock, X, Infinity as InfinityIcon,
   Globe2, Lightbulb, Plane, MapPin, Utensils, ShieldCheck, MessageSquare, Copy, ChevronDown, ChevronUp,

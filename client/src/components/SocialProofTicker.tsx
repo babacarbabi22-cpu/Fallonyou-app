@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { UserCheck, Users, Heart, Calendar, MapPin } from "lucide-react";
+import { UserCheck, Users, Plane, Calendar, MapPin } from "lucide-react";
 
 type TickerEvent = {
   icon: typeof UserCheck;
@@ -57,9 +57,9 @@ function generateEvent(): TickerEvent {
       message: `${name} se apuntó a un plan de ${activity}`,
     },
     {
-      icon: Heart,
-      iconColor: "text-rose-400",
-      message: `${name} de ${city} hizo match hace ${mins} min`,
+      icon: Users,
+      iconColor: "text-amber-400",
+      message: `${name} de ${city} se conectó hace ${mins} min`,
     },
     {
       icon: Calendar,

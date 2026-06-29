@@ -4,7 +4,7 @@ import { MatchRatingModal } from "@/components/MatchRatingModal";
 import { LocalHelpPanel } from "@/pages/LocalHelpPage";
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { Loader2, MessageCircle, Star, Shield, Heart, Camera, ArrowRight, CalendarDays, Users, Sparkles, MapPin, Plane, Store, Tag, ExternalLink, HandHeart, Euro } from "lucide-react";
+import { Loader2, MessageCircle, Star, Shield, Camera, ArrowRight, CalendarDays, Users, Sparkles, MapPin, Plane, Store, Tag, ExternalLink, HandHeart, Euro } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -174,7 +174,7 @@ function EmptyState() {
           className="w-20 h-20 rounded-full mx-auto mb-4 flex items-center justify-center"
           style={{ background: "linear-gradient(135deg,rgba(245,158,11,0.15),rgba(245,158,11,0.05))", border: "2px dashed rgba(245,158,11,0.3)" }}
         >
-          <Heart className="w-9 h-9 text-amber-500/60" />
+          <Users className="w-9 h-9 text-amber-500/60" />
         </div>
         <h3 className="text-xl font-bold mb-1">Aún sin matches</h3>
         <p className="text-muted-foreground text-sm max-w-xs mx-auto">
@@ -429,7 +429,7 @@ export default function MatchesPage() {
               className={`w-full flex items-start gap-3 p-3.5 rounded-xl border-2 transition-all text-left ${helpType === "free" ? "border-emerald-500 bg-emerald-500/5" : "border-border hover:border-emerald-500/40"}`}
               data-testid="match-help-option-free"
             >
-              <span className="text-2xl">❤️</span>
+              <span className="text-2xl">🤝</span>
               <div>
                 <p className="font-semibold text-sm">Sin pedir nada a cambio</p>
                 <p className="text-xs text-muted-foreground mt-0.5">Ayudo porque sí. La comunidad funciona así.</p>

@@ -3,7 +3,7 @@ import { useTranslation } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { BottomNav } from "@/components/BottomNav";
-import { ArrowLeft, Shield, Flag, AlertTriangle, Users, Heart, ChevronDown, ChevronUp, ExternalLink, Lock, Eye, MessageCircle } from "lucide-react";
+import { ArrowLeft, Shield, Flag, AlertTriangle, Users, HandHeart, ChevronDown, ChevronUp, ExternalLink, Lock, Eye, MessageCircle } from "lucide-react";
 import { Link } from "wouter";
 
 interface SafetySection {
@@ -34,7 +34,7 @@ const sections: SafetySection[] = [
   },
   {
     id: "consent",
-    icon: Heart,
+    icon: HandHeart,
     titleKey: "consentTitle",
     descKey: "consentDesc",
     contentKey: "consentContent",

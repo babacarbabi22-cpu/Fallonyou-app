@@ -1,4 +1,4 @@
-import { Heart, Star } from "lucide-react";
+import { Plane, Star } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useState } from "react";
 
@@ -10,10 +10,10 @@ interface FallingIcon {
   size: number;
   color: string;
   rotation: number;
-  type: 'heart' | 'star';
+  type: 'plane' | 'star';
 }
 
-interface MatchHeartCascadeProps {
+interface MatchCascadeProps {
   isActive: boolean;
   duration?: number;
 }
@@ -22,10 +22,10 @@ const IconComponent = ({ type, className, style }: { type: string; className: st
   if (type === 'star') {
     return <Star className={className} style={style} />;
   }
-  return <Heart className={className} style={style} />;
+  return <Plane className={className} style={style} />;
 };
 
-export function MatchHeartCascade({ isActive, duration = 3000 }: MatchHeartCascadeProps) {
+export function MatchHeartCascade({ isActive, duration = 3000 }: MatchCascadeProps) {
   const [icons, setIcons] = useState<FallingIcon[]>([]);
 
   useEffect(() => {
@@ -38,7 +38,7 @@ export function MatchHeartCascade({ isActive, duration = 3000 }: MatchHeartCasca
         "text-yellow-400",
         "text-amber-600",
       ];
-      const types: Array<'heart' | 'star'> = ['heart', 'star'];
+      const types: Array<'plane' | 'star'> = ['plane', 'star'];
 
       const newIcons: FallingIcon[] = [];
       for (let i = 0; i < 50; i++) {
@@ -105,21 +105,21 @@ export function MatchHeartCascade({ isActive, duration = 3000 }: MatchHeartCasca
 }
 
 const backgroundIcons = [
-  { delay: 0,   duration: 14, left: 5,  size: 18, color: "text-amber-500", rotation: 15,  type: 'heart' as const },
+  { delay: 0,   duration: 14, left: 5,  size: 18, color: "text-amber-500", rotation: 15,  type: 'plane' as const },
   { delay: 2,   duration: 12, left: 12, size: 14, color: "text-yellow-500", rotation: -20, type: 'star' as const },
-  { delay: 4,   duration: 16, left: 22, size: 20, color: "text-amber-400", rotation: 10,  type: 'heart' as const },
+  { delay: 4,   duration: 16, left: 22, size: 20, color: "text-amber-400", rotation: 10,  type: 'plane' as const },
   { delay: 1,   duration: 18, left: 33, size: 13, color: "text-amber-300", rotation: 0,   type: 'star' as const },
-  { delay: 3,   duration: 13, left: 44, size: 16, color: "text-amber-500", rotation: -10, type: 'heart' as const },
+  { delay: 3,   duration: 13, left: 44, size: 16, color: "text-amber-500", rotation: -10, type: 'plane' as const },
   { delay: 5,   duration: 15, left: 55, size: 18, color: "text-yellow-400", rotation: 20, type: 'star' as const },
-  { delay: 2.5, duration: 17, left: 65, size: 12, color: "text-amber-400", rotation: -15, type: 'heart' as const },
+  { delay: 2.5, duration: 17, left: 65, size: 12, color: "text-amber-400", rotation: -15, type: 'plane' as const },
   { delay: 6,   duration: 14, left: 75, size: 14, color: "text-amber-300", rotation: 5,   type: 'star' as const },
-  { delay: 0.5, duration: 19, left: 83, size: 16, color: "text-yellow-500", rotation: -5, type: 'heart' as const },
+  { delay: 0.5, duration: 19, left: 83, size: 16, color: "text-yellow-500", rotation: -5, type: 'plane' as const },
   { delay: 7,   duration: 11, left: 91, size: 12, color: "text-amber-500", rotation: 25,  type: 'star' as const },
-  { delay: 3.5, duration: 15, left: 48, size: 10, color: "text-amber-400", rotation: -30, type: 'heart' as const },
+  { delay: 3.5, duration: 15, left: 48, size: 10, color: "text-amber-400", rotation: -30, type: 'plane' as const },
   { delay: 8,   duration: 13, left: 8,  size: 14, color: "text-yellow-400", rotation: 0,  type: 'star' as const },
-  { delay: 1.5, duration: 20, left: 38, size: 22, color: "text-amber-500", rotation: 12,  type: 'heart' as const },
+  { delay: 1.5, duration: 20, left: 38, size: 22, color: "text-amber-500", rotation: 12,  type: 'plane' as const },
   { delay: 4.5, duration: 16, left: 58, size: 11, color: "text-amber-300", rotation: -18, type: 'star' as const },
-  { delay: 9,   duration: 14, left: 97, size: 15, color: "text-yellow-500", rotation: 8,  type: 'heart' as const },
+  { delay: 9,   duration: 14, left: 97, size: 15, color: "text-yellow-500", rotation: 8,  type: 'plane' as const },
 ];
 
 export function HeartCascade() {

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Heart, Star, Plane, Copy, Check, Users, Gift, Trophy, Crown, Sparkles, ChevronRight, ArrowLeft } from "lucide-react";
+import { Star, Plane, Copy, Check, Users, Gift, Trophy, Crown, Sparkles, ChevronRight, ArrowLeft } from "lucide-react";
 import { Link } from "wouter";
 
 interface ReferralTier {
@@ -120,7 +120,7 @@ export default function AmbassadorsPage() {
 
           <div className="text-center">
             <div className="flex items-center justify-center gap-2 mb-3">
-              <Heart className="w-6 h-6 text-amber-400 fill-amber-400 animate-twinkle" />
+              <Star className="w-6 h-6 text-amber-400 fill-amber-400 animate-twinkle" />
               <Plane className="w-6 h-6 text-amber-400 fill-amber-400 animate-twinkle-delay-1 -rotate-45" />
               <span className="font-black uppercase tracking-widest text-lg"
                 style={{
@@ -134,7 +134,7 @@ export default function AmbassadorsPage() {
                 FallonYou
               </span>
               <Plane className="w-6 h-6 text-amber-400 fill-amber-400 animate-twinkle-delay-2 rotate-45" />
-              <Heart className="w-6 h-6 text-amber-400 fill-amber-400 animate-twinkle-delay-3" />
+              <Star className="w-6 h-6 text-amber-400 fill-amber-400 animate-twinkle-delay-3" />
             </div>
 
             <h1 className="text-2xl font-black text-white mb-1">Programa de Embajadores</h1>

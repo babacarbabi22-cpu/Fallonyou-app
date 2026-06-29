@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Bell, X, Check, Eye, Heart, MessageCircle, CalendarDays, Tag, Sparkles, ChevronRight, ShieldCheck, Plane } from "lucide-react";
+import { Bell, X, Check, Eye, Users, MessageCircle, CalendarDays, Tag, Sparkles, ChevronRight, ShieldCheck, Plane } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
@@ -16,9 +16,9 @@ interface Notification {
 }
 
 const typeIcon: Record<string, any> = {
-  match:        { Icon: Heart,          color: "text-rose-500",   bg: "bg-rose-500/10" },
+  match:        { Icon: Users,          color: "text-amber-500",  bg: "bg-amber-500/10" },
   message:      { Icon: MessageCircle,  color: "text-blue-500",   bg: "bg-blue-500/10" },
-  like:         { Icon: Heart,          color: "text-pink-500",   bg: "bg-pink-500/10" },
+  like:         { Icon: Plane,          color: "text-sky-500",    bg: "bg-sky-500/10" },
   view:         { Icon: Eye,            color: "text-amber-500",  bg: "bg-amber-500/10" },
   event:        { Icon: CalendarDays,   color: "text-green-600",  bg: "bg-green-500/10" },
   new_event:    { Icon: CalendarDays,   color: "text-green-600",  bg: "bg-green-500/10" },

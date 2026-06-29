@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { UserWithPhotos } from "@/hooks/use-danceme";
 import { useI18n } from "@/lib/i18n";
 import { useState, useEffect } from "react";
-import { ChevronLeft, ChevronRight, MapPin, Briefcase, Ruler, GraduationCap, Star, Cigarette, Wine, Dumbbell, Baby, Heart, Church, Vote } from "lucide-react";
+import { ChevronLeft, ChevronRight, MapPin, Briefcase, Ruler, GraduationCap, Star, Cigarette, Wine, Dumbbell, Baby, Users, PawPrint, Church, Vote } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface ProfileDetailSheetProps {
@@ -248,7 +248,7 @@ export function ProfileDetailSheet({ user, open, onOpenChange }: ProfileDetailSh
               <div>
                 <h3 className="text-sm font-semibold text-muted-foreground mb-3">{t.profileDetails?.relationshipType || "Looking for"}</h3>
                 <Badge variant="default" className="flex items-center gap-1 w-fit">
-                  <Heart size={14} />
+                  <Users size={14} />
                   {getRelationshipTypeLabel(profile.relationshipType)}
                 </Badge>
               </div>
@@ -344,7 +344,7 @@ export function ProfileDetailSheet({ user, open, onOpenChange }: ProfileDetailSh
                   )}
                   {profile?.pets && (
                     <Badge variant="secondary" className="flex items-center gap-1">
-                      <Heart size={14} />
+                      <PawPrint size={14} />
                       {getPetsLabel(profile.pets)}
                     </Badge>
                   )}

@@ -4,11 +4,11 @@ import { SwipeCard } from "@/components/SwipeCard";
 import { BottomNav } from "@/components/BottomNav";
 import { SocialProofTicker } from "@/components/SocialProofTicker";
 import { ProfileDetailSheet } from "@/components/ProfileDetailSheet";
-import { MatchHeartCascade } from "@/components/HeartCascade";
+import { MatchHeartCascade } from "@/components/HeartCascade"; 
 import { AnimatePresence, motion } from "framer-motion";
 import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Loader2, Sparkles, SlidersHorizontal, Star, X, Heart, Plane, Camera, MapPin, CalendarDays, Zap, Crown, Lock, HandHeart, Euro } from "lucide-react";
+import { Loader2, Sparkles, SlidersHorizontal, Star, X, Plane, Camera, MapPin, CalendarDays, Zap, Crown, Lock, HandHeart, Euro } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -340,7 +340,7 @@ export default function SwipePage() {
                 color: premiumStatus.remainingLikes <= 3 ? "#ef4444" : "#f59e0b",
               }}
             >
-              <Heart className="w-3 h-3 fill-current" />
+              <Plane className="w-3 h-3 fill-current" />
               {premiumStatus.remainingLikes}
             </button>
           )}
@@ -726,7 +726,7 @@ export default function SwipePage() {
               className={`w-full flex items-start gap-3 p-3.5 rounded-xl border-2 transition-all text-left ${helpType === "free" ? "border-emerald-500 bg-emerald-500/5" : "border-border hover:border-emerald-500/40"}`}
               data-testid="help-option-free"
             >
-              <span className="text-2xl">❤️</span>
+              <span className="text-2xl">🤝</span>
               <div>
                 <p className="font-semibold text-sm">Sin pedir nada a cambio</p>
                 <p className="text-xs text-muted-foreground mt-0.5">Ayudo porque sí. La comunidad funciona así.</p>
