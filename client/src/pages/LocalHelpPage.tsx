@@ -372,6 +372,23 @@ export function LocalHelpPanel() {
                 </p>
               </div>
             </div>
+
+            <div className="rounded-2xl border border-amber-500/20 bg-gradient-to-br from-amber-500/8 to-orange-400/5 p-4 flex items-start gap-3">
+              <span className="text-2xl shrink-0">🌍</span>
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-amber-700 dark:text-amber-400">¿No encuentras a nadie cerca?</p>
+                <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                  Tenemos contacto directo con países de África y otras regiones donde tu donación será muy bien recibida. Escríbenos y lo gestionamos nosotros.
+                </p>
+                <a
+                  href="mailto:fallonyouapp@hotmail.com?subject=Quiero%20donar%20a%20Africa&body=Hola%2C%20me%20gustar%C3%ADa%20donar%20a%20Africa%20a%20trav%C3%A9s%20de%20FallonYou.%20Os%20cuento%20qu%C3%A9%20tengo%3A"
+                  className="inline-flex items-center gap-1.5 mt-2.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-amber-500 text-black hover:bg-amber-400 transition-colors"
+                  data-testid="button-donate-africa"
+                >
+                  ✉️ Contactar con FallonYou
+                </a>
+              </div>
+            </div>
           </div>
         )}
 
@@ -511,11 +528,28 @@ export function LocalHelpPanel() {
             )}
 
             {isDonateMode && (
-              <div className="rounded-xl bg-emerald-500/8 border border-emerald-500/20 p-3 flex items-start gap-2">
-                <span className="text-base shrink-0">💚</span>
-                <p className="text-xs text-emerald-700 dark:text-emerald-400 leading-relaxed">
-                  Tu donación es completamente gratuita. Quien esté interesado te contactará por el chat.
-                </p>
+              <div className="space-y-2">
+                <div className="rounded-xl bg-emerald-500/8 border border-emerald-500/20 p-3 flex items-start gap-2">
+                  <span className="text-base shrink-0">💚</span>
+                  <p className="text-xs text-emerald-700 dark:text-emerald-400 leading-relaxed">
+                    Tu donación es completamente gratuita. Quien esté interesado te contactará por el chat.
+                  </p>
+                </div>
+                <div className="rounded-xl bg-amber-500/8 border border-amber-500/20 p-3 flex items-start gap-2">
+                  <span className="text-base shrink-0">🌍</span>
+                  <div>
+                    <p className="text-xs font-semibold text-amber-700 dark:text-amber-400">¿No encuentras a nadie cerca?</p>
+                    <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
+                      Escríbenos — tenemos contacto directo con países de África donde tu donación llegará a quien la necesita.
+                    </p>
+                    <a
+                      href="mailto:fallonyouapp@hotmail.com?subject=Quiero%20donar%20a%20Africa&body=Hola%2C%20me%20gustar%C3%ADa%20donar%20a%20Africa%20a%20trav%C3%A9s%20de%20FallonYou.%20Os%20cuento%20qu%C3%A9%20tengo%3A"
+                      className="inline-flex items-center gap-1 mt-1.5 text-xs font-semibold text-amber-600 dark:text-amber-400 underline underline-offset-2"
+                    >
+                      ✉️ fallonyouapp@hotmail.com
+                    </a>
+                  </div>
+                </div>
               </div>
             )}
           </div>
