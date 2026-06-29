@@ -89,3 +89,9 @@ id = "ksth3dZK_KJknkk7Up_hi"
 uri = "file://attached_assets/pegatina_bilingue.png"
 type = "image"
 title = "Pegatina redonda — Bilingüe ES/EN/FR"
+
+[[outputs]]
+id = "r7QXjubFFIdWSEwUS1qfQ"
+uri = "file://store-assets/APP_STORE_TEXTS.md"
+type = "text"
+title = "Store Listing actualizado — FallonYou v2.0"
