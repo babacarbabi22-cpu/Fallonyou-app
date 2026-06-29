@@ -7,9 +7,8 @@ import {
   Loader2, Crown, Heart, Eye, Sparkles, Check, Shield,
   Star, HelpCircle, Rocket, Users, Zap, Store, Mail,
   Tag, ArrowRight, Lock, X, Infinity as InfinityIcon,
-  Globe2, Languages, Lightbulb, Plane, MapPin, Utensils, ShieldCheck, MessageSquare,
+  Globe2, Lightbulb, Plane, MapPin, Utensils, ShieldCheck, MessageSquare, Copy, ChevronDown, ChevronUp,
 } from "lucide-react";
-import { LanguageSelector } from "@/components/LanguageSelector";
 import { useI18n } from "@/lib/i18n";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -105,6 +104,15 @@ export default function PremiumPage() {
   const { toast } = useToast();
   const { language } = useI18n();
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [phraseLang, setPhraseLang] = useState<"en" | "fr" | "it" | "pt" | "de">("en");
+  const [phraseCategory, setPhraseCategory] = useState<"greetings" | "travel" | "food" | "social" | "emergency">("greetings");
+  const [copiedPhrase, setCopiedPhrase] = useState<string | null>(null);
+
+  const copyPhrase = (text: string) => {
+    navigator.clipboard.writeText(text).catch(() => {});
+    setCopiedPhrase(text);
+    setTimeout(() => setCopiedPhrase(null), 1500);
+  };
   const [billingInterval, setBillingInterval] = useState<"month" | "year">("year");
   const [showPricing, setShowPricing] = useState(false);
   const [teaserVisible, setTeaserVisible] = useState(() => shouldShowTeaser());
@@ -643,40 +651,292 @@ export default function PremiumPage() {
           </div>
         </motion.section>
 
-        {/* ── Idiomas ── */}
-        <motion.section initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}>
-          <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid rgba(99,102,241,0.25)" }}>
-            <div
-              className="px-5 py-4 flex items-center justify-between gap-3"
-              style={{ background: "linear-gradient(135deg,rgba(99,102,241,0.12),rgba(139,92,246,0.06))" }}
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-indigo-500/15 flex items-center justify-center shrink-0">
-                  <Globe2 className="w-5 h-5 text-indigo-400" />
+        {/* ── Aprende idiomas ── */}
+        {(() => {
+          const LANGS = [
+            { id: "en" as const, flag: "🇬🇧", name: "English" },
+            { id: "fr" as const, flag: "🇫🇷", name: "Français" },
+            { id: "it" as const, flag: "🇮🇹", name: "Italiano" },
+            { id: "pt" as const, flag: "🇵🇹", name: "Português" },
+            { id: "de" as const, flag: "🇩🇪", name: "Deutsch" },
+          ];
+          const CATS = [
+            { id: "greetings" as const,  label: "👋 Saludos" },
+            { id: "travel" as const,     label: "✈️ Viajes" },
+            { id: "food" as const,       label: "🍽️ Comida" },
+            { id: "social" as const,     label: "💬 Social" },
+            { id: "emergency" as const,  label: "🆘 Urgencias" },
+          ];
+          type LangId = "en" | "fr" | "it" | "pt" | "de";
+          type CatId = "greetings" | "travel" | "food" | "social" | "emergency";
+          const PHRASES: Record<LangId, Record<CatId, { phrase: string; pron: string; es: string }[]>> = {
+            en: {
+              greetings: [
+                { phrase: "Hello!", pron: "jélou", es: "¡Hola!" },
+                { phrase: "Good morning!", pron: "gud mórning", es: "¡Buenos días!" },
+                { phrase: "Nice to meet you!", pron: "nais tu mit yu", es: "¡Encantado de conocerte!" },
+                { phrase: "How are you?", pron: "jau ar yu", es: "¿Cómo estás?" },
+                { phrase: "See you later!", pron: "si yu léiter", es: "¡Hasta luego!" },
+              ],
+              travel: [
+                { phrase: "Where is the station?", pron: "wer is de stéishon", es: "¿Dónde está la estación?" },
+                { phrase: "How much does it cost?", pron: "jau mach das it kost", es: "¿Cuánto cuesta?" },
+                { phrase: "I'm lost.", pron: "aim lost", es: "Estoy perdido/a." },
+                { phrase: "Can you help me?", pron: "kan yu jelp mi", es: "¿Puedes ayudarme?" },
+                { phrase: "A ticket to...", pron: "a tiket tu", es: "Un billete para..." },
+              ],
+              food: [
+                { phrase: "The menu, please.", pron: "de méniu plis", es: "La carta, por favor." },
+                { phrase: "I'm vegetarian.", pron: "aim vedshetérian", es: "Soy vegetariano/a." },
+                { phrase: "It's delicious!", pron: "its delíshos", es: "¡Está delicioso!" },
+                { phrase: "The bill, please.", pron: "de bil plis", es: "La cuenta, por favor." },
+                { phrase: "No gluten, please.", pron: "no gluten plis", es: "Sin gluten, por favor." },
+              ],
+              social: [
+                { phrase: "What's your name?", pron: "wats yor neim", es: "¿Cómo te llamas?" },
+                { phrase: "Where are you from?", pron: "wer ar yu from", es: "¿De dónde eres?" },
+                { phrase: "Do you speak Spanish?", pron: "du yu spik spánish", es: "¿Hablas español?" },
+                { phrase: "Let's meet up!", pron: "lets mit ap", es: "¡Quedamos!" },
+                { phrase: "I don't understand.", pron: "ai dont anderstand", es: "No entiendo." },
+              ],
+              emergency: [
+                { phrase: "Call the police!", pron: "kol de polís", es: "¡Llama a la policía!" },
+                { phrase: "I need a doctor.", pron: "ai nid a dóktor", es: "Necesito un médico." },
+                { phrase: "Help!", pron: "jelp", es: "¡Ayuda!" },
+                { phrase: "Call an ambulance!", pron: "kol an émbiulans", es: "¡Llama a una ambulancia!" },
+                { phrase: "I've been robbed.", pron: "aiv bin robd", es: "Me han robado." },
+              ],
+            },
+            fr: {
+              greetings: [
+                { phrase: "Bonjour !", pron: "bon-zhur", es: "¡Buenos días / Hola!" },
+                { phrase: "Enchanté(e) !", pron: "on-shon-tei", es: "¡Encantado/a!" },
+                { phrase: "Comment ça va ?", pron: "komon sa va", es: "¿Cómo estás?" },
+                { phrase: "Au revoir !", pron: "o revoar", es: "¡Adiós!" },
+                { phrase: "Bonne nuit !", pron: "bon nui", es: "¡Buenas noches!" },
+              ],
+              travel: [
+                { phrase: "Où est la gare ?", pron: "u e la gar", es: "¿Dónde está la estación?" },
+                { phrase: "Combien ça coûte ?", pron: "kombyen sa kut", es: "¿Cuánto cuesta?" },
+                { phrase: "Je suis perdu(e).", pron: "zhe swi perdu", es: "Estoy perdido/a." },
+                { phrase: "Pouvez-vous m'aider ?", pron: "puvei vu meide", es: "¿Puede ayudarme?" },
+                { phrase: "Un billet pour...", pron: "an biye pur", es: "Un billete para..." },
+              ],
+              food: [
+                { phrase: "La carte, s'il vous plaît.", pron: "la kart sil vu plei", es: "La carta, por favor." },
+                { phrase: "Je suis végétarien(ne).", pron: "zhe swi vezhetaryen", es: "Soy vegetariano/a." },
+                { phrase: "C'est délicieux !", pron: "sei delisjø", es: "¡Está delicioso!" },
+                { phrase: "L'addition, s'il vous plaît.", pron: "ladisyon sil vu plei", es: "La cuenta, por favor." },
+                { phrase: "Sans gluten, s'il vous plaît.", pron: "son gluten sil vu plei", es: "Sin gluten, por favor." },
+              ],
+              social: [
+                { phrase: "Comment tu t'appelles ?", pron: "komon tu tapel", es: "¿Cómo te llamas?" },
+                { phrase: "Tu viens d'où ?", pron: "tu vyen du", es: "¿De dónde eres?" },
+                { phrase: "Tu parles espagnol ?", pron: "tu parl espanyol", es: "¿Hablas español?" },
+                { phrase: "On se retrouve !", pron: "on se retrouv", es: "¡Nos vemos!" },
+                { phrase: "Je ne comprends pas.", pron: "zhe ne komprond pa", es: "No entiendo." },
+              ],
+              emergency: [
+                { phrase: "Appelez la police !", pron: "aplei la polis", es: "¡Llama a la policía!" },
+                { phrase: "J'ai besoin d'un médecin.", pron: "zhei bezwon dan medsan", es: "Necesito un médico." },
+                { phrase: "Au secours !", pron: "o skur", es: "¡Ayuda!" },
+                { phrase: "Appelez une ambulance !", pron: "aplei yn ambiulons", es: "¡Llama a una ambulancia!" },
+                { phrase: "On m'a volé.", pron: "on ma volei", es: "Me han robado." },
+              ],
+            },
+            it: {
+              greetings: [
+                { phrase: "Ciao!", pron: "chao", es: "¡Hola / Adiós!" },
+                { phrase: "Buongiorno!", pron: "buon-yorno", es: "¡Buenos días!" },
+                { phrase: "Piacere!", pron: "piachere", es: "¡Encantado/a!" },
+                { phrase: "Come stai?", pron: "kome stai", es: "¿Cómo estás?" },
+                { phrase: "Arrivederci!", pron: "arrivederchi", es: "¡Hasta luego!" },
+              ],
+              travel: [
+                { phrase: "Dov'è la stazione?", pron: "dove la statsione", es: "¿Dónde está la estación?" },
+                { phrase: "Quanto costa?", pron: "kuanto kosta", es: "¿Cuánto cuesta?" },
+                { phrase: "Mi sono perso/a.", pron: "mi sono perso", es: "Estoy perdido/a." },
+                { phrase: "Può aiutarmi?", pron: "puo aiutarmi", es: "¿Puede ayudarme?" },
+                { phrase: "Un biglietto per...", pron: "un bilietto per", es: "Un billete para..." },
+              ],
+              food: [
+                { phrase: "Il menù, per favore.", pron: "il menu per favore", es: "La carta, por favor." },
+                { phrase: "Sono vegetariano/a.", pron: "sono vedjetariano", es: "Soy vegetariano/a." },
+                { phrase: "È delizioso!", pron: "e delitsioso", es: "¡Está delicioso!" },
+                { phrase: "Il conto, per favore.", pron: "il konto per favore", es: "La cuenta, por favor." },
+                { phrase: "Senza glutine.", pron: "sentsa glutine", es: "Sin gluten." },
+              ],
+              social: [
+                { phrase: "Come ti chiami?", pron: "kome ti kiami", es: "¿Cómo te llamas?" },
+                { phrase: "Di dove sei?", pron: "di dove sei", es: "¿De dónde eres?" },
+                { phrase: "Parli spagnolo?", pron: "parli spaniolo", es: "¿Hablas español?" },
+                { phrase: "Ci vediamo!", pron: "chi vediamo", es: "¡Nos vemos!" },
+                { phrase: "Non capisco.", pron: "non kapisko", es: "No entiendo." },
+              ],
+              emergency: [
+                { phrase: "Chiama la polizia!", pron: "kiama la politsia", es: "¡Llama a la policía!" },
+                { phrase: "Ho bisogno di un medico.", pron: "o bisonio di un mediko", es: "Necesito un médico." },
+                { phrase: "Aiuto!", pron: "aiuto", es: "¡Ayuda!" },
+                { phrase: "Chiama un'ambulanza!", pron: "kiama unambulansia", es: "¡Llama a una ambulancia!" },
+                { phrase: "Mi hanno derubato.", pron: "mi anno derubato", es: "Me han robado." },
+              ],
+            },
+            pt: {
+              greetings: [
+                { phrase: "Olá!", pron: "olá", es: "¡Hola!" },
+                { phrase: "Bom dia!", pron: "bom día", es: "¡Buenos días!" },
+                { phrase: "Prazer em conhecê-lo!", pron: "prazer em conocelo", es: "¡Encantado/a!" },
+                { phrase: "Como está?", pron: "komo estah", es: "¿Cómo está?" },
+                { phrase: "Até logo!", pron: "ate logo", es: "¡Hasta luego!" },
+              ],
+              travel: [
+                { phrase: "Onde fica a estação?", pron: "onde fika a estasaw", es: "¿Dónde está la estación?" },
+                { phrase: "Quanto custa?", pron: "kuantu kusta", es: "¿Cuánto cuesta?" },
+                { phrase: "Estou perdido/a.", pron: "estou perdidu", es: "Estoy perdido/a." },
+                { phrase: "Pode ajudar-me?", pron: "pode azhudarme", es: "¿Puede ayudarme?" },
+                { phrase: "Um bilhete para...", pron: "um bilhete para", es: "Un billete para..." },
+              ],
+              food: [
+                { phrase: "A ementa, por favor.", pron: "a ementa por favor", es: "La carta, por favor." },
+                { phrase: "Sou vegetariano/a.", pron: "sou vedzhetariano", es: "Soy vegetariano/a." },
+                { phrase: "Está delicioso!", pron: "estah delisiosu", es: "¡Está delicioso!" },
+                { phrase: "A conta, por favor.", pron: "a konta por favor", es: "La cuenta, por favor." },
+                { phrase: "Sem glúten, por favor.", pron: "sem gluten por favor", es: "Sin gluten, por favor." },
+              ],
+              social: [
+                { phrase: "Como te chamas?", pron: "komo te shamas", es: "¿Cómo te llamas?" },
+                { phrase: "De onde és?", pron: "de onde es", es: "¿De dónde eres?" },
+                { phrase: "Falas espanhol?", pron: "falas espanol", es: "¿Hablas español?" },
+                { phrase: "Até já!", pron: "ate zha", es: "¡Hasta pronto!" },
+                { phrase: "Não entendo.", pron: "naw entendo", es: "No entiendo." },
+              ],
+              emergency: [
+                { phrase: "Chame a polícia!", pron: "shame a polisia", es: "¡Llama a la policía!" },
+                { phrase: "Preciso de um médico.", pron: "presizo de um mediku", es: "Necesito un médico." },
+                { phrase: "Socorro!", pron: "sokorro", es: "¡Ayuda!" },
+                { phrase: "Chame uma ambulância!", pron: "shame uma ambuiancia", es: "¡Llama a una ambulancia!" },
+                { phrase: "Fui roubado/a.", pron: "fui robadu", es: "Me han robado." },
+              ],
+            },
+            de: {
+              greetings: [
+                { phrase: "Hallo!", pron: "jalo", es: "¡Hola!" },
+                { phrase: "Guten Morgen!", pron: "guten morgen", es: "¡Buenos días!" },
+                { phrase: "Schön, Sie kennenzulernen!", pron: "shon si kenensulernen", es: "¡Encantado/a de conocerle!" },
+                { phrase: "Wie geht es Ihnen?", pron: "vi geit es inen", es: "¿Cómo está usted?" },
+                { phrase: "Auf Wiedersehen!", pron: "auf viiderzen", es: "¡Hasta luego!" },
+              ],
+              travel: [
+                { phrase: "Wo ist der Bahnhof?", pron: "vo ist der banjof", es: "¿Dónde está la estación?" },
+                { phrase: "Was kostet das?", pron: "vas kostet das", es: "¿Cuánto cuesta?" },
+                { phrase: "Ich habe mich verirrt.", pron: "ich jabe mich feriirt", es: "Estoy perdido/a." },
+                { phrase: "Können Sie mir helfen?", pron: "konen si mir jelfen", es: "¿Puede ayudarme?" },
+                { phrase: "Eine Fahrkarte nach...", pron: "aine farkarte naj", es: "Un billete para..." },
+              ],
+              food: [
+                { phrase: "Die Speisekarte, bitte.", pron: "di shpaizekarte bite", es: "La carta, por favor." },
+                { phrase: "Ich bin Vegetarier/in.", pron: "ich bin vegetarier", es: "Soy vegetariano/a." },
+                { phrase: "Es ist köstlich!", pron: "es ist kostlich", es: "¡Está delicioso!" },
+                { phrase: "Die Rechnung, bitte.", pron: "di rejnung bite", es: "La cuenta, por favor." },
+                { phrase: "Ohne Gluten, bitte.", pron: "one gluten bite", es: "Sin gluten, por favor." },
+              ],
+              social: [
+                { phrase: "Wie heißen Sie?", pron: "vi jaisen si", es: "¿Cómo se llama?" },
+                { phrase: "Woher kommen Sie?", pron: "vojer komen si", es: "¿De dónde es usted?" },
+                { phrase: "Sprechen Sie Spanisch?", pron: "shprejen si spánish", es: "¿Habla español?" },
+                { phrase: "Bis bald!", pron: "bis balt", es: "¡Hasta pronto!" },
+                { phrase: "Ich verstehe nicht.", pron: "ich fersteje nicht", es: "No entiendo." },
+              ],
+              emergency: [
+                { phrase: "Rufen Sie die Polizei!", pron: "rufen si di politsei", es: "¡Llama a la policía!" },
+                { phrase: "Ich brauche einen Arzt.", pron: "ich brauje ainen artst", es: "Necesito un médico." },
+                { phrase: "Hilfe!", pron: "hilfe", es: "¡Ayuda!" },
+                { phrase: "Rufen Sie einen Krankenwagen!", pron: "rufen si ainen krankenvagen", es: "¡Llama a una ambulancia!" },
+                { phrase: "Ich wurde bestohlen.", pron: "ich vurde beshtoolen", es: "Me han robado." },
+              ],
+            },
+          };
+          const currentLang = LANGS.find(l => l.id === phraseLang)!;
+          const currentPhrases = PHRASES[phraseLang][phraseCategory];
+
+          return (
+            <motion.section initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}>
+              <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid rgba(99,102,241,0.3)" }}>
+                {/* Header */}
+                <div className="px-5 py-4" style={{ background: "linear-gradient(135deg,rgba(99,102,241,0.15),rgba(139,92,246,0.08))" }}>
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 rounded-xl bg-indigo-500/15 flex items-center justify-center shrink-0">
+                      <Globe2 className="w-5 h-5 text-indigo-400" />
+                    </div>
+                    <div>
+                      <p className="font-bold text-base">Aprende idiomas</p>
+                      <p className="text-xs text-muted-foreground">Frases útiles para viajeros · 5 idiomas</p>
+                    </div>
+                  </div>
+
+                  {/* Language selector */}
+                  <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+                    {LANGS.map(l => (
+                      <button
+                        key={l.id}
+                        onClick={() => setPhraseLang(l.id)}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all shrink-0 ${phraseLang === l.id ? "bg-indigo-500 text-white shadow-md shadow-indigo-500/30" : "bg-background/60 text-muted-foreground hover:bg-background"}`}
+                        data-testid={`lang-btn-${l.id}`}
+                      >
+                        <span>{l.flag}</span> {l.name}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-                <div>
-                  <p className="font-bold text-base">Idioma de la app</p>
-                  <p className="text-xs text-muted-foreground">Español · English · Français</p>
+
+                {/* Category tabs */}
+                <div className="flex gap-1.5 px-4 py-3 bg-muted/40 overflow-x-auto no-scrollbar">
+                  {CATS.map(c => (
+                    <button
+                      key={c.id}
+                      onClick={() => setPhraseCategory(c.id)}
+                      className={`text-[11px] font-semibold px-3 py-1.5 rounded-lg whitespace-nowrap transition-all shrink-0 ${phraseCategory === c.id ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+                      data-testid={`cat-btn-${c.id}`}
+                    >
+                      {c.label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Phrase cards */}
+                <div className="px-4 py-4 bg-card space-y-2.5">
+                  {currentPhrases.map((p, i) => (
+                    <div
+                      key={i}
+                      className="flex items-center gap-3 bg-muted/40 hover:bg-muted/70 rounded-xl px-4 py-3 transition-colors group"
+                      data-testid={`phrase-card-${i}`}
+                    >
+                      <div className="flex-1 min-w-0">
+                        <p className="font-bold text-sm text-foreground">{p.phrase}</p>
+                        <p className="text-[11px] text-indigo-400 font-mono mt-0.5">{currentLang.flag} /{p.pron}/</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">🇪🇸 {p.es}</p>
+                      </div>
+                      <button
+                        onClick={() => copyPhrase(p.phrase)}
+                        className="w-8 h-8 rounded-lg bg-background flex items-center justify-center shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                        title="Copiar"
+                        data-testid={`btn-copy-${i}`}
+                      >
+                        {copiedPhrase === p.phrase
+                          ? <span className="text-emerald-500 text-xs font-bold">✓</span>
+                          : <Copy className="w-3.5 h-3.5 text-muted-foreground" />
+                        }
+                      </button>
+                    </div>
+                  ))}
+                  <p className="text-[11px] text-center text-muted-foreground/50 pt-1">
+                    Toca la frase → cópiala → envíala a tu conexión 💬
+                  </p>
                 </div>
               </div>
-              <LanguageSelector />
-            </div>
-            <div className="px-5 py-4 bg-card space-y-2">
-              {[
-                { flag: "🇪🇸", lang: "Español", active: language === "es" },
-                { flag: "🇬🇧", lang: "English", active: language === "en" },
-                { flag: "🇫🇷", lang: "Français", active: language === "fr" },
-              ].map(({ flag, lang, active }) => (
-                <div key={lang} className={`flex items-center gap-3 rounded-xl px-3 py-2.5 ${active ? "bg-indigo-500/10 border border-indigo-500/20" : "bg-muted/40"}`}>
-                  <span className="text-xl">{flag}</span>
-                  <p className="text-sm font-medium flex-1">{lang}</p>
-                  {active && <span className="text-[11px] font-semibold text-indigo-400 uppercase tracking-wide">Activo</span>}
-                </div>
-              ))}
-              <p className="text-xs text-center text-muted-foreground pt-1">Cambia el idioma desde el selector arriba a la derecha</p>
-            </div>
-          </div>
-        </motion.section>
+            </motion.section>
+          );
+        })()}
 
         {/* ── Ideas útiles para viajeros ── */}
         <motion.section initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
