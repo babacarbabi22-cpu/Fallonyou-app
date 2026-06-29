@@ -1,8 +1,9 @@
 import { useMatches, useCurrentUser } from "@/hooks/use-danceme";
 import { BottomNav } from "@/components/BottomNav";
 import { MatchRatingModal } from "@/components/MatchRatingModal";
+import { LocalHelpPanel } from "@/pages/LocalHelpPage";
 import { useState } from "react";
-import { Loader2, MessageCircle, Star, Shield, Heart, Camera, ArrowRight, CalendarDays, Users, Sparkles, MapPin, Plane, Store, Tag, ExternalLink } from "lucide-react";
+import { Loader2, MessageCircle, Star, Shield, Heart, Camera, ArrowRight, CalendarDays, Users, Sparkles, MapPin, Plane, Store, Tag, ExternalLink, HandHeart, Plus } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/lib/i18n";
@@ -238,6 +239,7 @@ export default function MatchesPage() {
   const { data: currentUser } = useCurrentUser();
   const { data: matches, isLoading } = useMatches();
   const [selectedMatch, setSelectedMatch] = useState<{ id: number, user: any } | null>(null);
+  const [activeTab, setActiveTab] = useState<"connections" | "help">("connections");
   const t = useTranslation();
 
   if (!currentUser) return null;
@@ -253,8 +255,38 @@ export default function MatchesPage() {
   const matchCount = matches?.length ?? 0;
 
   return (
-    <div className="min-h-screen bg-background pb-24 px-4 pt-6">
-      <h1 className="text-3xl font-display font-bold mb-5 px-2">{t.matches.title}</h1>
+    <div className="min-h-screen bg-background pb-24 flex flex-col">
+      {/* Header with main tabs */}
+      <div className="sticky top-0 z-10 bg-background/95 backdrop-blur border-b px-4 pt-5 pb-2">
+        <h1 className="text-2xl font-display font-bold mb-3">{t.matches.title}</h1>
+        <div className="flex gap-1 bg-muted rounded-xl p-1">
+          <button
+            onClick={() => setActiveTab("connections")}
+            className={`flex-1 flex items-center justify-center gap-1.5 text-xs py-2 rounded-lg font-medium transition-all ${activeTab === "connections" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground"}`}
+            data-testid="tab-connections"
+          >
+            <MessageCircle className="w-3.5 h-3.5" />
+            Conexiones {matchCount > 0 && <span className="text-primary">({matchCount})</span>}
+          </button>
+          <button
+            onClick={() => setActiveTab("help")}
+            className={`flex-1 flex items-center justify-center gap-1.5 text-xs py-2 rounded-lg font-medium transition-all ${activeTab === "help" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground"}`}
+            data-testid="tab-help"
+          >
+            <HandHeart className="w-3.5 h-3.5" />
+            Ayuda Local
+          </button>
+        </div>
+      </div>
+
+      {/* Ayuda Local tab */}
+      {activeTab === "help" && (
+        <LocalHelpPanel />
+      )}
+
+      {/* Connections tab */}
+      {activeTab === "connections" && (
+      <div className="flex-1 px-4 pt-4">
 
       {/* No photo warning */}
       {!currentUser.profileImageUrl && (
@@ -344,6 +376,9 @@ export default function MatchesPage() {
           matchId={selectedMatch.id}
           user={selectedMatch.user}
         />
+      )}
+
+      </div>
       )}
 
       <BottomNav />

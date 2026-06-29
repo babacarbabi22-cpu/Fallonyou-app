@@ -1,11 +1,9 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useQuery as useCurrentUser } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { BottomNav } from "@/components/BottomNav";
@@ -111,7 +109,6 @@ function RequestCard({ req, currentUserId }: { req: HelpRequest; currentUserId: 
       className="rounded-2xl border bg-card p-4 flex flex-col gap-3"
       data-testid={`help-request-${req.id}`}
     >
-      {/* Header row */}
       <div className="flex items-start gap-3">
         <Avatar className="w-10 h-10 shrink-0">
           <AvatarImage src={req.profileImageUrl || undefined} />
@@ -133,10 +130,8 @@ function RequestCard({ req, currentUserId }: { req: HelpRequest; currentUserId: 
         </div>
       </div>
 
-      {/* Description */}
       <p className="text-sm leading-relaxed text-foreground/90">{req.description}</p>
 
-      {/* Budget badge */}
       {req.budget && req.budget > 0 && (
         <div className="flex items-center gap-1.5">
           <span
@@ -149,7 +144,6 @@ function RequestCard({ req, currentUserId }: { req: HelpRequest; currentUserId: 
         </div>
       )}
 
-      {/* Footer actions */}
       <div className="flex items-center gap-2 pt-1">
         {isOwn ? (
           <>
@@ -206,7 +200,6 @@ function RequestCard({ req, currentUserId }: { req: HelpRequest; currentUserId: 
         )}
       </div>
 
-      {/* Offers list (owner only) */}
       <AnimatePresence>
         {isOwn && showOffers && offers.length > 0 && (
           <motion.div
@@ -245,12 +238,11 @@ function RequestCard({ req, currentUserId }: { req: HelpRequest; currentUserId: 
   );
 }
 
-export default function LocalHelpPage() {
+export function LocalHelpPanel() {
   const { toast } = useToast();
   const [showForm, setShowForm] = useState(false);
   const [cityFilter, setCityFilter] = useState("");
   const [tab, setTab] = useState<"all" | "mine">("all");
-
   const [form, setForm] = useState({ city: "", category: "", description: "", budget: "" });
 
   const { data: currentUser } = useQuery<{ id: string }>({ queryKey: ['/api/user'] });
@@ -283,28 +275,11 @@ export default function LocalHelpPage() {
   const displayed = tab === "all" ? requests : myRequests;
 
   return (
-    <div className="flex flex-col min-h-screen bg-background pb-28">
-      {/* Header */}
-      <header className="sticky top-0 z-10 bg-background/95 backdrop-blur border-b px-4 py-3">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="font-bold text-lg flex items-center gap-2">
-              🤝 Ayuda Local
-            </h1>
-            <p className="text-xs text-muted-foreground">Pide o ofrece ayuda en cualquier ciudad</p>
-          </div>
-          <Button
-            size="sm"
-            onClick={() => setShowForm(true)}
-            className="gap-1.5"
-            data-testid="button-new-request"
-          >
-            <Plus className="w-4 h-4" /> Pedir ayuda
-          </Button>
-        </div>
-
-        {/* Tabs */}
-        <div className="flex gap-1 mt-3 bg-muted rounded-xl p-1">
+    <div className="flex flex-col flex-1">
+      {/* Controls */}
+      <div className="px-4 pt-3 pb-2 space-y-2">
+        {/* Sub-tabs: all vs mine */}
+        <div className="flex gap-1 bg-muted rounded-xl p-1">
           <button
             onClick={() => setTab("all")}
             className={`flex-1 text-xs py-1.5 rounded-lg font-medium transition-all ${tab === "all" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground"}`}
@@ -321,9 +296,9 @@ export default function LocalHelpPage() {
           </button>
         </div>
 
-        {/* City filter (only in "all" tab) */}
+        {/* City filter */}
         {tab === "all" && (
-          <div className="relative mt-2">
+          <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               placeholder="Filtrar por ciudad..."
@@ -339,25 +314,25 @@ export default function LocalHelpPage() {
             )}
           </div>
         )}
-      </header>
+      </div>
 
-      <main className="flex-1 p-4 space-y-3">
-        {/* Hero banner */}
+      {/* Content */}
+      <div className="flex-1 px-4 space-y-3 pb-4">
         {tab === "all" && !cityFilter && (
-          <div className="rounded-2xl bg-gradient-to-br from-amber-500/10 via-amber-400/5 to-transparent border border-amber-500/20 p-4 mb-1">
+          <div className="rounded-2xl bg-gradient-to-br from-amber-500/10 via-amber-400/5 to-transparent border border-amber-500/20 p-4">
             <p className="text-sm font-semibold text-amber-600">¿Estás viajando o eres nuevo en la ciudad?</p>
             <p className="text-xs text-muted-foreground mt-1">
-              Publica lo que necesitas — una recomendación, alguien que te acompañe, un traductor — y los locales de la comunidad responderán.
+              Publica lo que necesitas — una recomendación, un acompañante, un traductor — y los locales de la comunidad responderán.
             </p>
           </div>
         )}
 
         {isLoading ? (
-          <div className="flex items-center justify-center py-20">
+          <div className="flex items-center justify-center py-16">
             <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
           </div>
         ) : displayed.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-center gap-3 px-6">
+          <div className="flex flex-col items-center justify-center py-16 text-center gap-3 px-6">
             <div className="text-5xl">🌍</div>
             {tab === "all" ? (
               <>
@@ -386,7 +361,7 @@ export default function LocalHelpPage() {
             ))}
           </AnimatePresence>
         )}
-      </main>
+      </div>
 
       {/* New request dialog */}
       <Dialog open={showForm} onOpenChange={setShowForm}>
@@ -425,7 +400,7 @@ export default function LocalHelpPage() {
                 placeholder="Ej: Busco a alguien que me recomiende restaurantes locales auténticos en el centro, nada turístico..."
                 value={form.description}
                 onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
-                rows={4}
+                rows={3}
                 className="resize-none"
                 data-testid="textarea-help-description"
               />
@@ -467,7 +442,27 @@ export default function LocalHelpPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+    </div>
+  );
+}
 
+export default function LocalHelpPage() {
+  const [showForm, setShowForm] = useState(false);
+
+  return (
+    <div className="flex flex-col min-h-screen bg-background pb-28">
+      <header className="sticky top-0 z-10 bg-background/95 backdrop-blur border-b px-4 py-3">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="font-bold text-lg flex items-center gap-2">🤝 Ayuda Local</h1>
+            <p className="text-xs text-muted-foreground">Pide o ofrece ayuda en cualquier ciudad</p>
+          </div>
+          <Button size="sm" onClick={() => setShowForm(true)} className="gap-1.5" data-testid="button-new-request">
+            <Plus className="w-4 h-4" /> Pedir ayuda
+          </Button>
+        </div>
+      </header>
+      <LocalHelpPanel />
       <BottomNav />
     </div>
   );
