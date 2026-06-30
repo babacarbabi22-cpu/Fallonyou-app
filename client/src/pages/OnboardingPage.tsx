@@ -8,7 +8,7 @@ import { useTranslation } from "@/lib/i18n";
 import { useUpdateProfile, useCurrentUser } from "@/hooks/use-danceme";
 import { useUpload } from "@/hooks/use-upload";
 import { useLocation } from "wouter";
-import { Camera, Upload, Check, ArrowRight, User, Heart, Shield, Sparkles, Loader2, Plane, Users, Bell, BellOff, MapPin } from "lucide-react";
+import { Camera, Upload, Check, ArrowRight, User, Heart, Shield, Sparkles, Loader2, Plane, Users, Bell, BellOff, MapPin, HandHeart } from "lucide-react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { usePushNotifications } from "@/hooks/use-push-notifications";
@@ -80,6 +80,8 @@ export default function OnboardingPage() {
   const [selectedActivities, setSelectedActivities] = useState<string[]>([]);
   const [currentCity, setCurrentCity] = useState("");
   const [destination, setDestination] = useState("");
+  const [wantToHelp, setWantToHelp] = useState(false);
+  const [helpWith, setHelpWith] = useState<string[]>([]);
 
   const [showWelcome, setShowWelcome] = useState(true);
 
@@ -203,6 +205,8 @@ export default function OnboardingPage() {
         travelInterests: selectedActivities,
         currentCity: currentCity || undefined,
         destination: destination || undefined,
+        wantToHelp,
+        helpWith,
       });
       queryClient.invalidateQueries({ queryKey: ["/api/profile"] });
       setStep("profile");
@@ -457,6 +461,75 @@ export default function OnboardingPage() {
                       data-testid="input-destination"
                     />
                   </div>
+                </div>
+
+                {/* ── Quiero ayudar a todos ── */}
+                <div className="space-y-3">
+                  <button
+                    type="button"
+                    onClick={() => { setWantToHelp(prev => !prev); if (wantToHelp) setHelpWith([]); }}
+                    data-testid="button-toggle-want-to-help"
+                    className={`w-full flex items-center gap-4 p-4 rounded-xl border-2 transition-all text-left ${
+                      wantToHelp
+                        ? "border-amber-500 bg-amber-500/10"
+                        : "border-border bg-muted/30"
+                    }`}
+                  >
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${wantToHelp ? "bg-amber-500 text-black" : "bg-muted text-muted-foreground"}`}>
+                      <HandHeart className="w-5 h-5" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-semibold text-sm">🤝 Quiero ayudar a todos</p>
+                      <p className={`text-xs mt-0.5 ${wantToHelp ? "text-amber-600" : "text-muted-foreground"}`}>
+                        Comparte en qué puedes aportar a otros viajeros
+                      </p>
+                    </div>
+                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${wantToHelp ? "border-amber-500 bg-amber-500" : "border-muted-foreground"}`}>
+                      {wantToHelp && <Check className="w-3 h-3 text-black" />}
+                    </div>
+                  </button>
+
+                  {wantToHelp && (
+                    <div>
+                      <p className="text-xs font-medium text-muted-foreground mb-2">¿En qué puedes ayudar? (elige los que quieras)</p>
+                      <div className="grid grid-cols-2 gap-2">
+                        {[
+                          { id: "idiomas", label: "🌍 Idiomas" },
+                          { id: "alojamiento", label: "🏠 Alojamiento" },
+                          { id: "guia_local", label: "🗺️ Guía local" },
+                          { id: "trabajo", label: "💼 Trabajo/CV" },
+                          { id: "estudios", label: "📚 Estudios" },
+                          { id: "tecnologia", label: "🧑‍💻 Tecnología" },
+                          { id: "restaurantes", label: "🍽️ Restaurantes" },
+                          { id: "integracion", label: "🤝 Integración" },
+                          { id: "donaciones", label: "🎁 Donaciones" },
+                          { id: "transporte", label: "🚗 Transporte" },
+                          { id: "salud", label: "🏥 Salud" },
+                          { id: "finanzas", label: "💰 Finanzas" },
+                        ].map(({ id, label }) => {
+                          const isSelected = helpWith.includes(id);
+                          return (
+                            <button
+                              key={id}
+                              type="button"
+                              onClick={() => setHelpWith(prev =>
+                                prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+                              )}
+                              data-testid={`button-help-${id}`}
+                              className={`flex items-center gap-2 p-2.5 rounded-lg border text-sm transition-all ${
+                                isSelected
+                                  ? "border-amber-500 bg-amber-500/10 text-amber-700 dark:text-amber-400 font-medium"
+                                  : "border-border bg-muted/20 text-foreground"
+                              }`}
+                            >
+                              {isSelected && <Check className="w-3 h-3 text-amber-500 flex-shrink-0" />}
+                              <span className="text-xs">{label}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <Button

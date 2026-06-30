@@ -123,7 +123,8 @@ export async function registerRoutes(
         zodiacSign, smoking, drinking, children, education,
         occupation, birthplace, height, religion, politics, pets, exercise,
         interests, relationshipType,
-        connectionTypes, travelInterests, travelerMode, currentCity, homeCity, latitude, longitude
+        connectionTypes, travelInterests, travelerMode, currentCity, homeCity, latitude, longitude,
+        wantToHelp, helpWith
       } = req.body;
       
       // Update user's display name if provided
@@ -163,6 +164,8 @@ export async function registerRoutes(
       if (latitude !== undefined || longitude !== undefined) profileData.lastLocationAt = new Date();
       const { nextAdventure } = req.body;
       if (nextAdventure !== undefined) profileData.nextAdventure = nextAdventure;
+      if (wantToHelp !== undefined) profileData.wantToHelp = !!wantToHelp;
+      if (helpWith !== undefined) profileData.helpWith = Array.isArray(helpWith) ? helpWith : [];
       
       // Get old city before updating (for new-traveler notification)
       const [oldProfile] = await db.select({ currentCity: profiles.currentCity })

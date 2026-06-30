@@ -6,7 +6,7 @@ import { useUpload } from "@/hooks/use-upload";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Camera, LogOut, Shield, User, Star, Plane, MapPin, Users, Trash2, FileText, Mail, Briefcase, Eye, Sparkles, Lightbulb, ChevronRight, Flame, Trophy, Zap, Globe2, Smartphone, ChevronDown, Share2, Download, Bell, BellOff, Languages } from "lucide-react";
+import { Loader2, Camera, LogOut, Shield, User, Star, Plane, MapPin, Users, Trash2, FileText, Mail, Briefcase, Eye, Sparkles, Lightbulb, ChevronRight, Flame, Trophy, Zap, Globe2, Smartphone, ChevronDown, Share2, Download, Bell, BellOff, Languages, HandHeart, Check } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { api } from "@shared/routes";
@@ -125,6 +125,38 @@ export default function ProfilePage() {
     },
   });
 
+  const HELP_CATEGORIES = [
+    { id: "idiomas", label: "🌍 Idiomas" },
+    { id: "alojamiento", label: "🏠 Alojamiento" },
+    { id: "guia_local", label: "🗺️ Guía local" },
+    { id: "trabajo", label: "💼 Trabajo/CV" },
+    { id: "estudios", label: "📚 Estudios" },
+    { id: "tecnologia", label: "🧑‍💻 Tecnología" },
+    { id: "restaurantes", label: "🍽️ Restaurantes" },
+    { id: "integracion", label: "🤝 Integración" },
+    { id: "donaciones", label: "🎁 Donaciones" },
+    { id: "transporte", label: "🚗 Transporte" },
+    { id: "salud", label: "🏥 Salud" },
+    { id: "finanzas", label: "💰 Finanzas" },
+  ];
+
+  const [localHelpWith, setLocalHelpWith] = useState<string[]>([]);
+
+  const { mutate: saveHelpSettings, isPending: isSavingHelp } = useMutation({
+    mutationFn: async ({ wantToHelp, helpWith }: { wantToHelp: boolean; helpWith: string[] }) => {
+      const res = await fetch("/api/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ wantToHelp, helpWith }),
+      });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [api.auth.me.path] });
+    },
+  });
+
   useEffect(() => {
     if (user) {
       setFormState({
@@ -137,6 +169,7 @@ export default function ProfilePage() {
         birthplace: user.profile?.birthplace || "",
         nextAdventure: (user.profile as any)?.nextAdventure || "",
       });
+      setLocalHelpWith((user.profile as any)?.helpWith || []);
     }
   }, [user]);
 
@@ -473,6 +506,73 @@ export default function ProfilePage() {
               >
                 <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-md transition-all duration-300 ${isGuide ? "left-6" : "left-0.5"}`} />
               </button>
+            </div>
+          );
+        })()}
+
+        {/* ── Quiero ayudar a todos ────────────────────────────────────────── */}
+        {(() => {
+          const isHelping = !!(user.profile as any)?.wantToHelp;
+          return (
+            <div
+              className={`rounded-2xl border p-4 shadow-sm transition-all ${isHelping ? "border-amber-500/40 bg-amber-500/5" : "border-border bg-card"}`}
+              data-testid="card-want-to-help"
+            >
+              <div className="flex items-center gap-4">
+                <div className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 ${isHelping ? "bg-amber-500/20" : "bg-muted"}`}>
+                  <HandHeart className={`w-6 h-6 ${isHelping ? "text-amber-500" : "text-muted-foreground"}`} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-bold text-sm">🤝 Quiero ayudar a todos</p>
+                  <p className="text-xs text-muted-foreground leading-snug">
+                    {isHelping ? "Estás ofreciendo ayuda a otros viajeros ✓" : "Activa para compartir en qué puedes ayudar"}
+                  </p>
+                </div>
+                <button
+                  onClick={() => {
+                    const newVal = !isHelping;
+                    saveHelpSettings({ wantToHelp: newVal, helpWith: newVal ? localHelpWith : [] });
+                  }}
+                  disabled={isSavingHelp}
+                  data-testid="toggle-want-to-help"
+                  className={`relative w-12 h-6 rounded-full transition-all duration-300 flex-shrink-0 ${isHelping ? "bg-amber-500" : "bg-muted-foreground/30"} ${isSavingHelp ? "opacity-60" : ""}`}
+                >
+                  <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-md transition-all duration-300 ${isHelping ? "left-6" : "left-0.5"}`} />
+                </button>
+              </div>
+
+              {isHelping && (
+                <div className="mt-4 pt-4 border-t border-border">
+                  <p className="text-xs font-medium text-muted-foreground mb-3">¿En qué puedes ayudar? Toca para seleccionar:</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {HELP_CATEGORIES.map(({ id, label }) => {
+                      const isSelected = localHelpWith.includes(id);
+                      return (
+                        <button
+                          key={id}
+                          type="button"
+                          onClick={() => {
+                            const updated = isSelected
+                              ? localHelpWith.filter(x => x !== id)
+                              : [...localHelpWith, id];
+                            setLocalHelpWith(updated);
+                            saveHelpSettings({ wantToHelp: true, helpWith: updated });
+                          }}
+                          data-testid={`button-help-category-${id}`}
+                          className={`flex items-center gap-2 p-2.5 rounded-lg border text-xs transition-all ${
+                            isSelected
+                              ? "border-amber-500 bg-amber-500/10 text-amber-700 dark:text-amber-400 font-medium"
+                              : "border-border bg-muted/20"
+                          }`}
+                        >
+                          {isSelected && <Check className="w-3 h-3 text-amber-500 flex-shrink-0" />}
+                          {label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
           );
         })()}

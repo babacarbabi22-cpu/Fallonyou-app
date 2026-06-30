@@ -350,6 +350,38 @@ export function ProfileDetailSheet({ user, open, onOpenChange }: ProfileDetailSh
                   </div>
                 )}
 
+                {/* ── Quiero ayudar ── */}
+                {(profile as any)?.wantToHelp && (profile as any)?.helpWith?.length > 0 && (
+                  <div>
+                    <h3 className="text-sm font-semibold text-muted-foreground mb-3 flex items-center gap-1.5">
+                      🤝 Quiere ayudar con
+                    </h3>
+                    <div className="flex flex-wrap gap-2">
+                      {((profile as any).helpWith as string[]).map((item: string) => {
+                        const labelMap: Record<string, string> = {
+                          idiomas: "🌍 Idiomas",
+                          alojamiento: "🏠 Alojamiento",
+                          guia_local: "🗺️ Guía local",
+                          trabajo: "💼 Trabajo/CV",
+                          estudios: "📚 Estudios",
+                          tecnologia: "🧑‍💻 Tecnología",
+                          restaurantes: "🍽️ Restaurantes",
+                          integracion: "🤝 Integración",
+                          donaciones: "🎁 Donaciones",
+                          transporte: "🚗 Transporte",
+                          salud: "🏥 Salud",
+                          finanzas: "💰 Finanzas",
+                        };
+                        return (
+                          <Badge key={item} variant="secondary" className="text-xs">
+                            {labelMap[item] || item}
+                          </Badge>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
                 {/* ── Todas las fotos (siempre visible si hay al menos 1) ── */}
                 {photos.length > 0 && (
                   <div>
