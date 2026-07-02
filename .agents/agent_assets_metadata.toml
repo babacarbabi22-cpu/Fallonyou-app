@@ -60,6 +60,18 @@ uri = "file://attached_assets/app-icon-v3.png"
 type = "image"
 title = "fallonyou icon hands stars luxury"
 
+[[generated]]
+id = "JlL17CYfczoB6X0x1XgAz"
+uri = "file://attached_assets/icon_option_A.png"
+type = "image"
+title = "cursive F airplane trail gold icon"
+
+[[generated]]
+id = "pYYccQTpjeN4vhkm25nx9"
+uri = "file://attached_assets/icon_option_B.png"
+type = "image"
+title = "geometric F from airplanes gold icon"
+
 [[outputs]]
 id = "0Ko7QF5xas7_n14GgocyH"
 uri = "file://attached_assets/poster_fallonyou_dark.png"
@@ -113,3 +125,15 @@ id = "XIoySeDQZq7vVDmvnKNmR"
 uri = "file://client/public/app-icon.png"
 type = "image"
 title = "Icono — F elegante + avión"
+
+[[outputs]]
+id = "2vTomSAVWVS2LNcpHJCe8"
+uri = "file://attached_assets/icon_option_A.png"
+type = "image"
+title = "Opción A — F cursiva con trazo de avión"
+
+[[outputs]]
+id = "MNj9NHog-CN993f9TRhCc"
+uri = "file://attached_assets/icon_option_B.png"
+type = "image"
+title = "Opción B — F geométrica con aviones"
