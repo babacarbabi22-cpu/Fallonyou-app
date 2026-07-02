@@ -107,3 +107,9 @@ id = "r7QXjubFFIdWSEwUS1qfQ"
 uri = "file://store-assets/APP_STORE_TEXTS.md"
 type = "text"
 title = "Store Listing actualizado — FallonYou v2.0"
+
+[[outputs]]
+id = "XIoySeDQZq7vVDmvnKNmR"
+uri = "file://client/public/app-icon.png"
+type = "image"
+title = "Icono FallonYou — manos doradas"
