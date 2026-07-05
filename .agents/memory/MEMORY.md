@@ -1,0 +1,2 @@
+- [Future feature ideas](future-feature-ideas.md) — deferred, non-urgent feature ideas discussed with the user, to revisit later.
+- [BetaFamily testing setup](betafamily-testing-setup.md) — quirks and gotchas when using BetaFamily.com + Google Play closed testing together.
