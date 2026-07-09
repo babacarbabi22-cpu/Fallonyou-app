@@ -57,6 +57,16 @@ export default function AuthPage() {
         throw new Error("No se pudo conectar con el servidor. Inténtalo de nuevo en unos segundos.");
       }
 
+      // Guard: if response is not JSON (e.g. HTML error page during server restart), retry
+      const contentType = response.headers.get("content-type") || "";
+      if (!contentType.includes("application/json")) {
+        if (attempt < 2) {
+          await new Promise(r => setTimeout(r, 2500));
+          return attemptLogin(attempt + 1);
+        }
+        throw new Error("El servidor está reiniciando. Inténtalo de nuevo en unos segundos.");
+      }
+
       const data = await response.json();
 
       if (!response.ok) {
