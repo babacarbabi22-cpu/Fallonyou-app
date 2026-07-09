@@ -51,6 +51,7 @@ export async function setupAuth(app: Express) {
   app.post("/api/register", async (req, res) => {
     try {
       const { email, password, firstName, lastName, ageConfirmed } = req.body;
+      console.log(`[REGISTER] attempt: email=${email}, hasPassword=${!!password}, env=${process.env.NODE_ENV}`);
 
       if (!email || !password) {
         return res.status(400).json({ error: "Email and password are required" });
