@@ -4,7 +4,9 @@
   "webDir": "public",
   "bundledWebRuntime": false,
   "server": {
-    "androidScheme": "https"
+    "url": "https://fallonyou.app",
+    "androidScheme": "https",
+    "cleartext": false
   },
   "ios": {
     "contentInset": "automatic",
@@ -17,7 +19,7 @@
   "plugins": {
     "SplashScreen": {
       "launchShowDuration": 2000,
-      "backgroundColor": "#9b87f5",
+      "backgroundColor": "#09090b",
       "showSpinner": false,
       "androidScaleType": "CENTER_CROP",
       "splashFullScreen": true,
@@ -25,7 +27,7 @@
     },
     "StatusBar": {
       "style": "LIGHT",
-      "backgroundColor": "#9b87f5"
+      "backgroundColor": "#09090b"
     },
     "Keyboard": {
       "resize": "body",
