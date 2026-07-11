@@ -48,6 +48,10 @@ export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
+  app.get('/feature_graphic_googleplay.png', (req, res) => {
+    res.sendFile('feature_graphic_googleplay.png', { root: 'client/public' });
+  });
+
   app.get('/.well-known/assetlinks.json', (req, res) => {
     res.setHeader('Content-Type', 'application/json');
     res.json([{
