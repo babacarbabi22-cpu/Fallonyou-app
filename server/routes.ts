@@ -48,6 +48,17 @@ export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
+  app.get('/.well-known/assetlinks.json', (req, res) => {
+    res.setHeader('Content-Type', 'application/json');
+    res.json([{
+      relation: ['delegate_permission/common.handle_all_urls'],
+      target: {
+        namespace: 'android_app',
+        package_name: 'app.fallonyou.twa',
+        sha256_cert_fingerprints: ['C4:00:2A:C1:B6:E1:B7:6B:55:21:9E:D7:7C:42:B9:FC:BF:AD:C7:3D:DA:03:A7:23:D8:BB:FF:BC:7A:BD:98:68']
+      }
+    }]);
+  });
   await setupAuth(app);
   registerObjectStorageRoutes(app);
 
