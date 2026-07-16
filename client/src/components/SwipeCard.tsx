@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion, useMotionValue, useTransform, PanInfo } from "framer-motion";
 import { UserWithPhotos } from "@/hooks/use-danceme";
-import { X, MapPin, Briefcase, Ruler, GraduationCap, Star, User, Zap, Plane, BookOpen, UserPlus } from "lucide-react";
+import { X, MapPin, Briefcase, Ruler, GraduationCap, Star, User, Zap, Plane, BookOpen, UserPlus, Languages } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 
 // Global image cache for faster loading
@@ -239,6 +239,19 @@ export function SwipeCard({ user, onSwipe, onTap }: SwipeCardProps) {
                  <div className="flex items-center gap-1 bg-amber-500/30 backdrop-blur px-3 py-1 rounded-full border border-amber-400/40">
                    <Plane size={14} className="text-amber-300" />
                    <span className="text-amber-100">{(profile as any).nextAdventure}</span>
+                 </div>
+               )}
+               {(profile as any)?.langLevel && (
+                 <div
+                   data-testid="badge-lang-level"
+                   className="flex items-center gap-1 bg-indigo-500/30 backdrop-blur px-3 py-1 rounded-full border border-indigo-400/40"
+                 >
+                   <Languages size={14} className="text-indigo-300" />
+                   <span className="text-indigo-100 font-semibold">
+                     {(profile as any).langLevel === "a1" ? "A1" :
+                      (profile as any).langLevel === "a2" ? "A2" :
+                      (profile as any).langLevel === "b1" ? "B1" : "B2+"}
+                   </span>
                  </div>
                )}
             </div>

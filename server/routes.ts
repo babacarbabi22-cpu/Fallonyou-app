@@ -2782,6 +2782,30 @@ export async function registerRoutes(
 
   // ── Language Level Progress ────────────────────────────────────────────────
 
+  // ── Language Level Progression ────────────────────────────────────────────
+  // Server-side canonical map: ONLY source of truth for lessonId → level/category
+  const CANONICAL_LESSON_MAP: Record<string, { level: string; category: string }> = {
+    "a1-greetings":  { level: "a1",     category: "greetings"  },
+    "a1-restaurant": { level: "a1",     category: "restaurant" },
+    "a1-social":     { level: "a1",     category: "social"     },
+    "a2-airport":    { level: "a2",     category: "airport"    },
+    "a2-transport":  { level: "a2",     category: "transport"  },
+    "a2-hotel":      { level: "a2",     category: "hotel"      },
+    "b1-emergency":  { level: "b1",     category: "emergency"  },
+    "b1-numbers":    { level: "b1",     category: "numbers"    },
+    "b1-shopping":   { level: "b1",     category: "shopping"   },
+    "b2-health":     { level: "b2plus", category: "health"     },
+    "b2-business":   { level: "b2plus", category: "business"   },
+    "b2-culture":    { level: "b2plus", category: "culture"    },
+  };
+  const LANG_LEVEL_LESSONS: Record<string, string[]> = {
+    a1:     ["a1-greetings",  "a1-restaurant", "a1-social"   ],
+    a2:     ["a2-airport",    "a2-transport",  "a2-hotel"    ],
+    b1:     ["b1-emergency",  "b1-numbers",    "b1-shopping" ],
+    b2plus: ["b2-health",     "b2-business",   "b2-culture"  ],
+  };
+  const LANG_LEVEL_ORDER = ["a1", "a2", "b1", "b2plus"];
+
   app.get("/api/language/progress", async (req, res) => {
     if (!req.user) return res.status(401).json({ error: "Not authenticated" });
     const userId = (req.user as any).id;
@@ -2792,33 +2816,87 @@ export async function registerRoutes(
     res.json({ completedLessons: rows.map(r => r.lessonId) });
   });
 
+  app.get("/api/language/levels/:lang", async (req, res) => {
+    if (!req.user) return res.status(401).json({ error: "Not authenticated" });
+    const userId = (req.user as any).id;
+    const lang = req.params.lang;
+    const rows = await db.select().from(languageProgress).where(
+      and(eq(languageProgress.userId, userId), eq(languageProgress.language, lang))
+    );
+    const completedIds = new Set(rows.map(r => r.lessonId));
+    const userRow = await db.query.users.findFirst({ where: eq(users.id, userId) });
+    const isPremium = (userRow as any)?.isPremium === true || (userRow as any)?.isPremium === "true" ||
+      ((userRow as any)?.trialEndsAt && new Date((userRow as any).trialEndsAt) > new Date());
+    const levels = LANG_LEVEL_ORDER.map(levelId => ({
+      levelId,
+      lessons: (LANG_LEVEL_LESSONS[levelId] ?? []).map(id => ({
+        lessonId: id,
+        category: CANONICAL_LESSON_MAP[id]?.category ?? id,
+        completed: completedIds.has(id),
+      })),
+      completed: (LANG_LEVEL_LESSONS[levelId] ?? []).every(id => completedIds.has(id)),
+      requiresPremium: levelId === "b2plus",
+      isPremiumUser: isPremium,
+    }));
+    res.json({ levels, completedLessons: [...completedIds] });
+  });
+
   app.post("/api/language/progress", async (req, res) => {
     if (!req.user) return res.status(401).json({ error: "Not authenticated" });
     const userId = (req.user as any).id;
-    const { language, level, lessonId } = req.body;
-    if (!language || !level || !lessonId) return res.status(400).json({ error: "Missing fields" });
-    if (level === "b2plus") {
-      const user = await db.query.users.findFirst({ where: eq(users.id, userId) });
-      const isPremium = (user as any)?.isPremium === true || (user as any)?.isPremium === "true" ||
-        ((user as any)?.trialEndsAt && new Date((user as any).trialEndsAt) > new Date());
+    const { language, lessonId, score, total } = req.body;
+    if (!language || !lessonId) return res.status(400).json({ error: "Missing fields" });
+
+    // Server-side canonical validation — rejects any unknown or fabricated lessonId
+    const canonical = CANONICAL_LESSON_MAP[lessonId as string];
+    if (!canonical) return res.status(400).json({ error: "Invalid lessonId" });
+
+    // Server-side score gate (60% pass threshold) when score data is provided
+    if (typeof score === "number" && typeof total === "number" && total > 0) {
+      if (score / total < 0.6) return res.status(400).json({ error: "Score below pass threshold" });
+    }
+
+    // Premium gate derived from canonical level, not client-supplied field
+    if (canonical.level === "b2plus") {
+      const userRow = await db.query.users.findFirst({ where: eq(users.id, userId) });
+      const isPremium = (userRow as any)?.isPremium === true || (userRow as any)?.isPremium === "true" ||
+        ((userRow as any)?.trialEndsAt && new Date((userRow as any).trialEndsAt) > new Date());
       if (!isPremium) return res.status(403).json({ error: "Premium required for B2+" });
     }
-    await db.insert(languageProgress).values({ userId, language, level, lessonId }).onConflictDoNothing();
-    res.json({ ok: true });
+
+    await db.insert(languageProgress)
+      .values({ userId, language, level: canonical.level, lessonId: lessonId as string })
+      .onConflictDoNothing();
+
+    // Recompute completed level for profile cache update
+    const allRows = await db.select().from(languageProgress).where(
+      and(eq(languageProgress.userId, userId), eq(languageProgress.language, language as string))
+    );
+    const completedIds = new Set(allRows.map(r => r.lessonId));
+    let completedLevel: string | null = null;
+    for (let i = LANG_LEVEL_ORDER.length - 1; i >= 0; i--) {
+      const lv = LANG_LEVEL_ORDER[i];
+      const required = LANG_LEVEL_LESSONS[lv] ?? [];
+      if (required.length > 0 && required.every(id => completedIds.has(id))) {
+        completedLevel = lv;
+        break;
+      }
+    }
+    if (completedLevel) {
+      await db.execute(sql`
+        UPDATE profiles SET lang_level = ${completedLevel}, primary_lang = ${language}
+        WHERE user_id = ${userId}
+      `);
+    }
+
+    res.json({ ok: true, level: canonical.level, completedLevel });
   });
 
   app.get("/api/language/my-level", async (req, res) => {
     if (!req.user) return res.status(401).json({ error: "Not authenticated" });
     const userId = (req.user as any).id;
     const rows = await db.select().from(languageProgress).where(eq(languageProgress.userId, userId));
-    const LEVEL_ORDER = ["a1", "a2", "b1", "b2plus"];
     const LEVEL_LABELS: Record<string, string> = { a1: "A1", a2: "A2", b1: "B1", b2plus: "B2+" };
-    const LESSONS_REQUIRED: Record<string, string[]> = {
-      a1: ["a1-greetings"],
-      a2: ["a2-airport", "a2-transport"],
-      b1: ["b1-restaurant", "b1-hotel", "b1-social"],
-      b2plus: ["b2-emergency", "b2-social-adv"],
-    };
     const byLang: Record<string, string[]> = {};
     for (const r of rows) {
       if (!byLang[r.language]) byLang[r.language] = [];
@@ -2827,11 +2905,11 @@ export async function registerRoutes(
     let bestLevel: string | null = null;
     let bestLang: string | null = null;
     for (const [lang, completed] of Object.entries(byLang)) {
-      for (let i = LEVEL_ORDER.length - 1; i >= 0; i--) {
-        const lv = LEVEL_ORDER[i];
-        const required = LESSONS_REQUIRED[lv] ?? [];
+      for (let i = LANG_LEVEL_ORDER.length - 1; i >= 0; i--) {
+        const lv = LANG_LEVEL_ORDER[i];
+        const required = LANG_LEVEL_LESSONS[lv] ?? [];
         if (required.length > 0 && required.every(id => completed.includes(id))) {
-          if (bestLevel === null || LEVEL_ORDER.indexOf(lv) > LEVEL_ORDER.indexOf(bestLevel)) {
+          if (bestLevel === null || LANG_LEVEL_ORDER.indexOf(lv) > LANG_LEVEL_ORDER.indexOf(bestLevel)) {
             bestLevel = lv; bestLang = lang;
           }
           break;

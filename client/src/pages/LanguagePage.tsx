@@ -37,11 +37,11 @@ const CATEGORIES = [
 ];
 
 type LangCode = "en" | "es" | "fr" | "it" | "pt" | "de" | "ja" | "zh" | "ar" | "nl";
-type CatId = "greetings" | "airport" | "restaurant" | "transport" | "hotel" | "emergency" | "social";
+type CatId = "greetings" | "airport" | "restaurant" | "transport" | "hotel" | "emergency" | "social" | "numbers" | "shopping" | "health" | "business" | "culture";
 
 interface Phrase { phrase: string; phonetic: string; translation: string; }
 
-const PHRASES: Record<LangCode, Record<CatId, Phrase[]>> = {
+const PHRASES: Record<LangCode, Partial<Record<CatId, Phrase[]>>> = {
   en: {
     greetings:  [
       { phrase: "Hello!", phonetic: "HEH-loh", translation: "¡Hola!" },
@@ -116,6 +116,51 @@ const PHRASES: Record<LangCode, Record<CatId, Phrase[]>> = {
       { phrase: "What do you do?", phonetic: "wat duu yuu duu", translation: "¿A qué te dedicas?" },
       { phrase: "I love traveling!", phonetic: "ai lav TRAV-el-ing", translation: "¡Me encanta viajar!" },
       { phrase: "Let's keep in touch!", phonetic: "lets keep in tach", translation: "¡Mantengámonos en contacto!" },
+    ],
+    numbers: [
+      { phrase: "How much does this cost?", phonetic: "hau mach daz dis kost", translation: "¿Cuánto cuesta esto?" },
+      { phrase: "That's too expensive.", phonetic: "dats tuu ik-SPEN-siv", translation: "Eso es demasiado caro." },
+      { phrase: "Do you have change?", phonetic: "duu yuu hav cheinj", translation: "¿Tiene cambio?" },
+      { phrase: "Can you write the price down?", phonetic: "kan yuu rait da prais daun", translation: "¿Puede escribir el precio?" },
+      { phrase: "I'll pay by card.", phonetic: "ail pei bai kard", translation: "Pagaré con tarjeta." },
+      { phrase: "One, two, three… ten.", phonetic: "wan tuu three... ten", translation: "Uno, dos, tres… diez." },
+      { phrase: "Is there a discount?", phonetic: "iz der a DIS-kaunt", translation: "¿Hay descuento?" },
+    ],
+    shopping: [
+      { phrase: "Where is the shop?", phonetic: "wer iz da shop", translation: "¿Dónde está la tienda?" },
+      { phrase: "Do you have this in another color?", phonetic: "duu yuu hav dis in a-NA-der KUL-er", translation: "¿Lo tienen en otro color?" },
+      { phrase: "Can I try this on?", phonetic: "kan ai trai dis on", translation: "¿Puedo probármelo?" },
+      { phrase: "It doesn't fit.", phonetic: "it DAZ-ent fit", translation: "No me queda bien." },
+      { phrase: "I'll take it!", phonetic: "ail teik it", translation: "¡Me lo llevo!" },
+      { phrase: "What are the opening hours?", phonetic: "wat ar da OH-pen-ing au-erz", translation: "¿Cuál es el horario de apertura?" },
+      { phrase: "What's the return policy?", phonetic: "wats da re-TERN POL-i-see", translation: "¿Cuál es la política de devoluciones?" },
+    ],
+    health: [
+      { phrase: "Where is the pharmacy?", phonetic: "wer iz da FAR-ma-si", translation: "¿Dónde está la farmacia?" },
+      { phrase: "I have a headache.", phonetic: "ai hav a HED-eik", translation: "Tengo dolor de cabeza." },
+      { phrase: "I'm feeling sick.", phonetic: "aim FEE-ling sik", translation: "Me encuentro mal." },
+      { phrase: "I need medicine for a cold.", phonetic: "ai need MED-i-sin for a kohld", translation: "Necesito medicina para el resfriado." },
+      { phrase: "How many times a day?", phonetic: "hau MEN-i taimz a dei", translation: "¿Cuántas veces al día?" },
+      { phrase: "I have a doctor's appointment.", phonetic: "ai hav a DOK-torz a-POINT-ment", translation: "Tengo cita con el médico." },
+      { phrase: "I'm allergic to penicillin.", phonetic: "aim a-LER-jik tu pe-ni-SIL-in", translation: "Soy alérgico/a a la penicilina." },
+    ],
+    business: [
+      { phrase: "I have a meeting at ten.", phonetic: "ai hav a MEE-ting at ten", translation: "Tengo una reunión a las diez." },
+      { phrase: "Can we schedule a call?", phonetic: "kan wii SKED-yuul a kol", translation: "¿Podemos concertar una llamada?" },
+      { phrase: "I work in technology.", phonetic: "ai werk in tek-NOL-o-jee", translation: "Trabajo en tecnología." },
+      { phrase: "What's your job title?", phonetic: "wats yor job TAI-tul", translation: "¿Cuál es tu cargo?" },
+      { phrase: "I'll follow up by email.", phonetic: "ail FOL-o up bai EE-meil", translation: "Te haré seguimiento por email." },
+      { phrase: "Nice to work with you.", phonetic: "nais tu werk wid yuu", translation: "Ha sido un placer trabajar contigo." },
+      { phrase: "Let's set up a meeting.", phonetic: "lets set up a MEE-ting", translation: "Organicemos una reunión." },
+    ],
+    culture: [
+      { phrase: "Is tipping expected here?", phonetic: "iz TIP-ing ek-SPEK-ted heer", translation: "¿Es habitual dejar propina aquí?" },
+      { phrase: "What time do people eat dinner?", phonetic: "wat taim duu PEE-pul eet DIN-er", translation: "¿A qué hora cena la gente?" },
+      { phrase: "This is a local specialty.", phonetic: "dis iz a LO-kul SPE-shul-ti", translation: "Esto es una especialidad local." },
+      { phrase: "How do you celebrate this holiday?", phonetic: "hau duu yuu SEL-e-breit dis HOL-i-dei", translation: "¿Cómo celebráis esta festividad?" },
+      { phrase: "Let's go out for a drink!", phonetic: "lets goh aut for a drink", translation: "¡Salgamos a tomar algo!" },
+      { phrase: "What's the local custom?", phonetic: "wats da LO-kul KUS-tom", translation: "¿Cuál es la costumbre local?" },
+      { phrase: "When in Rome, do as the Romans do.", phonetic: "wen in rohm duu az da ROH-manz duu", translation: "A donde fueres, haz lo que vieres." },
     ],
   },
   fr: {
@@ -913,41 +958,45 @@ const LEVEL_CONFIG: LevelConfig[] = [
   {
     id: "a1", label: "A1", title: "Principiante", emoji: "🌱",
     colorClass: "text-green-600",
-    description: "Saludos y frases esenciales del día a día",
+    description: "Saludos, restaurante y socializar",
     lessons: [
-      { id: "a1-greetings", title: "Saludos básicos", emoji: "👋", category: "greetings" },
+      { id: "a1-greetings",  title: "Saludos básicos",  emoji: "👋", category: "greetings"  },
+      { id: "a1-restaurant", title: "Restaurante",       emoji: "🍽️", category: "restaurant" },
+      { id: "a1-social",     title: "Conocer gente",     emoji: "🤝", category: "social"     },
     ],
   },
   {
     id: "a2", label: "A2", title: "Básico", emoji: "✈️",
     colorClass: "text-blue-600",
-    description: "Viajes: aeropuerto y transporte",
+    description: "Aeropuerto, transporte y hotel",
     requiresLevel: "a1",
     lessons: [
-      { id: "a2-airport",   title: "En el aeropuerto", emoji: "🛫", category: "airport"   },
-      { id: "a2-transport", title: "Transporte",        emoji: "🚌", category: "transport" },
+      { id: "a2-airport",    title: "En el aeropuerto", emoji: "🛫", category: "airport"    },
+      { id: "a2-transport",  title: "Transporte",        emoji: "🚌", category: "transport"  },
+      { id: "a2-hotel",      title: "Hotel",             emoji: "🏨", category: "hotel"      },
     ],
   },
   {
     id: "b1", label: "B1", title: "Intermedio", emoji: "🗣️",
     colorClass: "text-amber-600",
-    description: "Restaurante, hotel y vida social",
+    description: "Emergencias, números y compras",
     requiresLevel: "a2",
     lessons: [
-      { id: "b1-restaurant", title: "Restaurante", emoji: "🍽️", category: "restaurant" },
-      { id: "b1-hotel",      title: "Hotel",        emoji: "🏨", category: "hotel"      },
-      { id: "b1-social",     title: "Socializar",   emoji: "🤝", category: "social"     },
+      { id: "b1-emergency",  title: "Emergencias",       emoji: "🆘", category: "emergency"  },
+      { id: "b1-numbers",    title: "Números y precios", emoji: "🔢", category: "numbers"    },
+      { id: "b1-shopping",   title: "Ir de compras",     emoji: "🛍️", category: "shopping"   },
     ],
   },
   {
     id: "b2plus", label: "B2+", title: "Avanzado", emoji: "🏆",
     colorClass: "text-yellow-600",
-    description: "Emergencias y expresiones avanzadas",
+    description: "Salud, negocios y cultura local",
     requiresLevel: "b1",
     isPremium: true,
     lessons: [
-      { id: "b2-emergency",  title: "Emergencias",    emoji: "🆘", category: "emergency" },
-      { id: "b2-social-adv", title: "Social avanzado", emoji: "💬", category: "social"    },
+      { id: "b2-health",    title: "Salud y farmacia",   emoji: "💊", category: "health"    },
+      { id: "b2-business",  title: "Negocios",           emoji: "💼", category: "business"  },
+      { id: "b2-culture",   title: "Cultura local",      emoji: "🎭", category: "culture"   },
     ],
   },
 ];
@@ -977,7 +1026,7 @@ function generateLessonQuiz(phrases: Phrase[], allPhrases: Phrase[]): QuizQuesti
 export default function LanguagePage() {
   const { toast } = useToast();
   const [, navigate] = useLocation();
-  const { currentUser } = useCurrentUser();
+  const { data: currentUser } = useCurrentUser();
   const t = useTranslation();
 
   const [tab, setTab] = useState<"phrases" | "lesson" | "natives" | "levels">("phrases");
@@ -986,8 +1035,12 @@ export default function LanguagePage() {
   const [flipped, setFlipped] = useState<number | null>(null);
   const [quizOpen, setQuizOpen] = useState(false);
 
+  // Category-level fallback: if a language lacks a new category, use English
+  const getLessonPhrases = (lang: LangCode, cat: CatId): Phrase[] =>
+    (PHRASES[lang]?.[cat] ?? PHRASES.en[cat]) ?? [];
+
   // ── Levels tab state ──────────────────────────────────────────────────────
-  const [levelView, setLevelView] = useState<"overview" | "lessons" | "study" | "quiz" | "result">("overview");
+  const [levelView, setLevelView] = useState<"overview" | "lessons" | "study" | "quiz" | "result" | "level-complete">("overview");
   const [activeLevel, setActiveLevel] = useState<LevelConfig | null>(null);
   const [activeLesson, setActiveLesson] = useState<LevelLesson | null>(null);
   const [quizQuestions, setQuizQuestions] = useState<QuizQuestion[]>([]);
@@ -1013,11 +1066,24 @@ export default function LanguagePage() {
   const isPremium = premiumStatus?.isPremium ?? false;
 
   const completeLesson = useMutation({
-    mutationFn: (data: { language: string; level: string; lessonId: string }) =>
+    mutationFn: (data: { language: string; lessonId: string; score: number; total: number }) =>
       apiRequest("POST", "/api/language/progress", data),
-    onSuccess: () => {
-      refetchProgress();
+    onSuccess: (_, vars) => {
+      refetchProgress().then(updated => {
+        const freshCompleted: string[] = updated.data?.completedLessons ?? [];
+        if (activeLevel) {
+          const allLessonsDone = activeLevel.lessons.every(l => freshCompleted.includes(l.id) || l.id === vars.lessonId);
+          if (allLessonsDone) {
+            setLevelView("level-complete");
+            return;
+          }
+        }
+        setLevelView("lessons");
+      });
       queryClient.invalidateQueries({ queryKey: ["/api/language/my-level"] });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "No se pudo guardar el progreso.", variant: "destructive" });
     },
   });
 
@@ -1551,7 +1617,7 @@ export default function LanguagePage() {
             </div>
           </div>
           <div className="space-y-2">
-            {(PHRASES[selectedLang] ?? PHRASES.en)[activeLesson.category]?.map((p, i) => (
+            {getLessonPhrases(selectedLang, activeLesson.category).map((p, i) => (
               <div key={i} data-testid={`study-phrase-${i}`} className="rounded-2xl border bg-card p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1">
@@ -1578,8 +1644,8 @@ export default function LanguagePage() {
             <Button
               className="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 rounded-2xl shadow-lg"
               onClick={() => {
-                const phrases = (PHRASES[selectedLang] ?? PHRASES.en)[activeLesson.category] ?? [];
-                const allPhrases = Object.values((PHRASES[selectedLang] ?? PHRASES.en) as Record<string, Phrase[]>).flat();
+                const phrases = getLessonPhrases(selectedLang, activeLesson.category);
+                const allPhrases = (Object.keys(PHRASES.en) as CatId[]).flatMap(cat => getLessonPhrases(selectedLang, cat));
                 const questions = generateLessonQuiz(phrases, allPhrases);
                 setQuizQuestions(questions);
                 setQuizIdx(0);
@@ -1590,7 +1656,7 @@ export default function LanguagePage() {
               }}
               data-testid="btn-start-lesson-quiz"
             >
-              🎯 Iniciar Quiz ({(PHRASES[selectedLang] ?? PHRASES.en)[activeLesson.category]?.length ?? 0} frases → 5 preguntas)
+              🎯 Iniciar Quiz ({getLessonPhrases(selectedLang, activeLesson.category).length} frases → 5 preguntas)
             </Button>
           </div>
         </div>
@@ -1695,8 +1761,12 @@ export default function LanguagePage() {
                 <Button
                   className="bg-amber-500 hover:bg-amber-600 text-white px-8 py-3 rounded-2xl font-bold shadow-lg"
                   onClick={() => {
-                    completeLesson.mutate({ language: selectedLang, level: activeLevel.id, lessonId: activeLesson.id });
-                    setLevelView("lessons");
+                    completeLesson.mutate({
+                      language: selectedLang,
+                      lessonId: activeLesson.id,
+                      score: quizScore,
+                      total: quizQuestions.length,
+                    });
                   }}
                   disabled={completeLesson.isPending}
                   data-testid="btn-claim-completion"
@@ -1725,8 +1795,8 @@ export default function LanguagePage() {
                 <Button
                   className="bg-amber-500 hover:bg-amber-600 text-white"
                   onClick={() => {
-                    const phrases = (PHRASES[selectedLang] ?? PHRASES.en)[activeLesson.category] ?? [];
-                    const allPhrases = Object.values((PHRASES[selectedLang] ?? PHRASES.en) as Record<string, Phrase[]>).flat();
+                    const phrases = getLessonPhrases(selectedLang, activeLesson.category);
+                    const allPhrases = (Object.keys(PHRASES.en) as CatId[]).flatMap(cat => getLessonPhrases(selectedLang, cat));
                     const questions = generateLessonQuiz(phrases, allPhrases);
                     setQuizQuestions(questions);
                     setQuizIdx(0);
@@ -1742,6 +1812,78 @@ export default function LanguagePage() {
               </div>
             </>
           )}
+        </div>
+      )}
+
+      {/* ── Level Complete screen ───────────────────────────────────────────── */}
+      {tab === "levels" && levelView === "level-complete" && activeLevel && (
+        <div className="px-4 pt-10 flex flex-col items-center text-center space-y-5" data-testid="section-level-complete">
+          <div className="text-7xl animate-bounce">🏅</div>
+          <div className={`w-20 h-20 rounded-3xl flex items-center justify-center text-4xl ${
+            activeLevel.id === "a1" ? "bg-green-500/15" :
+            activeLevel.id === "a2" ? "bg-blue-500/15" :
+            activeLevel.id === "b1" ? "bg-amber-500/15" : "bg-yellow-500/15"
+          }`}>
+            {activeLevel.emoji}
+          </div>
+          <div>
+            <h2 className="text-3xl font-black text-foreground">¡Nivel completado!</h2>
+            <p className={`text-2xl font-black mt-1 ${activeLevel.colorClass}`}>{activeLevel.label} — {activeLevel.title}</p>
+          </div>
+          <div className="rounded-2xl bg-green-500/10 border border-green-500/30 px-6 py-4 w-full">
+            <p className="text-sm font-semibold text-green-700 dark:text-green-400">
+              ✓ Has completado las {activeLevel.lessons.length} lecciones del nivel {activeLevel.label}
+            </p>
+          </div>
+          {(() => {
+            const nextLevel = LEVEL_CONFIG.find(l => l.requiresLevel === activeLevel.id);
+            if (nextLevel) {
+              return (
+                <div className="rounded-2xl bg-amber-500/10 border border-amber-500/30 px-6 py-4 w-full">
+                  <p className="text-xs text-amber-600 font-semibold uppercase tracking-wider mb-1">🔓 Desbloqueado</p>
+                  <p className="font-bold">{nextLevel.label} — {nextLevel.title}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{nextLevel.description}</p>
+                  {nextLevel.isPremium && !isPremium && (
+                    <p className="text-xs text-yellow-600 mt-1 font-medium">
+                      <Crown className="w-3 h-3 inline mr-0.5" />Requiere Premium para acceder
+                    </p>
+                  )}
+                </div>
+              );
+            }
+            return (
+              <div className="rounded-2xl bg-yellow-500/10 border border-yellow-500/30 px-6 py-4 w-full">
+                <p className="font-bold text-yellow-700 dark:text-yellow-400">🏆 ¡Completaste todos los niveles!</p>
+                <p className="text-xs text-muted-foreground mt-1">Eres un experto en {LANGUAGES.find(l => l.code === selectedLang)?.name}</p>
+              </div>
+            );
+          })()}
+          <div className="flex gap-3 pt-2 w-full">
+            <Button
+              variant="outline"
+              className="flex-1 border-amber-500 text-amber-600"
+              onClick={() => { setLevelView("overview"); setActiveLevel(null); }}
+              data-testid="btn-level-complete-back"
+            >
+              Ver todos los niveles
+            </Button>
+            {(() => {
+              const nextLevel = LEVEL_CONFIG.find(l => l.requiresLevel === activeLevel.id);
+              const canStartNext = nextLevel && isLevelUnlocked(nextLevel) && !(nextLevel.isPremium && !isPremium);
+              if (canStartNext) {
+                return (
+                  <Button
+                    className="flex-1 bg-amber-500 hover:bg-amber-600 text-white font-bold"
+                    onClick={() => { setActiveLevel(nextLevel!); setLevelView("lessons"); }}
+                    data-testid="btn-level-complete-next"
+                  >
+                    Ir a {nextLevel!.label} →
+                  </Button>
+                );
+              }
+              return null;
+            })()}
+          </div>
         </div>
       )}
 

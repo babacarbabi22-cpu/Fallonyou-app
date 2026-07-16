@@ -48,6 +48,8 @@ export const profiles = pgTable("profiles", {
   learningLanguages: text("learning_languages").array().default([]),
   wantToHelp: boolean("want_to_help").default(false),
   helpWith: text("help_with").array().default([]),
+  langLevel: text("lang_level"),
+  primaryLang: varchar("primary_lang", { length: 10 }),
 });
 
 export const photos = pgTable("photos", {
