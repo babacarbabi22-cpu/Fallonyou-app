@@ -50,6 +50,7 @@ export const profiles = pgTable("profiles", {
   helpWith: text("help_with").array().default([]),
   langLevel: text("lang_level"),
   primaryLang: varchar("primary_lang", { length: 10 }),
+  workStatus: text("work_status"),
 });
 
 export const photos = pgTable("photos", {
@@ -155,6 +156,8 @@ export const events = pgTable("events", {
   endsAt: timestamp("ends_at"),
   capacity: integer("capacity"),
   imageUrl: text("image_url"),
+  isOpportunity: boolean("is_opportunity").default(false),
+  opportunityType: text("opportunity_type"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 

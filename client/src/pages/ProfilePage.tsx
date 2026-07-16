@@ -614,6 +614,53 @@ export default function ProfilePage() {
           );
         })()}
 
+        {/* ── Estado laboral ───────────────────────────────────────────────── */}
+        {(() => {
+          const ws = (user.profile as any)?.workStatus as string | null | undefined;
+          const isLooking = ws === "looking";
+          const isOffering = ws === "offering";
+          return (
+            <div className="rounded-2xl border border-border bg-card p-4 shadow-sm" data-testid="card-work-status">
+              <p className="font-bold text-sm mb-3">💼 Estado laboral</p>
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={async () => {
+                    const next = isLooking ? null : "looking";
+                    await fetch("/api/profile", { method: "PATCH", headers: { "Content-Type": "application/json" }, credentials: "include", body: JSON.stringify({ workStatus: next }) });
+                    queryClient.invalidateQueries({ queryKey: ["/api/me"] });
+                  }}
+                  data-testid="button-work-looking"
+                  className={`flex-1 flex items-center gap-2 px-3 py-2.5 rounded-xl border text-sm font-medium transition-all ${isLooking ? "border-purple-500 bg-purple-500/10 text-purple-700 dark:text-purple-300" : "border-border text-muted-foreground hover:border-purple-400"}`}
+                >
+                  <span className="text-base">🔍</span>
+                  Busco trabajo
+                  {isLooking && <span className="ml-auto text-purple-500 text-xs">✓</span>}
+                </button>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    const next = isOffering ? null : "offering";
+                    await fetch("/api/profile", { method: "PATCH", headers: { "Content-Type": "application/json" }, credentials: "include", body: JSON.stringify({ workStatus: next }) });
+                    queryClient.invalidateQueries({ queryKey: ["/api/me"] });
+                  }}
+                  data-testid="button-work-offering"
+                  className={`flex-1 flex items-center gap-2 px-3 py-2.5 rounded-xl border text-sm font-medium transition-all ${isOffering ? "border-green-500 bg-green-500/10 text-green-700 dark:text-green-300" : "border-border text-muted-foreground hover:border-green-400"}`}
+                >
+                  <span className="text-base">📢</span>
+                  Ofrezco trabajo
+                  {isOffering && <span className="ml-auto text-green-500 text-xs">✓</span>}
+                </button>
+              </div>
+              {ws && (
+                <p className="text-xs text-muted-foreground mt-2 text-center">
+                  {isLooking ? "Se muestra en tu tarjeta de Discover que estás buscando trabajo" : "Se muestra en tu tarjeta de Discover que ofreces empleo"}
+                </p>
+              )}
+            </div>
+          );
+        })()}
+
         {/* ── Ciudades conectadas ───────────────────────────────────────────── */}
         {connectedCities && connectedCities.cities.length > 0 && (
           <div className="bg-card border rounded-2xl p-4 shadow-sm" data-testid="section-connected-cities">

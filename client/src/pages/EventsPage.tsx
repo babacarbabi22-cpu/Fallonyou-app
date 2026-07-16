@@ -60,6 +60,8 @@ interface Event {
   creatorId: string;
   participantCount: number;
   isParticipant: boolean;
+  isOpportunity?: boolean;
+  opportunityType?: string | null;
   participantAvatars: { id: string; firstName: string | null; profileImageUrl: string | null }[];
   creator: {
     id: string;
@@ -112,6 +114,14 @@ function EventCountdown({ startsAt }: { startsAt: string }) {
   );
 }
 
+const OPPORTUNITY_TYPES = [
+  { id: "trabajo_temporal", label: "💼 Trabajo temporal" },
+  { id: "colaboracion",     label: "🤝 Colaboración" },
+  { id: "voluntariado",     label: "❤️ Voluntariado" },
+  { id: "idiomas",          label: "🗣️ Intercambio de idiomas" },
+  { id: "otro",             label: "📌 Otro" },
+];
+
 type EventFormData = {
   title: string;
   description: string;
@@ -121,6 +131,8 @@ type EventFormData = {
   startsAt: string;
   capacity: string;
   imageUrl: string;
+  isOpportunity: boolean;
+  opportunityType: string;
 };
 
 const galleryImages: Record<string, { url: string; label: string }[]> = {
@@ -425,6 +437,42 @@ function EventForm({
           data-testid="input-event-description"
         />
       </div>
+      {/* ── Opportunity toggle ── */}
+      <div className={`rounded-xl border p-3 transition-all ${formData.isOpportunity ? "border-purple-500/50 bg-purple-500/5" : "border-border"}`}>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-lg">💼</span>
+            <div>
+              <p className="text-sm font-semibold">¿Es una oportunidad de trabajo?</p>
+              <p className="text-xs text-muted-foreground">Empleo, colaboración, voluntariado…</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setFormData({ ...formData, isOpportunity: !formData.isOpportunity, opportunityType: "" })}
+            data-testid="toggle-event-opportunity"
+            className={`relative w-11 h-6 rounded-full transition-all flex-shrink-0 ${formData.isOpportunity ? "bg-purple-500" : "bg-muted-foreground/30"}`}
+          >
+            <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-md transition-all ${formData.isOpportunity ? "left-5" : "left-0.5"}`} />
+          </button>
+        </div>
+        {formData.isOpportunity && (
+          <div className="mt-3 flex flex-wrap gap-2">
+            {OPPORTUNITY_TYPES.map(opt => (
+              <button
+                key={opt.id}
+                type="button"
+                onClick={() => setFormData({ ...formData, opportunityType: opt.id })}
+                data-testid={`button-opportunity-type-${opt.id}`}
+                className={`text-xs px-3 py-1.5 rounded-full border transition-all ${formData.opportunityType === opt.id ? "border-purple-500 bg-purple-500/15 text-purple-700 dark:text-purple-300 font-medium" : "border-border"}`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
       {!hideButton && (
         <Button
           onClick={onSubmit}
@@ -448,6 +496,8 @@ const emptyForm: EventFormData = {
   startsAt: "",
   capacity: "",
   imageUrl: "",
+  isOpportunity: false,
+  opportunityType: "",
 };
 
 // ── Top-rated events horizontal section ─────────────────────────────────────
@@ -663,6 +713,7 @@ export default function EventsPage() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [showMyEvents, setShowMyEvents] = useState(false);
   const [showDeals, setShowDeals] = useState(false);
+  const [showOpportunities, setShowOpportunities] = useState(false);
   const [showPastEvents, setShowPastEvents] = useState(false);
   const [copiedCode, setCopiedCode] = useState<number | null>(null);
   const [citySearch, setCitySearch] = useState("");
@@ -801,6 +852,8 @@ export default function EventsPage() {
       startsAt: startsAtLocal,
       capacity: event.capacity ? String(event.capacity) : "",
       imageUrl: event.imageUrl || "",
+      isOpportunity: !!event.isOpportunity,
+      opportunityType: event.opportunityType || "",
     });
     setEditingEvent(event);
   };
@@ -823,6 +876,7 @@ export default function EventsPage() {
 
   const allFilteredEvents = events?.filter((e) => {
     if (showMyEvents) return isCreatorOrAdmin(e);
+    if (showOpportunities) return !!e.isOpportunity;
     if (selectedCategory && e.category !== selectedCategory) return false;
     if (citySearch.trim() && !e.city.toLowerCase().includes(citySearch.toLowerCase())) return false;
     return true;
@@ -916,10 +970,10 @@ export default function EventsPage() {
 
         <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
           <Button
-            variant={!showMyEvents && !showDeals && selectedCategory === null ? "default" : "outline"}
+            variant={!showMyEvents && !showDeals && !showOpportunities && selectedCategory === null ? "default" : "outline"}
             size="sm"
-            onClick={() => { setShowMyEvents(false); setShowDeals(false); setSelectedCategory(null); }}
-            className={!showMyEvents && !showDeals && selectedCategory === null ? "bg-amber-500 hover:bg-amber-600 shrink-0" : "shrink-0"}
+            onClick={() => { setShowMyEvents(false); setShowDeals(false); setShowOpportunities(false); setSelectedCategory(null); }}
+            className={!showMyEvents && !showDeals && !showOpportunities && selectedCategory === null ? "bg-amber-500 hover:bg-amber-600 shrink-0" : "shrink-0"}
             data-testid="button-filter-all"
           >
             {t.activities.all}
@@ -936,13 +990,22 @@ export default function EventsPage() {
           <Button
             variant={showDeals ? "default" : "outline"}
             size="sm"
-            onClick={() => { setShowDeals(!showDeals); setShowMyEvents(false); setSelectedCategory(null); }}
+            onClick={() => { setShowDeals(!showDeals); setShowMyEvents(false); setShowOpportunities(false); setSelectedCategory(null); }}
             className={showDeals ? "bg-green-700 hover:bg-green-800 text-white shrink-0" : "shrink-0 border-green-600 text-green-700 hover:bg-green-50"}
             data-testid="button-filter-deals"
           >
             {t.activities.deals}
           </Button>
-          {!showMyEvents && !showDeals && eventCategories.map((cat) => (
+          <Button
+            variant={showOpportunities ? "default" : "outline"}
+            size="sm"
+            onClick={() => { setShowOpportunities(!showOpportunities); setShowDeals(false); setShowMyEvents(false); setSelectedCategory(null); }}
+            className={showOpportunities ? "bg-purple-700 hover:bg-purple-800 text-white shrink-0" : "shrink-0 border-purple-600 text-purple-700 hover:bg-purple-50 dark:hover:bg-purple-950"}
+            data-testid="button-filter-opportunities"
+          >
+            💼 Trabajo
+          </Button>
+          {!showMyEvents && !showDeals && !showOpportunities && eventCategories.map((cat) => (
             <Button
               key={cat.id}
               variant={selectedCategory === cat.id ? "default" : "outline"}
@@ -1316,6 +1379,11 @@ export default function EventsPage() {
                   {event.participantCount >= 5 && !isPastEvent(event.startsAt) && (
                     <Badge className="bg-orange-500/90 text-white border-0 backdrop-blur-sm font-bold">
                       {t.engagement?.popularBadge || "🔥 Popular"}
+                    </Badge>
+                  )}
+                  {event.isOpportunity && (
+                    <Badge className="bg-purple-600/90 text-white border-0 backdrop-blur-sm font-semibold" data-testid={`badge-opportunity-${event.id}`}>
+                      💼 {OPPORTUNITY_TYPES.find(o => o.id === event.opportunityType)?.label.split(" ").slice(1).join(" ") || "Trabajo"}
                     </Badge>
                   )}
                 </div>

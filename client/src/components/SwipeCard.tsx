@@ -254,6 +254,22 @@ export function SwipeCard({ user, onSwipe, onTap }: SwipeCardProps) {
                    </span>
                  </div>
                )}
+               {(profile as any)?.workStatus === "looking" && (
+                 <div
+                   data-testid="badge-work-looking"
+                   className="flex items-center gap-1 bg-purple-500/30 backdrop-blur px-3 py-1 rounded-full border border-purple-400/40"
+                 >
+                   <span className="text-purple-200 text-xs font-semibold">🔍 Busca trabajo</span>
+                 </div>
+               )}
+               {(profile as any)?.workStatus === "offering" && (
+                 <div
+                   data-testid="badge-work-offering"
+                   className="flex items-center gap-1 bg-green-500/30 backdrop-blur px-3 py-1 rounded-full border border-green-400/40"
+                 >
+                   <span className="text-green-200 text-xs font-semibold">📢 Ofrece trabajo</span>
+                 </div>
+               )}
             </div>
           </div>
         </div>

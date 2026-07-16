@@ -181,6 +181,8 @@ export async function registerRoutes(
       if (nextAdventure !== undefined) profileData.nextAdventure = nextAdventure;
       if (wantToHelp !== undefined) profileData.wantToHelp = !!wantToHelp;
       if (helpWith !== undefined) profileData.helpWith = Array.isArray(helpWith) ? helpWith : [];
+      const { workStatus } = req.body;
+      if (workStatus !== undefined) profileData.workStatus = workStatus || null;
       
       // Get old city before updating (for new-traveler notification)
       const [oldProfile] = await db.select({ currentCity: profiles.currentCity })
@@ -1573,7 +1575,7 @@ export async function registerRoutes(
   app.post('/api/events', async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     
-    const { title, description, category, city, location, startsAt, endsAt, capacity, latitude, longitude, imageUrl } = req.body;
+    const { title, description, category, city, location, startsAt, endsAt, capacity, latitude, longitude, imageUrl, isOpportunity, opportunityType } = req.body;
     
     if (!title || !category || !city || !startsAt) {
       return res.status(400).json({ error: 'Missing required fields' });
@@ -1592,6 +1594,8 @@ export async function registerRoutes(
       latitude,
       longitude,
       imageUrl: fixImageUrl(imageUrl),
+      isOpportunity: !!isOpportunity,
+      opportunityType: isOpportunity ? (opportunityType || null) : null,
     }).returning();
     
     // Automatically join as participant
@@ -1723,7 +1727,7 @@ export async function registerRoutes(
     const isAdminEditor = editorUser?.isAdmin === 'true';
     if (!isAdminEditor && event.creatorId !== req.user!.id) return res.status(403).json({ error: 'Not authorized' });
 
-    const { title, description, category, city, location, startsAt, capacity, imageUrl } = req.body;
+    const { title, description, category, city, location, startsAt, capacity, imageUrl, isOpportunity, opportunityType } = req.body;
 
     const updateData: Record<string, any> = {};
     if (title !== undefined) updateData.title = title;
@@ -1734,6 +1738,7 @@ export async function registerRoutes(
     if (startsAt !== undefined) updateData.startsAt = new Date(startsAt);
     if (capacity !== undefined) updateData.capacity = capacity;
     if (imageUrl !== undefined) updateData.imageUrl = fixImageUrl(imageUrl);
+    if (isOpportunity !== undefined) { updateData.isOpportunity = !!isOpportunity; updateData.opportunityType = isOpportunity ? (opportunityType || null) : null; }
 
     const [updated] = await db.update(events).set(updateData).where(eq(events.id, eventId)).returning();
     res.json(updated);
