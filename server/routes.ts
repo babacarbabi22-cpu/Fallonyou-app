@@ -4,7 +4,7 @@ import type { Server } from "http";
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
 import { db } from "./db";
-import { users, profiles, photos, events, eventParticipants, eventComments, eventRatings, matches, preferences, referrals, profileViews, stories, businessPartners, localOffers, notifications, swipes, ambassadorApplications, appSessions, blockedUsers, adventurePhotos, cityTips, cityTipVotes, localHelpRequests, localHelpOffers } from "@shared/schema";
+import { users, profiles, photos, events, eventParticipants, eventComments, eventRatings, matches, preferences, referrals, profileViews, stories, businessPartners, localOffers, notifications, swipes, ambassadorApplications, appSessions, blockedUsers, adventurePhotos, cityTips, cityTipVotes, localHelpRequests, localHelpOffers, languageProgress } from "@shared/schema";
 import { eq, and, desc, ilike, gte, inArray, or, sql, lt, ne, count } from "drizzle-orm";
 import { api } from "@shared/routes";
 import { z } from "zod";
@@ -2778,6 +2778,67 @@ export async function registerRoutes(
       LIMIT 10
     `);
     res.json(rows.rows);
+  });
+
+  // ── Language Level Progress ────────────────────────────────────────────────
+
+  app.get("/api/language/progress", async (req, res) => {
+    if (!req.user) return res.status(401).json({ error: "Not authenticated" });
+    const userId = (req.user as any).id;
+    const lang = (req.query.lang as string) || "en";
+    const rows = await db.select().from(languageProgress).where(
+      and(eq(languageProgress.userId, userId), eq(languageProgress.language, lang))
+    );
+    res.json({ completedLessons: rows.map(r => r.lessonId) });
+  });
+
+  app.post("/api/language/progress", async (req, res) => {
+    if (!req.user) return res.status(401).json({ error: "Not authenticated" });
+    const userId = (req.user as any).id;
+    const { language, level, lessonId } = req.body;
+    if (!language || !level || !lessonId) return res.status(400).json({ error: "Missing fields" });
+    if (level === "b2plus") {
+      const user = await db.query.users.findFirst({ where: eq(users.id, userId) });
+      const isPremium = (user as any)?.isPremium === true || (user as any)?.isPremium === "true" ||
+        ((user as any)?.trialEndsAt && new Date((user as any).trialEndsAt) > new Date());
+      if (!isPremium) return res.status(403).json({ error: "Premium required for B2+" });
+    }
+    await db.insert(languageProgress).values({ userId, language, level, lessonId }).onConflictDoNothing();
+    res.json({ ok: true });
+  });
+
+  app.get("/api/language/my-level", async (req, res) => {
+    if (!req.user) return res.status(401).json({ error: "Not authenticated" });
+    const userId = (req.user as any).id;
+    const rows = await db.select().from(languageProgress).where(eq(languageProgress.userId, userId));
+    const LEVEL_ORDER = ["a1", "a2", "b1", "b2plus"];
+    const LEVEL_LABELS: Record<string, string> = { a1: "A1", a2: "A2", b1: "B1", b2plus: "B2+" };
+    const LESSONS_REQUIRED: Record<string, string[]> = {
+      a1: ["a1-greetings"],
+      a2: ["a2-airport", "a2-transport"],
+      b1: ["b1-restaurant", "b1-hotel", "b1-social"],
+      b2plus: ["b2-emergency", "b2-social-adv"],
+    };
+    const byLang: Record<string, string[]> = {};
+    for (const r of rows) {
+      if (!byLang[r.language]) byLang[r.language] = [];
+      byLang[r.language].push(r.lessonId);
+    }
+    let bestLevel: string | null = null;
+    let bestLang: string | null = null;
+    for (const [lang, completed] of Object.entries(byLang)) {
+      for (let i = LEVEL_ORDER.length - 1; i >= 0; i--) {
+        const lv = LEVEL_ORDER[i];
+        const required = LESSONS_REQUIRED[lv] ?? [];
+        if (required.length > 0 && required.every(id => completed.includes(id))) {
+          if (bestLevel === null || LEVEL_ORDER.indexOf(lv) > LEVEL_ORDER.indexOf(bestLevel)) {
+            bestLevel = lv; bestLang = lang;
+          }
+          break;
+        }
+      }
+    }
+    res.json({ level: bestLevel, levelLabel: bestLevel ? LEVEL_LABELS[bestLevel] : null, language: bestLang });
   });
 
   // ── Dream Destinations ────────────────────────────────────────────────────

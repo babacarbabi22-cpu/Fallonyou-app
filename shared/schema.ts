@@ -474,3 +474,15 @@ export const localHelpOffers = pgTable("local_help_offers", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 export type LocalHelpOffer = typeof localHelpOffers.$inferSelect;
+
+export const languageProgress = pgTable("language_progress", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  language: varchar("language", { length: 10 }).notNull(),
+  level: varchar("level", { length: 20 }).notNull(),
+  lessonId: varchar("lesson_id", { length: 50 }).notNull(),
+  completedAt: timestamp("completed_at").defaultNow(),
+}, (t) => [uniqueIndex("lang_progress_unique_idx").on(t.userId, t.language, t.lessonId)]);
+export type LanguageProgress = typeof languageProgress.$inferSelect;
+export const insertLanguageProgressSchema = createInsertSchema(languageProgress).omit({ id: true, completedAt: true });
+export type InsertLanguageProgress = z.infer<typeof insertLanguageProgressSchema>;

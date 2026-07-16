@@ -41,6 +41,19 @@ export default function ProfilePage() {
     enabled: !!user,
   });
 
+  const { data: langLevelData } = useQuery<{ level: string | null; levelLabel: string | null; language: string | null }>({
+    queryKey: ["/api/language/my-level"],
+    enabled: !!user,
+  });
+
+  const LANG_LEVEL_META: Record<string, { color: string; bg: string; emoji: string }> = {
+    a1:     { color: "text-green-700 dark:text-green-400", bg: "bg-green-500/15 border-green-500/30",  emoji: "🌱" },
+    a2:     { color: "text-blue-700 dark:text-blue-400",   bg: "bg-blue-500/15 border-blue-500/30",    emoji: "✈️" },
+    b1:     { color: "text-amber-700 dark:text-amber-400", bg: "bg-amber-500/15 border-amber-500/30",  emoji: "🗣️" },
+    b2plus: { color: "text-yellow-700 dark:text-yellow-400", bg: "bg-yellow-500/15 border-yellow-500/30", emoji: "🏆" },
+  };
+  const LANG_FLAGS: Record<string, string> = { en: "🇬🇧", es: "🇪🇸", fr: "🇫🇷", it: "🇮🇹", pt: "🇧🇷", de: "🇩🇪", ja: "🇯🇵", zh: "🇨🇳", ar: "🇸🇦", nl: "🇳🇱" };
+
   const { uploadFile, isUploading } = useUpload({
     onSuccess: async (response) => {
       await fetch(api.photos.upload.path, {
@@ -415,6 +428,30 @@ export default function ProfilePage() {
             </div>
           </div>
         </div>
+
+        {/* ── Nivel de idioma ───────────────────────────────────────────────── */}
+        {langLevelData?.level && (() => {
+          const meta = LANG_LEVEL_META[langLevelData.level] ?? LANG_LEVEL_META.a1;
+          const flag = LANG_FLAGS[langLevelData.language ?? ""] ?? "🌐";
+          return (
+            <div
+              className={`rounded-2xl border p-4 shadow-sm flex items-center gap-3 ${meta.bg}`}
+              data-testid="card-language-level"
+            >
+              <div className="w-11 h-11 rounded-2xl bg-white/20 dark:bg-black/20 flex items-center justify-center text-xl shrink-0">
+                {meta.emoji}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className={`font-black text-lg ${meta.color}`}>{langLevelData.levelLabel}</span>
+                  <span className="text-sm font-semibold">Nivel de idioma</span>
+                  <span className="text-base">{flag}</span>
+                </div>
+                <p className="text-xs text-muted-foreground">Sigue practicando en la sección Idiomas</p>
+              </div>
+            </div>
+          );
+        })()}
 
         {/* ── Insignias / Logros ──────────────────────────────────────────── */}
         {badges && badges.length > 0 && (

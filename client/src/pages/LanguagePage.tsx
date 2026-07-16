@@ -4,7 +4,7 @@ import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Languages, BookOpen, Users, Volume2, ChevronDown, Check, Zap } from "lucide-react";
+import { Languages, BookOpen, Users, Volume2, ChevronDown, Check, Zap, Lock, Crown, ArrowLeft, CheckCircle2, XCircle, Trophy } from "lucide-react";
 import { useCurrentUser } from "@/hooks/use-danceme";
 import { useLocation } from "wouter";
 import { BottomNav } from "@/components/BottomNav";
@@ -890,6 +890,88 @@ const DAILY_LESSONS: Record<LangCode, Array<{ word: string; translation: string;
   ],
 };
 
+// ── Level progression config ──────────────────────────────────────────────────
+
+interface LevelLesson {
+  id: string;
+  title: string;
+  emoji: string;
+  category: CatId;
+}
+interface LevelConfig {
+  id: string;
+  label: string;
+  title: string;
+  emoji: string;
+  description: string;
+  colorClass: string;
+  lessons: LevelLesson[];
+  requiresLevel?: string;
+  isPremium?: boolean;
+}
+const LEVEL_CONFIG: LevelConfig[] = [
+  {
+    id: "a1", label: "A1", title: "Principiante", emoji: "🌱",
+    colorClass: "text-green-600",
+    description: "Saludos y frases esenciales del día a día",
+    lessons: [
+      { id: "a1-greetings", title: "Saludos básicos", emoji: "👋", category: "greetings" },
+    ],
+  },
+  {
+    id: "a2", label: "A2", title: "Básico", emoji: "✈️",
+    colorClass: "text-blue-600",
+    description: "Viajes: aeropuerto y transporte",
+    requiresLevel: "a1",
+    lessons: [
+      { id: "a2-airport",   title: "En el aeropuerto", emoji: "🛫", category: "airport"   },
+      { id: "a2-transport", title: "Transporte",        emoji: "🚌", category: "transport" },
+    ],
+  },
+  {
+    id: "b1", label: "B1", title: "Intermedio", emoji: "🗣️",
+    colorClass: "text-amber-600",
+    description: "Restaurante, hotel y vida social",
+    requiresLevel: "a2",
+    lessons: [
+      { id: "b1-restaurant", title: "Restaurante", emoji: "🍽️", category: "restaurant" },
+      { id: "b1-hotel",      title: "Hotel",        emoji: "🏨", category: "hotel"      },
+      { id: "b1-social",     title: "Socializar",   emoji: "🤝", category: "social"     },
+    ],
+  },
+  {
+    id: "b2plus", label: "B2+", title: "Avanzado", emoji: "🏆",
+    colorClass: "text-yellow-600",
+    description: "Emergencias y expresiones avanzadas",
+    requiresLevel: "b1",
+    isPremium: true,
+    lessons: [
+      { id: "b2-emergency",  title: "Emergencias",    emoji: "🆘", category: "emergency" },
+      { id: "b2-social-adv", title: "Social avanzado", emoji: "💬", category: "social"    },
+    ],
+  },
+];
+
+interface QuizQuestion {
+  phrase: string;
+  phonetic: string;
+  answer: string;
+  options: string[];
+}
+
+function generateLessonQuiz(phrases: Phrase[], allPhrases: Phrase[]): QuizQuestion[] {
+  const shuffled = [...phrases].sort(() => Math.random() - 0.5);
+  const selected = shuffled.slice(0, Math.min(5, shuffled.length));
+  const pool = allPhrases.map(p => p.translation);
+  const fallbacks = ["Gracias", "Por favor", "¡Hola!", "¿Dónde?", "No sé"];
+  return selected.map(p => {
+    const wrong = pool.filter(t => t !== p.translation).sort(() => Math.random() - 0.5).slice(0, 3);
+    let fi = 0;
+    while (wrong.length < 3 && fi < fallbacks.length) { if (!wrong.includes(fallbacks[fi]) && fallbacks[fi] !== p.translation) wrong.push(fallbacks[fi]); fi++; }
+    return { phrase: p.phrase, phonetic: p.phonetic, answer: p.translation, options: [...wrong, p.translation].sort(() => Math.random() - 0.5) };
+  });
+}
+
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function LanguagePage() {
@@ -898,16 +980,57 @@ export default function LanguagePage() {
   const { currentUser } = useCurrentUser();
   const t = useTranslation();
 
-  const [tab, setTab] = useState<"phrases" | "lesson" | "natives">("phrases");
+  const [tab, setTab] = useState<"phrases" | "lesson" | "natives" | "levels">("phrases");
   const [selectedLang, setSelectedLang] = useState<LangCode>("en");
   const [selectedCat, setSelectedCat] = useState<CatId>("greetings");
   const [flipped, setFlipped] = useState<number | null>(null);
   const [quizOpen, setQuizOpen] = useState(false);
 
+  // ── Levels tab state ──────────────────────────────────────────────────────
+  const [levelView, setLevelView] = useState<"overview" | "lessons" | "study" | "quiz" | "result">("overview");
+  const [activeLevel, setActiveLevel] = useState<LevelConfig | null>(null);
+  const [activeLesson, setActiveLesson] = useState<LevelLesson | null>(null);
+  const [quizQuestions, setQuizQuestions] = useState<QuizQuestion[]>([]);
+  const [quizIdx, setQuizIdx] = useState(0);
+  const [quizScore, setQuizScore] = useState(0);
+  const [quizSelected, setQuizSelected] = useState<string | null>(null);
+  const [quizFeedback, setQuizFeedback] = useState<boolean | null>(null);
+
   const { data: quizToday } = useQuery<{ completed: boolean; score?: number; total?: number }>({
     queryKey: ["/api/language/quiz/today", selectedLang],
     queryFn: () => fetch(`/api/language/quiz/today?lang=${selectedLang}`, { credentials: "include" }).then(r => r.json()),
   });
+
+  const { data: langProgress, refetch: refetchProgress } = useQuery<{ completedLessons: string[] }>({
+    queryKey: ["/api/language/progress", selectedLang],
+    queryFn: () => fetch(`/api/language/progress?lang=${selectedLang}`, { credentials: "include" }).then(r => r.json()),
+  });
+  const completedLessons = langProgress?.completedLessons ?? [];
+
+  const { data: premiumStatus } = useQuery<{ isPremium: boolean }>({
+    queryKey: ["/api/premium/status"],
+  });
+  const isPremium = premiumStatus?.isPremium ?? false;
+
+  const completeLesson = useMutation({
+    mutationFn: (data: { language: string; level: string; lessonId: string }) =>
+      apiRequest("POST", "/api/language/progress", data),
+    onSuccess: () => {
+      refetchProgress();
+      queryClient.invalidateQueries({ queryKey: ["/api/language/my-level"] });
+    },
+  });
+
+  const isLevelUnlocked = (lvl: LevelConfig): boolean => {
+    if (!lvl.requiresLevel) return true;
+    const parent = LEVEL_CONFIG.find(l => l.id === lvl.requiresLevel);
+    if (!parent) return false;
+    return parent.lessons.every(l => completedLessons.includes(l.id));
+  };
+  const getLevelProgress = (lvl: LevelConfig) => {
+    const done = lvl.lessons.filter(l => completedLessons.includes(l.id)).length;
+    return { done, total: lvl.lessons.length };
+  };
   const [speaksExpanded, setSpeaksExpanded] = useState(false);
   const [learningExpanded, setLearningExpanded] = useState(false);
 
@@ -998,6 +1121,7 @@ export default function LanguagePage() {
         <div className="flex gap-1 mt-3">
           {[
             { id: "phrases" as const, icon: BookOpen, label: t.languagePage.phrasesTab },
+            { id: "levels"  as const, icon: Trophy,   label: "Niveles"                 },
             { id: "lesson"  as const, icon: Languages, label: t.languagePage.lessonTab },
             { id: "natives" as const, icon: Users, label: t.languagePage.nativesTab },
           ].map(({ id, icon: Icon, label }) => (
@@ -1270,6 +1394,354 @@ export default function LanguagePage() {
               Actualizar mis idiomas
             </Button>
           </div>
+        </div>
+      )}
+
+      {/* ── Tab: Niveles ─────────────────────────────────────────────────────── */}
+
+      {/* Level overview */}
+      {tab === "levels" && levelView === "overview" && (
+        <div className="px-4 pt-4 space-y-3" data-testid="section-levels-overview">
+          <p className="text-sm text-muted-foreground pb-1">
+            Aprende {langMeta.flag} {langMeta.name} paso a paso
+          </p>
+          {LEVEL_CONFIG.map(lvl => {
+            const unlocked = isLevelUnlocked(lvl);
+            const { done, total } = getLevelProgress(lvl);
+            const premiumBlocked = !!(lvl.isPremium && !isPremium);
+            const completed = done === total && total > 0;
+            return (
+              <button
+                key={lvl.id}
+                disabled={!unlocked || premiumBlocked}
+                onClick={() => {
+                  if (!unlocked || premiumBlocked) return;
+                  setActiveLevel(lvl);
+                  setLevelView("lessons");
+                }}
+                data-testid={`btn-level-${lvl.id}`}
+                className={`w-full rounded-2xl border p-4 text-left transition-all ${
+                  unlocked && !premiumBlocked
+                    ? "bg-card hover:border-amber-500/50 cursor-pointer shadow-sm"
+                    : "bg-muted/30 opacity-60 cursor-not-allowed"
+                } ${completed ? "border-green-500/40" : ""}`}
+              >
+                <div className="flex items-center gap-3">
+                  <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-2xl shrink-0 ${
+                    !unlocked ? "bg-muted" : premiumBlocked ? "bg-yellow-500/10" : completed ? "bg-green-500/10" : "bg-amber-500/10"
+                  }`}>
+                    {!unlocked
+                      ? <Lock className="w-6 h-6 text-muted-foreground" />
+                      : premiumBlocked
+                      ? <Crown className="w-6 h-6 text-yellow-500" />
+                      : completed
+                      ? <CheckCircle2 className="w-6 h-6 text-green-500" />
+                      : lvl.emoji}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className={`font-black text-xl ${unlocked && !premiumBlocked ? lvl.colorClass : "text-muted-foreground"}`}>{lvl.label}</span>
+                      <span className="text-sm font-bold">{lvl.title}</span>
+                      {premiumBlocked && (
+                        <Badge className="bg-yellow-500/20 text-yellow-700 dark:text-yellow-400 border-yellow-500/30 text-[10px] px-2">
+                          <Crown className="w-2.5 h-2.5 mr-0.5" />Premium
+                        </Badge>
+                      )}
+                      {completed && <Badge className="bg-green-500/20 text-green-700 dark:text-green-400 border-green-500/30 text-[10px] px-2">✓ Completado</Badge>}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-0.5">{lvl.description}</p>
+                    {unlocked && !premiumBlocked && (
+                      <div className="mt-2 flex items-center gap-2">
+                        <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-amber-500 rounded-full transition-all duration-500"
+                            style={{ width: `${total > 0 ? (done / total) * 100 : 0}%` }}
+                          />
+                        </div>
+                        <span className="text-[10px] text-muted-foreground shrink-0">{done}/{total} lecciones</span>
+                      </div>
+                    )}
+                    {!unlocked && (
+                      <p className="text-[10px] text-muted-foreground mt-1">
+                        🔒 Completa {lvl.requiresLevel?.toUpperCase()} para desbloquear
+                      </p>
+                    )}
+                    {premiumBlocked && (
+                      <p className="text-[10px] text-yellow-600 mt-1">Actualiza a Premium para acceder</p>
+                    )}
+                  </div>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Lesson list */}
+      {tab === "levels" && levelView === "lessons" && activeLevel && (
+        <div className="px-4 pt-4 space-y-3" data-testid="section-lesson-list">
+          <button
+            onClick={() => { setLevelView("overview"); setActiveLevel(null); }}
+            className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+            data-testid="btn-back-to-overview"
+          >
+            <ArrowLeft className="w-4 h-4" /> Volver a niveles
+          </button>
+          <div className="flex items-center gap-3 py-2 border-b">
+            <span className={`font-black text-3xl ${activeLevel.colorClass}`}>{activeLevel.label}</span>
+            <div>
+              <p className="font-bold">{activeLevel.title}</p>
+              <p className="text-xs text-muted-foreground">{activeLevel.description}</p>
+            </div>
+          </div>
+          <div className="space-y-2 pt-1">
+            {activeLevel.lessons.map((lesson, i) => {
+              const done = completedLessons.includes(lesson.id);
+              const prevDone = i === 0 || completedLessons.includes(activeLevel.lessons[i - 1].id);
+              const phraseCount = (PHRASES[selectedLang] ?? PHRASES.en)[lesson.category]?.length ?? 0;
+              return (
+                <button
+                  key={lesson.id}
+                  disabled={!prevDone}
+                  onClick={() => { if (!prevDone) return; setActiveLesson(lesson); setLevelView("study"); }}
+                  data-testid={`btn-lesson-${lesson.id}`}
+                  className={`w-full flex items-center gap-3 p-4 rounded-2xl border transition-all ${
+                    done
+                      ? "border-green-500/40 bg-green-500/5"
+                      : prevDone
+                      ? "bg-card hover:border-amber-500/40 shadow-sm"
+                      : "bg-muted/30 opacity-50 cursor-not-allowed"
+                  }`}
+                >
+                  <div className={`w-11 h-11 rounded-2xl flex items-center justify-center text-xl shrink-0 ${
+                    done ? "bg-green-500/15" : prevDone ? "bg-amber-500/10" : "bg-muted"
+                  }`}>
+                    {done ? <CheckCircle2 className="w-5 h-5 text-green-500" /> : !prevDone ? <Lock className="w-4 h-4 text-muted-foreground" /> : lesson.emoji}
+                  </div>
+                  <div className="flex-1 text-left">
+                    <p className="font-semibold text-sm">{lesson.title}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {done ? "✓ Completado" : `${phraseCount} frases · Quiz incluido`}
+                    </p>
+                  </div>
+                  {done && <CheckCircle2 className="w-5 h-5 text-green-500 shrink-0" />}
+                  {prevDone && !done && <span className="text-amber-500 text-lg">›</span>}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Study mode */}
+      {tab === "levels" && levelView === "study" && activeLesson && (
+        <div className="px-4 pt-4 space-y-3" data-testid="section-study-mode">
+          <button
+            onClick={() => setLevelView("lessons")}
+            className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+            data-testid="btn-back-to-lessons"
+          >
+            <ArrowLeft className="w-4 h-4" /> Volver a lecciones
+          </button>
+          <div className="flex items-center gap-2 pb-2 border-b">
+            <span className="text-2xl">{activeLesson.emoji}</span>
+            <div>
+              <h2 className="font-bold">{activeLesson.title}</h2>
+              <p className="text-xs text-muted-foreground">Estudia estas frases y luego haz el quiz</p>
+            </div>
+          </div>
+          <div className="space-y-2">
+            {(PHRASES[selectedLang] ?? PHRASES.en)[activeLesson.category]?.map((p, i) => (
+              <div key={i} data-testid={`study-phrase-${i}`} className="rounded-2xl border bg-card p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1">
+                    <p className="font-semibold">{p.phrase}</p>
+                    <p className="text-xs text-muted-foreground font-mono mt-0.5">{p.phonetic}</p>
+                    <p className="text-sm text-amber-600 dark:text-amber-400 mt-1 font-medium">{p.translation}</p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      const u = new SpeechSynthesisUtterance(p.phrase);
+                      u.lang = selectedLang === "zh" ? "zh-CN" : selectedLang === "ja" ? "ja-JP" : selectedLang === "ar" ? "ar-SA" : selectedLang === "pt" ? "pt-BR" : `${selectedLang}-${selectedLang.toUpperCase()}`;
+                      speechSynthesis.speak(u);
+                    }}
+                    className="p-1.5 rounded-full hover:bg-amber-500/10 text-amber-500 shrink-0"
+                    data-testid={`study-speak-${i}`}
+                  >
+                    <Volume2 className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="pb-4">
+            <Button
+              className="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 rounded-2xl shadow-lg"
+              onClick={() => {
+                const phrases = (PHRASES[selectedLang] ?? PHRASES.en)[activeLesson.category] ?? [];
+                const allPhrases = Object.values((PHRASES[selectedLang] ?? PHRASES.en) as Record<string, Phrase[]>).flat();
+                const questions = generateLessonQuiz(phrases, allPhrases);
+                setQuizQuestions(questions);
+                setQuizIdx(0);
+                setQuizScore(0);
+                setQuizSelected(null);
+                setQuizFeedback(null);
+                setLevelView("quiz");
+              }}
+              data-testid="btn-start-lesson-quiz"
+            >
+              🎯 Iniciar Quiz ({(PHRASES[selectedLang] ?? PHRASES.en)[activeLesson.category]?.length ?? 0} frases → 5 preguntas)
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Quiz mode */}
+      {tab === "levels" && levelView === "quiz" && quizQuestions.length > 0 && (() => {
+        const q = quizQuestions[quizIdx];
+        const passThreshold = Math.ceil(quizQuestions.length * 0.6);
+        return (
+          <div className="px-4 pt-4 space-y-4" data-testid="section-quiz-mode">
+            <div className="flex items-center justify-between">
+              <button onClick={() => setLevelView("study")} className="flex items-center gap-1 text-sm text-muted-foreground">
+                <ArrowLeft className="w-4 h-4" /> Salir
+              </button>
+              <span className="text-sm font-semibold">{quizIdx + 1} / {quizQuestions.length}</span>
+            </div>
+            <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
+              <div className="h-full bg-amber-500 rounded-full transition-all" style={{ width: `${(quizIdx / quizQuestions.length) * 100}%` }} />
+            </div>
+            <div className="flex items-center gap-1.5">
+              {quizQuestions.map((_, i) => (
+                <div key={i} className={`w-3 h-3 rounded-full transition-all ${
+                  i < quizIdx ? "bg-green-500" : i === quizIdx ? "bg-amber-500 scale-125" : "bg-muted"
+                }`} />
+              ))}
+              <span className="ml-auto text-xs text-muted-foreground">Necesitas {passThreshold}/{quizQuestions.length}</span>
+            </div>
+            <div className="rounded-2xl border bg-gradient-to-br from-amber-500/10 to-yellow-500/5 p-5 text-center">
+              <p className="text-xs text-amber-600 font-semibold uppercase tracking-wider mb-2">¿Cómo se traduce?</p>
+              <p className="text-2xl font-bold mb-1">{q.phrase}</p>
+              <p className="text-sm text-muted-foreground font-mono">{q.phonetic}</p>
+            </div>
+            <div className="space-y-2">
+              {q.options.map((opt, i) => {
+                const isSelected = quizSelected === opt;
+                const isCorrect = opt === q.answer;
+                const showFeedback = quizFeedback !== null;
+                return (
+                  <button
+                    key={i}
+                    disabled={showFeedback}
+                    onClick={() => {
+                      if (showFeedback) return;
+                      const correct = opt === q.answer;
+                      setQuizSelected(opt);
+                      setQuizFeedback(correct);
+                      if (correct) setQuizScore(s => s + 1);
+                    }}
+                    data-testid={`quiz-option-${i}`}
+                    className={`w-full p-3.5 rounded-xl border text-left text-sm font-medium transition-all ${
+                      showFeedback
+                        ? isCorrect
+                          ? "bg-green-500/10 border-green-500 text-green-700 dark:text-green-400"
+                          : isSelected
+                          ? "bg-red-500/10 border-red-500 text-red-700 dark:text-red-400"
+                          : "border-border text-muted-foreground opacity-60"
+                        : "bg-card hover:border-amber-500/40"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      {showFeedback && isCorrect && <CheckCircle2 className="w-4 h-4 text-green-500 shrink-0" />}
+                      {showFeedback && isSelected && !isCorrect && <XCircle className="w-4 h-4 text-red-500 shrink-0" />}
+                      {opt}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+            {quizFeedback !== null && (
+              <Button
+                className="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 rounded-2xl"
+                onClick={() => {
+                  const next = quizIdx + 1;
+                  if (next >= quizQuestions.length) {
+                    setLevelView("result");
+                  } else {
+                    setQuizIdx(next);
+                    setQuizSelected(null);
+                    setQuizFeedback(null);
+                  }
+                }}
+                data-testid="btn-quiz-next"
+              >
+                {quizIdx + 1 >= quizQuestions.length ? "Ver resultado →" : "Siguiente →"}
+              </Button>
+            )}
+          </div>
+        );
+      })()}
+
+      {/* Result screen */}
+      {tab === "levels" && levelView === "result" && activeLesson && activeLevel && (
+        <div className="px-4 pt-10 flex flex-col items-center text-center space-y-4" data-testid="section-quiz-result">
+          {quizScore >= Math.ceil(quizQuestions.length * 0.6) ? (
+            <>
+              <div className="text-6xl animate-bounce">🎉</div>
+              <h2 className="text-2xl font-black text-green-500">¡Aprobado!</h2>
+              <p className="text-muted-foreground">Puntuación: <span className="font-bold text-foreground">{quizScore}/{quizQuestions.length}</span></p>
+              <p className="text-sm">Has completado <strong>{activeLesson.title}</strong></p>
+              {!completedLessons.includes(activeLesson.id) ? (
+                <Button
+                  className="bg-amber-500 hover:bg-amber-600 text-white px-8 py-3 rounded-2xl font-bold shadow-lg"
+                  onClick={() => {
+                    completeLesson.mutate({ language: selectedLang, level: activeLevel.id, lessonId: activeLesson.id });
+                    setLevelView("lessons");
+                  }}
+                  disabled={completeLesson.isPending}
+                  data-testid="btn-claim-completion"
+                >
+                  {completeLesson.isPending ? "Guardando…" : "✓ Guardar progreso"}
+                </Button>
+              ) : (
+                <Button
+                  variant="outline"
+                  className="border-amber-500 text-amber-600"
+                  onClick={() => setLevelView("lessons")}
+                  data-testid="btn-back-to-lessons-done"
+                >
+                  Volver a lecciones
+                </Button>
+              )}
+            </>
+          ) : (
+            <>
+              <div className="text-6xl">😅</div>
+              <h2 className="text-2xl font-black text-red-500">Inténtalo de nuevo</h2>
+              <p className="text-muted-foreground">Puntuación: <span className="font-bold text-foreground">{quizScore}/{quizQuestions.length}</span></p>
+              <p className="text-sm text-muted-foreground">Necesitas al menos {Math.ceil(quizQuestions.length * 0.6)} aciertos para aprobar</p>
+              <div className="flex gap-3 pt-2">
+                <Button variant="outline" onClick={() => setLevelView("study")} data-testid="btn-retry-study">Repasar frases</Button>
+                <Button
+                  className="bg-amber-500 hover:bg-amber-600 text-white"
+                  onClick={() => {
+                    const phrases = (PHRASES[selectedLang] ?? PHRASES.en)[activeLesson.category] ?? [];
+                    const allPhrases = Object.values((PHRASES[selectedLang] ?? PHRASES.en) as Record<string, Phrase[]>).flat();
+                    const questions = generateLessonQuiz(phrases, allPhrases);
+                    setQuizQuestions(questions);
+                    setQuizIdx(0);
+                    setQuizScore(0);
+                    setQuizSelected(null);
+                    setQuizFeedback(null);
+                    setLevelView("quiz");
+                  }}
+                  data-testid="btn-retry-quiz"
+                >
+                  Repetir quiz
+                </Button>
+              </div>
+            </>
+          )}
         </div>
       )}
 
