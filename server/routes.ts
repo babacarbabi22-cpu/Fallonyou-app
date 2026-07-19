@@ -1,7 +1,8 @@
 
 import type { Express } from "express";
 import type { Server } from "http";
-import { setupAuth } from "./auth";
+import { setupAuth, getSession } from "./auth";
+import { setupChatWebSocket } from "./wsChat";
 import { storage } from "./storage";
 import { db } from "./db";
 import { users, profiles, photos, events, eventParticipants, eventComments, eventRatings, matches, preferences, referrals, profileViews, stories, businessPartners, localOffers, notifications, swipes, ambassadorApplications, appSessions, blockedUsers, adventurePhotos, cityTips, cityTipVotes, localHelpRequests, localHelpOffers, languageProgress } from "@shared/schema";
@@ -64,6 +65,7 @@ export async function registerRoutes(
     }]);
   });
   await setupAuth(app);
+  const chatWS = setupChatWebSocket(httpServer, getSession());
   registerObjectStorageRoutes(app);
 
   app.use("/uploads", express.static("uploads"));
@@ -764,6 +766,9 @@ export async function registerRoutes(
       content: content?.trim() || '',
       imageUrl: imageUrl || null,
     });
+
+    // Notify connected WS clients in this room (real-time delivery)
+    chatWS.notifyNewMessage(matchId, message);
 
     const senderProfile = await storage.getProfile(req.user!.id);
     const senderName = senderProfile?.displayName || 'Someone';

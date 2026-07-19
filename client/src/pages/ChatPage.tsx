@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useRoute, Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,7 @@ import { ArrowLeft, Send, MoreVertical, Shield, Flag, Ban, CheckCheck, Check, XC
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "@/lib/i18n";
+import { useChatSocket } from "@/hooks/use-chat-socket";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -76,6 +77,8 @@ export default function ChatPage() {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
+  const [isOtherTyping, setIsOtherTyping] = useState(false);
+  const typingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
@@ -100,19 +103,42 @@ export default function ChatPage() {
   const { data: messages = [], isLoading } = useQuery<Message[]>({
     queryKey: ['/api/matches', matchId, 'messages'],
     enabled: !!matchId,
-    refetchInterval: 3000,
+    // No polling needed — WebSocket delivers messages in real-time
+    refetchInterval: false,
   });
+
+  const handleTypingEvent = useCallback((userId: string) => {
+    if (userId === currentUser?.id) return;
+    setIsOtherTyping(true);
+    if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
+    typingTimerRef.current = setTimeout(() => setIsOtherTyping(false), 3000);
+  }, [currentUser?.id]);
+
+  const { sendTyping, sendRead } = useChatSocket({
+    matchId,
+    onTyping: handleTypingEvent,
+    enabled: !!matchId,
+  });
+
+  // Mark messages as read via WS when chat opens
+  useEffect(() => {
+    if (matchId) sendRead();
+  }, [matchId, sendRead]);
 
   const sendMutation = useMutation({
     mutationFn: async ({ content, imageUrl }: { content: string; imageUrl?: string }) => {
       const res = await apiRequest('POST', `/api/matches/${matchId}/messages`, { content, imageUrl });
       return res.json();
     },
-    onSuccess: () => {
+    onSuccess: (newMsg) => {
       setMessage("");
       setImagePreview(null);
       setImageFile(null);
-      queryClient.invalidateQueries({ queryKey: ['/api/matches', matchId, 'messages'] });
+      // Optimistically inject the sent message if WS hasn't already done it
+      queryClient.setQueryData<Message[]>(
+        ['/api/matches', matchId, 'messages'],
+        (old = []) => old.some(m => m.id === newMsg.id) ? old : [...old, newMsg]
+      );
     },
     onError: () => {
       toast({
@@ -360,6 +386,21 @@ export default function ChatPage() {
           })
         )}
         <div ref={messagesEndRef} />
+
+        {/* Typing indicator */}
+        {isOtherTyping && (
+          <div className="flex items-center gap-2 px-4 pb-2">
+            <Avatar className="w-6 h-6">
+              <AvatarImage src={matchData?.otherUser?.photos?.[0]?.url || matchData?.otherUser?.profileImageUrl} />
+              <AvatarFallback className="text-[10px]">{matchData?.otherUser?.firstName?.[0]}</AvatarFallback>
+            </Avatar>
+            <div className="flex items-center gap-1 bg-muted rounded-2xl px-3 py-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground animate-bounce" style={{ animationDelay: "0ms" }} />
+              <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground animate-bounce" style={{ animationDelay: "150ms" }} />
+              <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground animate-bounce" style={{ animationDelay: "300ms" }} />
+            </div>
+          </div>
+        )}
       </main>
 
       {/* Image preview strip */}
@@ -412,7 +453,7 @@ export default function ChatPage() {
           </Button>
           <Input
             value={message}
-            onChange={(e) => setMessage(e.target.value)}
+            onChange={(e) => { setMessage(e.target.value); sendTyping(); }}
             placeholder={imageFile ? "Añade un texto (opcional)..." : "Escribe un mensaje..."}
             className="flex-1"
             data-testid="input-message"
