@@ -1,5 +1,5 @@
 {
-  "appId": "app.fallonyou.twa"
+  "appId": "app.fallonyou.twa",
   "appName": "FallonYou",
   "webDir": "public",
   "bundledWebRuntime": false,
