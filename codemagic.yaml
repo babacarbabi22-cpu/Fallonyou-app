@@ -23,6 +23,11 @@ workflows:
       - name: Copy Capacitor assets
         script: |
           npx cap copy android
+      - name: Patch applicationId
+        script: |
+          sed -i "s/applicationId.*/applicationId \"app.fallonyou.twa\"/" android/app/build.gradle
+          sed -i "s/versionCode.*/versionCode 3/" android/app/build.gradle
+          grep -E "applicationId|versionCode" android/app/build.gradle
       - name: Set Android SDK
         script: |
           echo "sdk.dir=$ANDROID_SDK_ROOT" > android/local.properties
@@ -49,5 +54,3 @@ workflows:
         notify:
           success: true
           failure: true
-
-
