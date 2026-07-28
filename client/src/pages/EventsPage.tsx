@@ -601,7 +601,7 @@ function AlbumPromo() {
   );
 }
 
-function FeatureDiscoveryBanner() {
+function FeatureDiscoveryBanner({ onEventsClick }: { onEventsClick?: () => void }) {
   const [, navigate] = useLocation();
   const [dismissed, setDismissed] = useState(() =>
     !!localStorage.getItem("fallonyou_feature_banner_v1")
@@ -631,7 +631,7 @@ function FeatureDiscoveryBanner() {
         <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-hide">
           {/* Events feature */}
           <button
-            onClick={() => {}}
+            onClick={() => onEventsClick?.()}
             className="flex-shrink-0 flex flex-col gap-2 rounded-xl p-3 text-left transition-all active:scale-98 w-[44%]"
             style={{ background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.2)" }}
             data-testid="feature-card-events"
@@ -1025,7 +1025,7 @@ export default function EventsPage() {
       </div>
 
       {/* Feature discovery banner */}
-      <FeatureDiscoveryBanner />
+      <FeatureDiscoveryBanner onEventsClick={() => setIsCreateOpen(true)} />
 
       {/* City inspirations carousel */}
       <CityAdsCarousel />
