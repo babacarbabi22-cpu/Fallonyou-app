@@ -23,15 +23,6 @@ workflows:
       - name: Copy Capacitor assets
         script: |
           npx cap copy android
-      - name: Fix Gradle wrapper version
-        script: |
-          python3 -c "
-content = open('android/gradle/wrapper/gradle-wrapper.properties').read()
-print('Before:', [l for l in content.splitlines() if 'distributionUrl' in l])
-content = __import__('re').sub(r'distributionUrl=.*', r'distributionUrl=https\\://services.gradle.org/distributions/gradle-8.11.1-all.zip', content)
-open('android/gradle/wrapper/gradle-wrapper.properties', 'w').write(content)
-print('After:', [l for l in content.splitlines() if 'distributionUrl' in l])
-"
       - name: Set Android SDK
         script: |
           echo "sdk.dir=$ANDROID_SDK_ROOT" > android/local.properties
