@@ -20,9 +20,9 @@ workflows:
           mkdir -p public
           cp -r dist/public/* public/
           ls -la public/
-      - name: Copy Capacitor assets
+      - name: Sync Capacitor assets
         script: |
-          npx cap copy android
+          npx cap sync android
       - name: Set Android SDK
         script: |
           echo "sdk.dir=$ANDROID_SDK_ROOT" > android/local.properties
