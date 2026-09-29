@@ -49,3 +49,42 @@ workflows:
         notify:
           success: true
           failure: true
+  ios-workflow:
+    name: iOS App Store Connect
+    max_build_duration: 120
+    instance_type: mac_mini_m2
+    # Create an App Store Connect integration with this name in Codemagic first.
+    integrations:
+      app_store_connect: fallonyou-app-store-connect
+    environment:
+      node: 22
+      xcode: latest
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: app.fallonyou.twa
+    scripts:
+      - name: Install locked dependencies
+        script: npm ci
+      - name: Build web assets for Capacitor
+        script: |
+          npm run build
+          cp -R dist/public/. public/
+      - name: Sync iOS project and CocoaPods
+        script: npx cap sync ios
+      - name: Set unique iOS build number
+        script: |
+          cd ios/App
+          xcrun agvtool new-version -all "$BUILD_NUMBER"
+      - name: Apply App Store signing profiles
+        script: xcode-project use-profiles
+      - name: Build signed IPA
+        script: |
+          cd ios/App
+          xcode-project build-ipa --workspace App.xcworkspace --scheme App
+    artifacts:
+      - ios/App/build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+    publishing:
+      app_store_connect:
+        auth: integration
+        # Upload the build only. App Store review is submitted manually.
