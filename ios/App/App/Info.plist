@@ -26,6 +26,8 @@
 	<string>FallOnYou necesita acceso a la cámara para que puedas añadir fotos a tu perfil y compartir imágenes.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>FallOnYou necesita acceso a tus fotos para que puedas añadirlas a tu perfil y compartir imágenes.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>FallOnYou uses the microphone to record sound when you choose to record a story video.</string>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
