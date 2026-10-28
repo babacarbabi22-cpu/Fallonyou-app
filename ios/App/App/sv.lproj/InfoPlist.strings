@@ -1,0 +1,3 @@
+"NSCameraUsageDescription" = "FallOnYou använder kameran när du väljer att ta profilbilder, verifieringsselfies eller videor för dina stories.";
+"NSPhotoLibraryUsageDescription" = "FallOnYou låter dig välja bilder och videor att dela i din profil, dina stories eller dina samtal.";
+"NSMicrophoneUsageDescription" = "FallOnYou använder mikrofonen för att spela in ljud när du väljer att skapa en video för dina stories.";

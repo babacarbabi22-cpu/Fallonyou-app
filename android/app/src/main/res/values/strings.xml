@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">FallonYou</string>
+    <string name="title_activity_main">FallonYou</string>
+    <string name="package_name">com.fallonyou.app</string>
+    <string name="custom_url_scheme">com.fallonyou.app</string>
+</resources>

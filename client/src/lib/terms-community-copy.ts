@@ -1,0 +1,58 @@
+export const termsCommunityCopy = {
+  es: {
+    title: "Bienvenido/a a FallonYou", subtitle: "Una comunidad para todos",
+    respect: "Respeto", inclusion: "Inclusión", safety: "Seguridad",
+    heading: "Términos y Comunidad FallonYou", saving: "Guardando...", enter: "Entrar a FallonYou",
+    sections: [
+      { title: "Todos son bienvenidos", body: "FallonYou es una plataforma abierta e inclusiva. Sin importar tu origen, edad (mayor de 18 años), género, orientación o nacionalidad, tienes un lugar aquí. Cualquier persona puede unirse a una actividad mientras esté abierta, sin límite de participantes." },
+      { title: "Respeto ante todo", body: "Tratarás a todos los usuarios con respeto y consideración. Cualquier forma de acoso, discriminación, lenguaje ofensivo o comportamiento irrespetuoso resultará en la suspensión permanente de tu cuenta." },
+      { title: "Perfil auténtico", body: "Usarás tu identidad real, una foto tuya y la información correcta en tu perfil. Está prohibido hacerse pasar por otra persona o crear cuentas falsas." },
+      { title: "Actividades abiertas", body: "Las actividades creadas en FallonYou son abiertas a todos por defecto. Si creas una actividad, la comunidad puede unirse libremente. El espíritu de la app es conectar a personas para vivir experiencias juntas." },
+      { title: "Privacidad y seguridad", body: "No compartirás información personal de otros usuarios fuera de la app. Reportarás cualquier comportamiento inapropiado usando las herramientas de denuncia disponibles." },
+      { title: "Contenido prohibido", body: "Está prohibido publicar contenido ilegal, sexual explícito, violento, spam o cualquier contenido que dañe a otros usuarios o a la comunidad." },
+    ],
+    confirmation: "Al aceptar estos términos confirmas que tienes 18 años o más y que cumplirás estas normas de comunidad. FallonYou se reserva el derecho de suspender cuentas que no respeten estos términos.",
+  },
+  en: {
+    title: "Welcome to FallonYou", subtitle: "A community for everyone",
+    respect: "Respect", inclusion: "Inclusion", safety: "Safety",
+    heading: "FallonYou Terms and Community", saving: "Saving...", enter: "Enter FallonYou",
+    sections: [
+      { title: "Everyone is welcome", body: "FallonYou is an open and inclusive platform. Whatever your background, age (18 or older), gender, orientation or nationality, you have a place here. Anyone can join an activity while it is open, with no participant limit." },
+      { title: "Respect comes first", body: "You will treat all users with respect and consideration. Any harassment, discrimination, offensive language or disrespectful behaviour will result in permanent suspension of your account." },
+      { title: "An authentic profile", body: "You will use your real identity, a photo of yourself and accurate information in your profile. Impersonating another person or creating fake accounts is prohibited." },
+      { title: "Open activities", body: "Activities created on FallonYou are open to everyone by default. If you create an activity, the community can join freely. The app's purpose is to connect people to share experiences." },
+      { title: "Privacy and safety", body: "You will not share other users' personal information outside the app. You will report inappropriate behaviour using the available reporting tools." },
+      { title: "Prohibited content", body: "Posting illegal, sexually explicit or violent content, spam, or any content that harms other users or the community is prohibited." },
+    ],
+    confirmation: "By accepting these terms, you confirm that you are 18 or older and will follow these community rules. FallonYou reserves the right to suspend accounts that do not comply with these terms.",
+  },
+  fr: {
+    title: "Bienvenue sur FallonYou", subtitle: "Une communauté pour tous",
+    respect: "Respect", inclusion: "Inclusion", safety: "Sécurité",
+    heading: "Conditions et communauté FallonYou", saving: "Enregistrement...", enter: "Entrer dans FallonYou",
+    sections: [
+      { title: "Tout le monde est bienvenu", body: "FallonYou est une plateforme ouverte et inclusive. Quels que soient votre origine, votre âge (18 ans ou plus), votre genre, votre orientation ou votre nationalité, vous avez votre place ici. Toute personne peut rejoindre une activité tant qu'elle est ouverte, sans limite de participants." },
+      { title: "Le respect avant tout", body: "Vous traiterez tous les utilisateurs avec respect et considération. Tout harcèlement, discrimination, langage offensant ou comportement irrespectueux entraînera la suspension permanente de votre compte." },
+      { title: "Un profil authentique", body: "Vous utiliserez votre véritable identité, une photo de vous et des informations exactes dans votre profil. Usurper l'identité d'une autre personne ou créer de faux comptes est interdit." },
+      { title: "Des activités ouvertes", body: "Les activités créées sur FallonYou sont ouvertes à tous par défaut. Si vous créez une activité, la communauté peut la rejoindre librement. L'application vise à connecter les personnes pour partager des expériences." },
+      { title: "Confidentialité et sécurité", body: "Vous ne partagerez pas les informations personnelles d'autres utilisateurs en dehors de l'application. Vous signalerez tout comportement inapproprié à l'aide des outils disponibles." },
+      { title: "Contenu interdit", body: "Il est interdit de publier du contenu illégal, sexuellement explicite ou violent, du spam ou tout contenu nuisible aux autres utilisateurs ou à la communauté." },
+    ],
+    confirmation: "En acceptant ces conditions, vous confirmez avoir 18 ans ou plus et respecter ces règles de communauté. FallonYou se réserve le droit de suspendre les comptes qui ne respectent pas ces conditions.",
+  },
+  sv: {
+    title: "Välkommen till FallonYou", subtitle: "En gemenskap för alla",
+    respect: "Respekt", inclusion: "Inkludering", safety: "Säkerhet",
+    heading: "FallonYou – villkor och gemenskap", saving: "Sparar...", enter: "Gå till FallonYou",
+    sections: [
+      { title: "Alla är välkomna", body: "FallonYou är en öppen och inkluderande plattform. Oavsett bakgrund, ålder (18 år eller äldre), kön, läggning eller nationalitet har du en plats här. Alla kan gå med i en aktivitet så länge den är öppen, utan deltagargräns." },
+      { title: "Respekt kommer först", body: "Du ska behandla alla användare med respekt och hänsyn. Trakasserier, diskriminering, kränkande språk eller respektlöst beteende leder till permanent avstängning av ditt konto." },
+      { title: "En autentisk profil", body: "Du ska använda din verkliga identitet, ett foto av dig själv och korrekta uppgifter i din profil. Det är förbjudet att utge sig för att vara någon annan eller skapa falska konton." },
+      { title: "Öppna aktiviteter", body: "Aktiviteter som skapas på FallonYou är öppna för alla som standard. Om du skapar en aktivitet kan gemenskapen gå med fritt. Appens syfte är att föra samman människor för att dela upplevelser." },
+      { title: "Integritet och säkerhet", body: "Du ska inte dela andra användares personuppgifter utanför appen. Du ska rapportera olämpligt beteende med de tillgängliga rapporteringsverktygen." },
+      { title: "Förbjudet innehåll", body: "Det är förbjudet att publicera olagligt, sexuellt explicit eller våldsamt innehåll, skräppost eller innehåll som skadar andra användare eller gemenskapen." },
+    ],
+    confirmation: "Genom att acceptera villkoren bekräftar du att du är 18 år eller äldre och följer dessa gemenskapsregler. FallonYou förbehåller sig rätten att stänga av konton som inte följer villkoren.",
+  },
+} as const;

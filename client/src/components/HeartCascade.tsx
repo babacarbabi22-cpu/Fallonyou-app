@@ -1,0 +1,146 @@
+import { Plane, Star } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { useEffect, useState } from "react";
+
+interface FallingIcon {
+  id: number;
+  x: number;
+  delay: number;
+  duration: number;
+  size: number;
+  color: string;
+  rotation: number;
+  type: 'plane' | 'star';
+}
+
+interface MatchCascadeProps {
+  isActive: boolean;
+  duration?: number;
+}
+
+const IconComponent = ({ type, className, style }: { type: string; className: string; style: React.CSSProperties }) => {
+  if (type === 'star') {
+    return <Star className={className} style={style} />;
+  }
+  return <Plane className={className} style={style} />;
+};
+
+export function MatchHeartCascade({ isActive, duration = 3000 }: MatchCascadeProps) {
+  const [icons, setIcons] = useState<FallingIcon[]>([]);
+
+  useEffect(() => {
+    if (isActive) {
+      const colors = [
+        "text-amber-500",
+        "text-yellow-500",
+        "text-orange-400",
+        "text-amber-400",
+        "text-yellow-400",
+        "text-amber-600",
+      ];
+      const types: Array<'plane' | 'star'> = ['plane', 'star'];
+
+      const newIcons: FallingIcon[] = [];
+      for (let i = 0; i < 50; i++) {
+        const type = types[Math.floor(Math.random() * types.length)];
+        newIcons.push({
+          id: i,
+          x: Math.random() * 100,
+          delay: Math.random() * 1.2,
+          duration: 2 + Math.random() * 2,
+          size: 16 + Math.random() * 28,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          rotation: Math.random() * 360,
+          type,
+        });
+      }
+      setIcons(newIcons);
+
+      const timer = setTimeout(() => {
+        setIcons([]);
+      }, duration);
+
+      return () => clearTimeout(timer);
+    } else {
+      setIcons([]);
+    }
+  }, [isActive, duration]);
+
+  return (
+    <AnimatePresence>
+      {icons.map((icon) => (
+        <motion.div
+          key={icon.id}
+          initial={{ 
+            y: -100, 
+            x: `${icon.x}vw`,
+            opacity: 1,
+            rotate: icon.rotation,
+            scale: 0
+          }}
+          animate={{ 
+            y: "110vh",
+            opacity: [1, 1, 0.8, 0],
+            rotate: icon.rotation + 180,
+            scale: 1
+          }}
+          exit={{ opacity: 0 }}
+          transition={{
+            duration: icon.duration,
+            delay: icon.delay,
+            ease: "easeIn"
+          }}
+          className="fixed pointer-events-none z-[60]"
+          style={{ left: 0, top: 0 }}
+        >
+          <IconComponent 
+            type={icon.type}
+            className={`${icon.color} fill-current drop-shadow-lg`}
+            style={{ width: icon.size, height: icon.size }}
+          />
+        </motion.div>
+      ))}
+    </AnimatePresence>
+  );
+}
+
+const backgroundIcons = [
+  { delay: 0,   duration: 14, left: 5,  size: 18, color: "text-amber-500", rotation: 15,  type: 'plane' as const },
+  { delay: 2,   duration: 12, left: 12, size: 14, color: "text-yellow-500", rotation: -20, type: 'star' as const },
+  { delay: 4,   duration: 16, left: 22, size: 20, color: "text-amber-400", rotation: 10,  type: 'plane' as const },
+  { delay: 1,   duration: 18, left: 33, size: 13, color: "text-amber-300", rotation: 0,   type: 'star' as const },
+  { delay: 3,   duration: 13, left: 44, size: 16, color: "text-amber-500", rotation: -10, type: 'plane' as const },
+  { delay: 5,   duration: 15, left: 55, size: 18, color: "text-yellow-400", rotation: 20, type: 'star' as const },
+  { delay: 2.5, duration: 17, left: 65, size: 12, color: "text-amber-400", rotation: -15, type: 'plane' as const },
+  { delay: 6,   duration: 14, left: 75, size: 14, color: "text-amber-300", rotation: 5,   type: 'star' as const },
+  { delay: 0.5, duration: 19, left: 83, size: 16, color: "text-yellow-500", rotation: -5, type: 'plane' as const },
+  { delay: 7,   duration: 11, left: 91, size: 12, color: "text-amber-500", rotation: 25,  type: 'star' as const },
+  { delay: 3.5, duration: 15, left: 48, size: 10, color: "text-amber-400", rotation: -30, type: 'plane' as const },
+  { delay: 8,   duration: 13, left: 8,  size: 14, color: "text-yellow-400", rotation: 0,  type: 'star' as const },
+  { delay: 1.5, duration: 20, left: 38, size: 22, color: "text-amber-500", rotation: 12,  type: 'plane' as const },
+  { delay: 4.5, duration: 16, left: 58, size: 11, color: "text-amber-300", rotation: -18, type: 'star' as const },
+  { delay: 9,   duration: 14, left: 97, size: 15, color: "text-yellow-500", rotation: 8,  type: 'plane' as const },
+];
+
+export function HeartCascade() {
+  return (
+    <div className="fixed inset-0 overflow-hidden pointer-events-none" style={{ zIndex: -1 }}>
+      {backgroundIcons.map((icon, i) => (
+        <IconComponent
+          key={i}
+          type={icon.type}
+          className={`absolute ${icon.color} fill-current opacity-20 animate-heartfall`}
+          style={{
+            width: `${icon.size}px`,
+            height: `${icon.size}px`,
+            left: `${icon.left}%`,
+            top: '-20px',
+            animationDuration: `${icon.duration}s`,
+            animationDelay: `${icon.delay}s`,
+            transform: `rotate(${icon.rotation}deg)`,
+          }}
+        />
+      ))}
+    </div>
+  );
+}

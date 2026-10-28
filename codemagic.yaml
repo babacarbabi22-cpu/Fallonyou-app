@@ -1,0 +1,91 @@
+workflows:
+  android-workflow:
+    name: Android Build
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+    environment:
+      java: 21
+      node: 20
+      groups:
+        - keystore_credentials
+      vars:
+        CM_KEYSTORE_PATH: /tmp/keystore.jks
+    scripts:
+      - name: Install npm dependencies
+        script: |
+          npm install
+      - name: Build web assets
+        script: |
+          npm run build
+          mkdir -p public
+          cp -r dist/public/* public/
+          ls -la public/
+      - name: Sync Capacitor assets
+        script: |
+          npx cap sync android
+      - name: Set Android SDK
+        script: |
+          sdkmanager "platforms;android-36"
+          echo "sdk.dir=$ANDROID_SDK_ROOT" > android/local.properties
+      - name: Setup keystore
+        script: |
+          echo $CM_KEYSTORE | base64 --decode > $CM_KEYSTORE_PATH
+      - name: Build Android release
+        script: |
+          cd android
+          chmod +x gradlew
+          ./gradlew clean
+          ./gradlew bundleRelease \
+            -Pandroid.injected.signing.store.file=$CM_KEYSTORE_PATH \
+            -Pandroid.injected.signing.store.password=$CM_KEYSTORE_PASSWORD \
+            -Pandroid.injected.signing.key.alias=$CM_KEY_ALIAS \
+            -Pandroid.injected.signing.key.password=$CM_KEY_PASSWORD
+    artifacts:
+      - android/app/build/outputs/**/*.apk
+      - android/app/build/outputs/**/*.aab
+    publishing:
+      email:
+        recipients:
+          - babacarbabi22@gmail.com
+        notify:
+          success: true
+          failure: true
+  ios-workflow:
+    name: iOS App Store Connect
+    max_build_duration: 120
+    instance_type: mac_mini_m2
+    # Create an App Store Connect integration with this name in Codemagic first.
+    integrations:
+      app_store_connect: fallonyou-app-store-connect
+    environment:
+      node: 22
+      xcode: latest
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: app.fallonyou.twa
+    scripts:
+      - name: Install locked dependencies
+        script: npm ci
+      - name: Build web assets for Capacitor
+        script: |
+          npm run build
+          cp -R dist/public/. public/
+      - name: Sync iOS project and CocoaPods
+        script: npx cap sync ios
+      - name: Set unique iOS build number
+        script: |
+          cd ios/App
+          xcrun agvtool new-version -all "$BUILD_NUMBER"
+      - name: Apply App Store signing profiles
+        script: xcode-project use-profiles
+      - name: Build signed IPA
+        script: |
+          cd ios/App
+          xcode-project build-ipa --workspace App.xcworkspace --scheme App
+    artifacts:
+      - ios/App/build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+    publishing:
+      app_store_connect:
+        auth: integration
+        # Upload the build only. App Store review is submitted manually.

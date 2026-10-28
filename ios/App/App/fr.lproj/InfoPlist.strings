@@ -1,0 +1,3 @@
+"NSCameraUsageDescription" = "FallOnYou utilise la caméra lorsque vous choisissez de prendre des photos de profil, des selfies de vérification ou des vidéos pour vos stories.";
+"NSPhotoLibraryUsageDescription" = "FallOnYou vous permet de choisir des photos et vidéos à partager dans votre profil, vos stories ou vos conversations.";
+"NSMicrophoneUsageDescription" = "FallOnYou utilise le microphone pour enregistrer le son lorsque vous choisissez de créer une vidéo pour vos stories.";
